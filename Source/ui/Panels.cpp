@@ -3,85 +3,22 @@
 
 namespace chordchimp::ui
 {
-    namespace
-    {
-        void caption (juce::Label& l, const juce::String& text, juce::Colour c = colours::dim)
-        {
-            l.setText (text, juce::dontSendNotification);
-            l.setFont (font (11.5f, true));
-            l.setColour (juce::Label::textColourId, c);
-        }
-    }
-
     //==========================================================================
-    ParamControl& ParamGrid::add (const juce::String& paramId, const juce::String& label)
+    TopBar::TopBar (ChordChimpProcessor& p, Bindings& b, std::function<void (bool)> showKeyboard)
+        : presets (p), enable (b, params::enable, "On")
     {
-        auto* c = owned.add (new ParamControl (bindings, paramId, label));
-        c->setAccent (colour);
-        addAndMakeVisible (c);
-        cells.add (c);
-        return *c;
-    }
-
-    void ParamGrid::addSection (const juce::String& title)
-    {
-        while (cells.size() % cols != 0)
-            cells.add (nullptr);
-        auto* l = sections.add (new juce::Label());
-        caption (*l, title.toUpperCase(), colours::faint);
-        addAndMakeVisible (l);
-        cells.add (l);
-        for (int i = 1; i < cols; ++i)
-            cells.add (nullptr);
-    }
-
-    int ParamGrid::rows() const noexcept { return (cells.size() + cols - 1) / cols; }
-
-    void ParamGrid::resized()
-    {
-        const float w = (float) getWidth() / (float) cols;
-        int y = 0;
-        for (int row = 0; row < rows(); ++row)
-        {
-            auto* first = cells[row * cols];
-            const bool section = dynamic_cast<juce::Label*> (first) != nullptr;
-            const int h = section ? sectionHeight : rowHeight;
-            if (section)
-                first->setBounds (0, y, getWidth(), h);
-            else
-                for (int c = 0; c < cols; ++c)
-                    if (auto* cell = cells[row * cols + c])
-                        cell->setBounds (juce::Rectangle<float> (w * (float) c, (float) y, w, (float) h).reduced (4.0f, 2.0f).toNearestInt());
-            y += h;
-        }
-    }
-
-    //==========================================================================
-    TopBar::TopBar (ChordChimpProcessor& p, Bindings& b, std::function<void()> openSetup, std::function<void (bool)> showKeyboard)
-        : presets (p),
-          enable (b, params::enable, "On"), key (b, params::key), scale (b, params::scale), progression (b, params::progression),
-          group (b, params::chordGroup)
-    {
-        logo.setTooltip ("Setup: the test pattern");
-        logo.onClick = std::move (openSetup);
-        logo.setColour (juce::TextButton::buttonColourId, colours::background);
-        logo.setColour (juce::TextButton::textColourOffId, colours::text);
-        addAndMakeVisible (logo);
+        enable.setTooltip ("On: chords from every white key. Off: notes pass through unchanged");
+        addAndMakeVisible (enable);
+        addAndMakeVisible (presets);
         keyboardButton.setClickingTogglesState (true);
         keyboardButton.setTooltip ("Show or hide the keyboard at the bottom");
         keyboardButton.onClick = [this, showKeyboard] { showKeyboard (keyboardButton.getToggleState()); };
         addAndMakeVisible (keyboardButton);
-        for (auto* c : { &enable, &key, &scale, &progression, &group })
-            addAndMakeVisible (c);
-        addAndMakeVisible (presets);
     }
 
     void TopBar::setKeyboardShown (bool shown) { keyboardButton.setToggleState (shown, juce::dontSendNotification); }
 
-    void TopBar::refresh()
-    {
-        presets.refresh();
-    }
+    void TopBar::refresh() { presets.refresh(); }
 
     void TopBar::paint (juce::Graphics& g)
     {
@@ -89,101 +26,134 @@ namespace chordchimp::ui
         g.fillRect (getLocalBounds());
         g.setColour (colours::outline);
         g.fillRect (getLocalBounds().removeFromBottom (1));
+        g.setColour (colours::chord);
+        g.setFont (font (17.0f, true));
+        g.drawText ("ChordChimp", nameArea, juce::Justification::centredLeft);
     }
 
     void TopBar::resized()
     {
-        auto r = getLocalBounds().reduced (8, 4);
-        logo.setBounds (r.removeFromLeft (84).withSizeKeepingCentre (84, 30));
-        logo.setButtonText ("ChordChimp");
-        r.removeFromLeft (6);
-        enable.setBounds (r.removeFromLeft (40).withTrimmedTop (14));
-        r.removeFromLeft (4);
-        presets.setBounds (r.removeFromLeft (juce::jlimit (150, 250, r.getWidth() * 2 / 9)));
-        r.removeFromLeft (4);
-        keyboardButton.setBounds (r.removeFromRight (52).withTrimmedTop (14).withTrimmedBottom (0));
-        r.removeFromRight (10);
-        const struct { ParamControl* c; int w; } cols[] = { { &key, 66 }, { &scale, 118 }, { &progression, 150 }, { &group, 118 } };
+        auto r = getLocalBounds().reduced (12, 6);
+        nameArea = r.removeFromLeft (112);
+        enable.setBounds (r.removeFromLeft (44).withSizeKeepingCentre (44, 28));
+        r.removeFromLeft (12);
+        keyboardButton.setBounds (r.removeFromRight (52).withSizeKeepingCentre (52, 28));
+        r.removeFromRight (12);
+        presets.setBounds (r.removeFromLeft (juce::jmin (r.getWidth(), 360)).withTrimmedBottom (2));
+    }
+
+    //==========================================================================
+    GlobalRow::GlobalRow (Bindings& b)
+        : key (b, params::key), scale (b, params::scale), group (b, params::chordGroup), progression (b, params::progression),
+          octave (b, params::chordOctave, "Octave")
+    {
+        progression.setTooltip ("Which chord each white key plays");
+        octave.setTooltip ("Chord Octave: the register the chords play in");
+        for (auto* c : { &key, &scale, &group, &progression, &octave })
+            addAndMakeVisible (c);
+    }
+
+    void GlobalRow::resized()
+    {
+        auto r = getLocalBounds();
+        const struct { ParamControl* c; int w; } cols[] = { { &key, 70 }, { &scale, 150 }, { &group, 130 }, { &progression, 180 }, { &octave, 110 } };
         int total = 0;
         for (const auto& c : cols)
             total += c.w;
-        const float k = juce::jmin (1.4f, (float) r.getWidth() / (float) total);
+        const float k = (float) r.getWidth() / (float) total;
         for (const auto& c : cols)
-            c.c->setBounds (r.removeFromLeft ((int) ((float) c.w * k)).reduced (3, 0));
+            c.c->setBounds (r.removeFromLeft ((int) ((float) c.w * k)).reduced (4, 0));
     }
 
     //==========================================================================
-    ChordFxPanel::ChordFxPanel (Bindings& b) : grid (b, 5, colours::chord), steps (colours::chord)
+    EffectsPanel::EffectsPanel (Bindings& b) : bindings (b), steps (colours::chord)
     {
-        grid.add (params::stack);
-        grid.add (params::chordOctave, "Octave");
-        grid.add (params::hold);
-        grid.add (params::velocity);
-        grid.addGap();
-        grid.add (params::strum);
-        grid.add (params::strumRate, "Strum rate");
-        grid.addGap();
-        grid.add (params::velocityPeak, "Velocity peak");
-        grid.add (params::velocityRange, "Velocity range");
-        grid.add (params::arp);
-        grid.add (params::arpRate, "Arp rate");
-        grid.add (params::arpRange, "Arp range");
-        grid.add (params::arpGate, "Arp gate");
-        grid.addGap();
-        grid.add (params::repeat);
-        grid.add (params::repeatRate, "Repeat rate");
-        grid.add (params::repeatGate, "Repeat gate");
-        grid.addGap();
-        grid.add (params::voiceLeading, "Voice leading").setTooltip ("Smooth: each chord takes the inversion nearest the one before");
-        grid.add (params::seq, "Step seq");
-        grid.add (params::seqPattern, "Pattern");
-        grid.add (params::seqSwing, "Swing");
-        grid.add (params::seqGate, "Gate");
-        addAndMakeVisible (grid);
-        caption (stepsCaption, "STEPS");
-        addAndMakeVisible (stepsCaption);
+        auto& strum = cards[0];
+        strum.title = "Strum";
+        strum.controls = { &add (params::strum, "Direction"), &add (params::strumRate, "Rate") };
+
+        auto& velocity = cards[1];
+        velocity.title = "Velocity";
+        velocity.controls = { &add (params::velocity, "Curve"), &add (params::velocityPeak, "Peak"), &add (params::velocityRange, "Range") };
+
+        auto& arp = cards[2];
+        arp.title = "Arp";
+        arp.controls = { &add (params::arp, "Pattern"), &add (params::arpRate, "Rate"), &add (params::arpRange, "Range"),
+                         &add (params::arpGate, "Gate") };
+
+        auto& voicing = cards[3];
+        voicing.title = "Voicing";
+        voicing.controls = { &add (params::stack), &add (params::hold), &add (params::voiceLeading, "Voice leading") };
+        voicing.controls.back()->setTooltip ("Smooth: each chord takes the inversion nearest the one before");
+
+        auto& repeat = cards[4];
+        repeat.title = "Repeat";
+        repeat.toggle = &add (params::repeat, "On");
+        repeat.controls = { &add (params::repeatRate, "Rate"), &add (params::repeatGate, "Gate") };
+
+        auto& seq = cards[5];
+        seq.title = "Step seq";
+        seq.toggle = &add (params::seq, "On");
+        seq.controls = { &add (params::seqPattern, "Pattern"), &add (params::seqSwing, "Swing"), &add (params::seqGate, "Gate") };
+        seq.extra = &steps;
         addAndMakeVisible (steps);
     }
 
-    void ChordFxPanel::refresh (const UiModel& m) { steps.setSteps (m.settings.fx.seq.steps()); }
+    ParamControl& EffectsPanel::add (const juce::String& paramId, const juce::String& label)
+    {
+        auto* c = controls.add (new ParamControl (bindings, paramId, label));
+        addAndMakeVisible (c);
+        return *c;
+    }
 
-    void ChordFxPanel::resized()
+    void EffectsPanel::refresh (const UiModel& m) { steps.setSteps (m.settings.fx.seq.steps()); }
+
+    int EffectsPanel::preferredHeight()
+    {
+        const int card = titleHeight + controlHeight + 8;
+        return 2 * card + (card + stepsHeight + 4) + 2 * gap;
+    }
+
+    void EffectsPanel::paint (juce::Graphics& g)
+    {
+        for (const auto& c : cards)
+        {
+            g.setColour (colours::raised.withAlpha (0.55f));
+            g.fillRoundedRectangle (c.bounds.toFloat(), 6.0f);
+            g.setColour (colours::dim);
+            g.setFont (font (11.5f, true));
+            g.drawText (c.title.toUpperCase(), c.bounds.reduced (10, 0).removeFromTop (titleHeight), juce::Justification::centredLeft);
+        }
+    }
+
+    void EffectsPanel::layoutCard (Card& c)
+    {
+        auto r = c.bounds.reduced (6, 0);
+        auto head = r.removeFromTop (titleHeight);
+        if (c.toggle != nullptr)
+            c.toggle->setBounds (head.removeFromRight (48).reduced (0, 2));
+        auto row = r.removeFromTop (controlHeight);
+        const int w = row.getWidth() / juce::jmax (1, (int) c.controls.size());
+        for (auto* control : c.controls)
+            control->setBounds (row.removeFromLeft (w).reduced (3, 0));
+        if (c.extra != nullptr)
+            c.extra->setBounds (r.withTrimmedTop (4).removeFromTop (stepsHeight).reduced (3, 0));
+    }
+
+    void EffectsPanel::resized()
     {
         auto r = getLocalBounds();
-        grid.setBounds (r.removeFromTop (grid.rows() * ParamGrid::rowHeight));
-        auto s = r.removeFromTop (30).reduced (4, 2);
-        stepsCaption.setBounds (s.removeFromLeft (52));
-        steps.setBounds (s);
-    }
-
-    //==========================================================================
-    SetupPanel::SetupPanel (Bindings& b, std::function<void()> close)
-        : right (b, 2, colours::chord)
-    {
-        heading.setText ("Setup", juce::dontSendNotification);
-        heading.setFont (font (18.0f, true));
-        heading.setColour (juce::Label::textColourId, colours::text);
-        addAndMakeVisible (heading);
-        closeButton.onClick = std::move (close);
-        addAndMakeVisible (closeButton);
-
-        right.addSection ("Test pattern (LiveBridge)");
-        right.add (params::testPattern);
-        addAndMakeVisible (right);
-    }
-
-    void SetupPanel::paint (juce::Graphics& g)
-    {
-        g.setColour (colours::background);
-        g.fillRect (getLocalBounds());
-    }
-
-    void SetupPanel::resized()
-    {
-        auto r = getLocalBounds().reduced (16, 10);
-        auto top = r.removeFromTop (32);
-        closeButton.setBounds (top.removeFromRight (80).reduced (0, 3));
-        heading.setBounds (top);
-        right.setBounds (r.removeFromLeft (r.getWidth() / 3).removeFromTop (ParamGrid::sectionHeight + ParamGrid::rowHeight));
+        const int card = titleHeight + controlHeight + 8;
+        const int heights[] = { card, card, card + stepsHeight + 4 };
+        for (int row = 0; row < 3; ++row)
+        {
+            auto line = r.removeFromTop (heights[row]);
+            r.removeFromTop (gap);
+            cards[(size_t) (2 * row)].bounds = line.removeFromLeft ((line.getWidth() - gap) / 2);
+            line.removeFromLeft (gap);
+            cards[(size_t) (2 * row + 1)].bounds = line;
+        }
+        for (auto& c : cards)
+            layoutCard (c);
     }
 }

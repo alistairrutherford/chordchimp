@@ -59,37 +59,17 @@ namespace chordchimp::ui
     }
 
     //==========================================================================
-    namespace
+    ChordPads::ChordPads (ChordChimpProcessor& p) : processor (p), playing (p)
     {
-        constexpr float chordBlackHeight = 0.5f;
-
-        void drawWhiteKey (juce::Graphics& g, juce::Rectangle<float> r, juce::Colour tint, bool lit)
-        {
-            r = r.reduced (1.0f, 0.0f);
-            g.setColour (lit ? colours::whiteKey.interpolatedWith (tint, 0.45f) : colours::whiteKey);
-            g.fillRoundedRectangle (r, 4.0f);
-        }
-
-        void drawBlackKey (juce::Graphics& g, juce::Rectangle<float> r)
-        {
-            g.setColour (colours::blackKey);
-            g.fillRoundedRectangle (r, 3.0f);
-        }
+        setTooltip ("The seven chords, one per white key (in any octave): click or drag across to play");
     }
 
-    ChordKeyboard::ChordKeyboard (ChordChimpProcessor& p) : processor (p), playing (p)
+    void ChordPads::refresh (const UiModel& m)
     {
-        layout.lo = 0;
-        layout.hi = 11;
-        setTooltip ("Chord keys: click to play.");
-    }
-
-    void ChordKeyboard::refresh (const UiModel& m)
-    {
-        std::array<bool, 12> now {};
+        std::array<bool, numChordSlots> now {};
         for (int n = 0; n < 128; ++n)
-            if (processor.isKeyDown (n) || processor.isPerforming (n))
-                now[(size_t) (n % 12)] = true;
+            if (const int slot = KeyRouter::slotOf (n); slot >= 0 && (processor.isKeyDown (n) || processor.isPerforming (n)))
+                now[(size_t) slot] = true;
 
         const bool changed = now != active || ! (m.display == model.display);
         model = m;
@@ -98,51 +78,72 @@ namespace chordchimp::ui
             repaint();
     }
 
-    void ChordKeyboard::paint (juce::Graphics& g)
+    juce::Rectangle<float> ChordPads::padBounds (int slot) const
     {
-        layout.area = getLocalBounds().toFloat();
-        const auto& d = model.display;
-        for (int pc = 0; pc < 12; ++pc)
-        {
-            if (PianoLayout::isBlack (pc))
-                continue;
-            const int slot = keys::whiteLetter (pc);
-            auto r = layout.keyBounds (pc, chordBlackHeight);
-            drawWhiteKey (g, r, colours::chord, active[(size_t) pc]);
+        constexpr float gap = 6.0f;
+        const float w = ((float) getWidth() - gap * (numChordSlots - 1)) / (float) numChordSlots;
+        return { (w + gap) * (float) slot, 0.0f, w, (float) getHeight() };
+    }
 
-            auto text = r.reduced (3.0f, 6.0f).withTrimmedTop (r.getHeight() * chordBlackHeight);
-            const auto& slotData = d.chords[(size_t) slot];
-            g.setColour (colours::whiteKeyText);
-            g.setFont (font (19.0f, true));
-            g.drawFittedText (juce::String (romanNumeral (slotData, d.context.scale)), text.removeFromTop (text.getHeight() * 0.5f).toNearestInt(),
-                              juce::Justification::centredBottom, 1);
-            g.setFont (font (13.0f));
-            g.setColour (colours::whiteKeyText.withAlpha (0.8f));
-            g.drawFittedText (juce::String (nameSlot (slotData, d.context).text()), text.toNearestInt(), juce::Justification::centredTop, 1, 0.7f);
+    int ChordPads::slotAt (juce::Point<float> p) const
+    {
+        for (int slot = 0; slot < numChordSlots; ++slot)
+            if (padBounds (slot).contains (p))
+                return slot;
+        return -1;
+    }
+
+    void ChordPads::paint (juce::Graphics& g)
+    {
+        const auto& d = model.display;
+        for (int slot = 0; slot < numChordSlots; ++slot)
+        {
+            const auto r = padBounds (slot);
+            const bool lit = active[(size_t) slot];
+            g.setColour (lit ? colours::chord : colours::raised);
+            g.fillRoundedRectangle (r, 8.0f);
+            g.setColour (lit ? colours::chord.brighter (0.3f) : colours::outline);
+            g.drawRoundedRectangle (r.reduced (0.5f), 8.0f, 1.0f);
+
+            const auto ink = lit ? colours::background : colours::text;
+            g.setColour (lit ? colours::background.withAlpha (0.6f) : colours::faint);
+            g.setFont (font (11.0f, true));
+            g.drawText (juce::String::charToString ("CDEFGAB"[slot]), r.reduced (9.0f, 7.0f).removeFromTop (14.0f),
+                        juce::Justification::topLeft);
+
+            const auto& chord = d.chords[(size_t) slot];
+            auto text = r.reduced (6.0f, 10.0f);
+            const float h = text.getHeight();
+            g.setColour (ink);
+            g.setFont (font (juce::jlimit (16.0f, 28.0f, h * 0.24f), true));
+            g.drawFittedText (juce::String (romanNumeral (chord, d.context.scale)),
+                              text.removeFromTop (h * 0.55f).toNearestInt(), juce::Justification::centredBottom, 1);
+            g.setColour (lit ? ink : colours::dim);
+            g.setFont (font (juce::jlimit (12.0f, 16.0f, h * 0.14f)));
+            g.drawFittedText (juce::String (nameSlot (chord, d.context).text()), text.withTrimmedTop (4.0f).toNearestInt(),
+                              juce::Justification::centredTop, 1, 0.7f);
 
             if (slot == d.lastSlot)
             {
-                g.setColour (colours::chord);
-                g.fillRoundedRectangle (r.reduced (5.0f, 0.0f).removeFromBottom (5.0f).translated (0.0f, -4.0f), 2.0f);
+                g.setColour (lit ? colours::background : colours::chord);
+                g.fillRoundedRectangle (r.reduced (r.getWidth() * 0.25f, 0.0f).removeFromBottom (4.0f).translated (0.0f, -6.0f), 2.0f);
             }
         }
-        for (int pc = 0; pc < 12; ++pc)
-        {
-            if (! PianoLayout::isBlack (pc))
-                continue;
-            drawBlackKey (g, layout.keyBounds (pc, chordBlackHeight));
-        }
     }
 
-    void ChordKeyboard::mouseDown (const juce::MouseEvent& e)
+    void ChordPads::mouseDown (const juce::MouseEvent& e)
     {
-        layout.area = getLocalBounds().toFloat();
-        const int pc = layout.noteAt (e.position, chordBlackHeight);
-        if (pc >= 0 && ! PianoLayout::isBlack (pc) && ! e.mods.isPopupMenu())
-            playing.press (KeyRouter::homeC + pc, 100);
+        if (! e.mods.isPopupMenu())
+            mouseDrag (e);
     }
 
-    void ChordKeyboard::mouseUp (const juce::MouseEvent&) { playing.release(); }
+    void ChordPads::mouseDrag (const juce::MouseEvent& e)
+    {
+        if (const int slot = slotAt (e.position); slot >= 0)
+            playing.press (KeyRouter::keyForSlot (slot), 100);
+    }
+
+    void ChordPads::mouseUp (const juce::MouseEvent&) { playing.release(); }
 
     //==========================================================================
     OutputKeyboard::OutputKeyboard (ChordChimpProcessor& p) : processor (p), playing (p)

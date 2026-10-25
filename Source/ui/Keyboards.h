@@ -1,8 +1,9 @@
-// The editor's keyboards (PLAN.md §6). Each plays through the engine like host MIDI input
-// (ChordChimpProcessor::pushUiNote), so clicking a key is the same as pressing it.
+// The editor's playable surfaces (PLAN.md §5). Each plays through the engine like host MIDI
+// input (ChordChimpProcessor::pushUiNote), so clicking is the same as pressing a key.
 //
-//   ChordKeyboard   one octave: each white key shows its Roman numeral and chord name, with a
-//                   stripe on the last one played (black keys play nothing).
+//   ChordPads       seven pads, one per white-key letter (C … B): the chord's Roman numeral and
+//                   name, the key letter in a corner, lit while that chord plays, with a stripe
+//                   on the last one played. Click (or drag across) to play.
 //   OutputKeyboard  88 keys: the notes ChordChimp sends (red) and the keys held (outlined).
 //                   Hideable.
 #pragma once
@@ -45,23 +46,26 @@ namespace chordchimp::ui
         int held = -1;
     };
 
-    class ChordKeyboard : public juce::Component,
-                         public juce::SettableTooltipClient
+    class ChordPads : public juce::Component,
+                      public juce::SettableTooltipClient
     {
     public:
-        explicit ChordKeyboard (ChordChimpProcessor&);
+        explicit ChordPads (ChordChimpProcessor&);
         void refresh (const UiModel&);
+
+        juce::Rectangle<float> padBounds (int slot) const;
+        int slotAt (juce::Point<float>) const;   // -1 if none
 
         void paint (juce::Graphics&) override;
         void mouseDown (const juce::MouseEvent&) override;
+        void mouseDrag (const juce::MouseEvent&) override;
         void mouseUp (const juce::MouseEvent&) override;
 
     private:
         ChordChimpProcessor& processor;
         PlayingKeys playing;
         UiModel model;
-        PianoLayout layout;
-        std::array<bool, 12> active {};
+        std::array<bool, numChordSlots> active {};
     };
 
     class OutputKeyboard : public juce::Component,

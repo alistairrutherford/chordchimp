@@ -1,10 +1,12 @@
-// The editor's panels (PLAN.md §6):
+// The editor's panels (PLAN.md §5):
 //
-//   TopBar         logo (opens Setup) · Enable · Preset browser · Key · Scale · Progression ·
-//                  Chord Group · keyboard show/hide
-//   ChordFxPanel   the effects: Stack, Octave, Hold; Strum; Arp; Repeat, Voice leading;
-//                  Velocity; Step Sequencer and its pattern's steps
-//   SetupPanel     everything else, as an overlay: the test pattern (LiveBridge)
+//   TopBar         the name · On · the preset browser · Keys (show or hide the output keyboard)
+//   GlobalRow      Key · Scale · Chord Group · Progression · Octave
+//   EffectsPanel   six cards: Strum, Velocity; Arp, Voicing (Stack, Hold, Voice leading);
+//                  Repeat and Step seq, each with its on switch in the card's corner, and the
+//                  chosen pattern's steps under Step seq
+//
+// Test pattern (the LiveBridge rig) has no control: Live's device parameters reach it.
 #pragma once
 
 #include "Keyboards.h"
@@ -12,35 +14,10 @@
 
 namespace chordchimp::ui
 {
-    // ParamControls in rows of `columns` cells; empty cells with addGap().
-    class ParamGrid : public juce::Component
-    {
-    public:
-        ParamGrid (Bindings& b, int columns, juce::Colour accent) : bindings (b), cols (columns), colour (accent) {}
-
-        ParamControl& add (const juce::String& paramId, const juce::String& label = {});
-        void addGap() { cells.add (nullptr); }
-        void addCell (juce::Component& c) { addAndMakeVisible (c); cells.add (&c); }   // not owned
-        void addSection (const juce::String& title);   // a caption row across the grid
-
-        int rows() const noexcept;
-        void resized() override;
-
-        static constexpr int rowHeight = 42, sectionHeight = 20;
-
-    private:
-        Bindings& bindings;
-        int cols;
-        juce::Colour colour;
-        juce::OwnedArray<ParamControl> owned;
-        juce::OwnedArray<juce::Label> sections;
-        juce::Array<juce::Component*> cells;      // nullptr = gap; a Label = section
-    };
-
     class TopBar : public juce::Component
     {
     public:
-        TopBar (ChordChimpProcessor&, Bindings&, std::function<void()> openSetup, std::function<void (bool)> showKeyboard);
+        TopBar (ChordChimpProcessor&, Bindings&, std::function<void (bool)> showKeyboard);
         void setKeyboardShown (bool shown);
         void refresh();
         void paint (juce::Graphics&) override;
@@ -49,34 +26,50 @@ namespace chordchimp::ui
         PresetBar presets;
 
     private:
-        juce::TextButton logo { "ChordChimp" };
+        ParamControl enable;
         juce::TextButton keyboardButton { "Keys" };
-        ParamControl enable, key, scale, progression, group;
+        juce::Rectangle<int> nameArea;
     };
 
-    class ChordFxPanel : public juce::Component
+    class GlobalRow : public juce::Component
     {
     public:
-        explicit ChordFxPanel (Bindings&);
-        void refresh (const UiModel&);
+        explicit GlobalRow (Bindings&);
         void resized() override;
 
     private:
-        ParamGrid grid;
-        StepSeqView steps;
-        juce::Label stepsCaption;
+        ParamControl key, scale, group, progression, octave;
     };
 
-    class SetupPanel : public juce::Component
+    class EffectsPanel : public juce::Component
     {
     public:
-        SetupPanel (Bindings&, std::function<void()> close);
+        explicit EffectsPanel (Bindings&);
+        void refresh (const UiModel&);
         void paint (juce::Graphics&) override;
         void resized() override;
 
+        // The height the cards need at this width (the editor sizes the chord pads around it).
+        static int preferredHeight();
+
     private:
-        juce::TextButton closeButton { "Done" };
-        juce::Label heading;
-        ParamGrid right;
+        struct Card
+        {
+            juce::String title;
+            ParamControl* toggle = nullptr;           // the card's on switch, if it has one
+            std::vector<ParamControl*> controls;
+            juce::Component* extra = nullptr;         // under the controls (the steps)
+            juce::Rectangle<int> bounds;
+        };
+
+        ParamControl& add (const juce::String& paramId, const juce::String& label = {});
+        void layoutCard (Card&);
+
+        Bindings& bindings;
+        juce::OwnedArray<ParamControl> controls;
+        std::array<Card, 6> cards;
+        StepSeqView steps;
+
+        static constexpr int titleHeight = 22, controlHeight = 40, stepsHeight = 22, gap = 8;
     };
 }

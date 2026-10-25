@@ -1,15 +1,14 @@
-// The editor (PLAN.md §5), about 1100×640 and resizable:
+// The editor (PLAN.md §5): one page, about 780×560 and resizable.
 //
-//   top bar      logo (Setup) · Enable · Presets · Key · Scale · Progression · Chord Group · Keys
-//   main         the chord keys and, below them, the effects (Chord FX)
+//   top bar      the name · On · presets · Keys
+//   globals      Key · Scale · Chord Group · Progression · Octave
+//   chord pads   the seven chords (they take the space the rest leaves)
+//   effects      Strum, Velocity; Arp, Voicing; Repeat, Step seq
 //   bottom       the output keyboard (can be hidden), which also plays
 //
 // Everything here is a host parameter; the UI keeps only its own preferences (keyboard shown,
 // size) in the plug-in state. Refreshed at 30 Hz from the processor's published display and
 // note states.
-//
-// ChordChimp Phase 1 (2026-10-25) took out Chordism's Smart Scale half, the Chord Editor page,
-// MIDI drop-in and QWERTY playing; the single-page layout comes in Phase 3.
 #pragma once
 
 #include "Panels.h"
@@ -30,13 +29,15 @@ namespace chordchimp
         void resized() override;
 
         // For tests (Tests/Snapshot): read the processor now, without waiting for the timer;
-        // the parameters some control is (or was) bound to; the pages.
+        // the parameters some control is (or was) bound to; the keyboard.
         void refreshNow() { timerCallback(); }
         const std::set<juce::String>& boundParameters() const noexcept { return bindings.boundIds(); }
-        void showSetup (bool shown);
         void showKeyboard (bool shown);
+        ui::ChordPads& getChordPads() noexcept { return chordPads; }
 
-        static constexpr int defaultWidth = 1100, defaultHeight = 640;
+        static constexpr int defaultWidth = 780, defaultHeight = 560;
+        static constexpr int minWidth = 720, minHeight = 520, maxWidth = 1400, maxHeight = 960;
+        static constexpr int maxPadHeight = 200;
 
     private:
         void timerCallback() override;
@@ -47,13 +48,10 @@ namespace chordchimp
         juce::TooltipWindow tooltips { this, 600 };
 
         ui::TopBar topBar;
-        juce::Label chordTitle;
-        ui::ChordKeyboard chordKeys;
-        ui::ChordFxPanel chordFx;
+        ui::GlobalRow globals;
+        ui::ChordPads chordPads;
+        ui::EffectsPanel effects;
         ui::OutputKeyboard outputKeys;
-        ui::SetupPanel setup;
-
-        juce::Rectangle<int> mainArea;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ChordChimpEditor)
     };

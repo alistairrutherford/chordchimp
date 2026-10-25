@@ -2,12 +2,12 @@
 // host and checks:
 //
 //   1. snapshots  the editor in a fixed state (C major, the Pop progression, effects, keys held)
-//                 and its Setup overlay at 1100×640, and the editor at its smallest size
-//                 (960×600, keyboard hidden), each compared with Tests/fixtures/snapshot/*.png
-//                 (at most 0.5% of pixels may differ by more than 24 levels: font rendering moves
-//                 a little between macOS versions)
-//   2. reachable  every host parameter is bound to a control of the editor (going through the
-//                 four sequencer patterns, as a user would)
+//                 at its default size (780×560), its smallest (720×520, keyboard hidden) and a
+//                 large one (1200×800), each compared with Tests/fixtures/snapshot/*.png (at most
+//                 0.5% of pixels may differ by more than 24 levels: font rendering moves a little
+//                 between macOS versions); clicking a chord pad plays its chord
+//   2. reachable  every host parameter but the test rig is bound to a control of the editor
+//                 (going through the four sequencer patterns, as a user would)
 //   3. state      a saved state restores every parameter and the UI's preferences into a new
 //                 instance
 //   4. presets    the factory presets are Chordism's (Tests/fixtures/chordism_presets.json:
@@ -847,14 +847,35 @@ int main (int argc, char** argv)
         editor->setSize (ChordChimpEditor::defaultWidth, ChordChimpEditor::defaultHeight);
         editor->showKeyboard (true);
         snapshot (*editor, "editor", fixtures, out, update);
-        editor->showSetup (true);
-        snapshot (*editor, "editor-setup", fixtures, out, update);
-        editor->showSetup (false);
-        editor->setSize (960, 600);   // the smallest size, keyboard hidden
+        editor->setSize (ChordChimpEditor::minWidth, ChordChimpEditor::minHeight);   // the smallest size, keyboard hidden
         editor->showKeyboard (false);
         snapshot (*editor, "editor-small", fixtures, out, update);
         editor->showKeyboard (true);
+        editor->setSize (1200, 800);
+        snapshot (*editor, "editor-large", fixtures, out, update);
         editor->setSize (ChordChimpEditor::defaultWidth, ChordChimpEditor::defaultHeight);
+
+        std::cout << "== chord pads ==\n";
+        {
+            // Release the arranged keys, then press pad G (Pop puts degree 2 there: Dm7 in Sevenths).
+            block (*processor, { juce::MidiMessage::noteOff (1, 52), juce::MidiMessage::noteOff (1, 74), juce::MidiMessage::noteOff (1, 63) });
+            set (*processor, params::arp, 0.0f);
+            set (*processor, params::seq, 0.0f);
+            block (*processor, {});
+            auto& pads = editor->getChordPads();
+            const auto at = pads.padBounds (4).getCentre();
+            auto source = juce::Desktop::getInstance().getMainMouseSource();
+            const auto now = juce::Time::getCurrentTime();
+            const juce::MouseEvent e (source, at, {}, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, &pads, &pads, now, at, now, 1, false);
+            pads.mouseDown (e);
+            const auto on = noteOns (block (*processor, {}));
+            pads.mouseUp (e);
+            const auto off = block (*processor, {});
+            check (pads.slotAt (at) == 4 && on == std::vector<int> { 50, 53, 57, 60 } && noteOffs (off) == 4,
+                   "clicking pad G plays its chord (Pop: ii, Dm7) and letting go ends it");
+            set (*processor, params::arp, (float) (int) ArpPattern::ConvergeUp);
+            set (*processor, params::seq, 1.0f);
+        }
 
         std::cout << "== preferences ==\n";
         {
@@ -880,10 +901,10 @@ int main (int argc, char** argv)
             if (auto* withId = dynamic_cast<juce::AudioProcessorParameterWithID*> (param))
             {
                 ++total;
-                if (editor->boundParameters().count (withId->paramID) == 0)
+                if (editor->boundParameters().count (withId->paramID) == 0 && withId->paramID != params::testPattern)
                     missing.add (withId->paramID);
             }
-        check (total == params::numParameters && missing.isEmpty(), juce::String (total) + " parameters, " + juce::String (missing.size()) + " without a control"
+        check (total == params::numParameters && missing.isEmpty(), juce::String (total) + " parameters, " + juce::String (missing.size()) + " without a control (Test pattern is Live's)"
                                       + (missing.isEmpty() ? juce::String() : ": " + missing.joinIntoString (", ")));
     }
 

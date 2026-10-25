@@ -10,25 +10,20 @@ namespace chordchimp
 
     ChordChimpEditor::ChordChimpEditor (ChordChimpProcessor& p)
         : AudioProcessorEditor (p), processor (p), bindings (p.state),
-          topBar (p, bindings, [this] { showSetup (true); }, [this] (bool shown) { showKeyboard (shown); }),
-          chordKeys (p), chordFx (bindings), outputKeys (p),
-          setup (bindings, [this] { showSetup (false); })
+          topBar (p, bindings, [this] (bool shown) { showKeyboard (shown); }),
+          globals (bindings), chordPads (p), effects (bindings), outputKeys (p)
     {
         setLookAndFeel (&lookAndFeel);
-
-        chordTitle.setText ("CHORDS", juce::dontSendNotification);
-        chordTitle.setFont (ui::font (13.0f, true));
-        chordTitle.setColour (juce::Label::textColourId, ui::colours::chord);
-        for (auto* c : std::initializer_list<juce::Component*> { &topBar, &chordTitle, &chordKeys, &chordFx, &outputKeys })
+        for (auto* c : std::initializer_list<juce::Component*> { &topBar, &globals, &chordPads, &effects, &outputKeys })
             addAndMakeVisible (c);
-        addChildComponent (setup);
 
         auto& ui = processor.uiState;
         showKeyboard (ui.getProperty (keyboardId, true));
 
         setResizable (true, true);
-        setResizeLimits (960, 600, 1800, 1100);
-        setSize (ui.getProperty (widthId, defaultWidth), ui.getProperty (heightId, defaultHeight));
+        setResizeLimits (minWidth, minHeight, maxWidth, maxHeight);
+        setSize (juce::jlimit (minWidth, maxWidth, (int) ui.getProperty (widthId, defaultWidth)),
+                 juce::jlimit (minHeight, maxHeight, (int) ui.getProperty (heightId, defaultHeight)));
         timerCallback();
         startTimerHz (30);
     }
@@ -37,13 +32,6 @@ namespace chordchimp
     {
         stopTimer();
         setLookAndFeel (nullptr);
-    }
-
-    void ChordChimpEditor::showSetup (bool shown)
-    {
-        setup.setVisible (shown);
-        if (shown)
-            setup.toFront (false);
     }
 
     void ChordChimpEditor::showKeyboard (bool shown)
@@ -57,25 +45,23 @@ namespace chordchimp
     void ChordChimpEditor::paint (juce::Graphics& g)
     {
         g.fillAll (ui::colours::background);
-        g.setColour (ui::colours::panel);
-        g.fillRoundedRectangle (mainArea.toFloat(), 6.0f);
     }
 
     void ChordChimpEditor::resized()
     {
         auto r = getLocalBounds();
-        topBar.setBounds (r.removeFromTop (48));
-        setup.setBounds (r);
+        topBar.setBounds (r.removeFromTop (44));
         if (outputKeys.isVisible())
-            outputKeys.setBounds (r.removeFromBottom (64).reduced (8, 4));
+            outputKeys.setBounds (r.removeFromBottom (60).reduced (12, 6));
 
-        mainArea = r.reduced (8, 8);
-        const int keyboardHeight = juce::jlimit (120, 200, getHeight() / 4 + 8);
-        auto a = mainArea.reduced (8, 6);
-        chordTitle.setBounds (a.removeFromTop (26).removeFromLeft (150));
-        chordKeys.setBounds (a.removeFromTop (keyboardHeight).reduced (0, 4));
-        a.removeFromTop (6);
-        chordFx.setBounds (a);
+        r.reduce (12, 10);
+        globals.setBounds (r.removeFromTop (42));
+        r.removeFromTop (12);
+        effects.setBounds (r.removeFromBottom (ui::EffectsPanel::preferredHeight()));
+        r.removeFromBottom (12);
+        // The pads take the space left, up to a height that still looks like pads; any more is
+        // shared above and below them.
+        chordPads.setBounds (r.withSizeKeepingCentre (r.getWidth(), juce::jmin (r.getHeight(), maxPadHeight)));
 
         processor.uiState.setProperty (widthId, getWidth(), nullptr);
         processor.uiState.setProperty (heightId, getHeight(), nullptr);
@@ -89,8 +75,8 @@ namespace chordchimp
         m.display = processor.readDisplay();
         m.settings = processor.currentSettings();
 
-        chordKeys.refresh (m);
+        chordPads.refresh (m);
         outputKeys.refresh (m);
-        chordFx.refresh (m);
+        effects.refresh (m);
     }
 }
