@@ -11,7 +11,7 @@ namespace chordchimp
     ChordChimpEditor::ChordChimpEditor (ChordChimpProcessor& p)
         : AudioProcessorEditor (p), processor (p), bindings (p.state),
           topBar (p, bindings, [this] { showSetup (true); }, [this] (bool shown) { showKeyboard (shown); }),
-          chordKeys (p, bindings), chordFx (bindings), outputKeys (p),
+          chordKeys (p), chordFx (bindings), outputKeys (p),
           setup (bindings, [this] { showSetup (false); })
     {
         setLookAndFeel (&lookAndFeel);

@@ -111,11 +111,13 @@ namespace chordchimp
             if (tree.hasType ("ChordChimp"))
                 return tree;
 
-            // A Chordism preset file: the same tree under Chordism's name (PLAN.md §3.4).
+            // A Chordism preset file: the same tree under Chordism's name, with its Progression
+            // value made a choice (PLAN.md §3.4).
             if (tree.hasType ("Chordism"))
             {
                 juce::ValueTree renamed ("ChordChimp");
                 renamed.copyPropertiesAndChildrenFrom (tree, nullptr);
+                params::fromChordism (renamed);
                 return renamed;
             }
         }

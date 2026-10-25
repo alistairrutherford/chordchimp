@@ -2,7 +2,7 @@
 // reaches the plug-in only through Live's device parameters (PLAN.md §8).
 //
 // IDs, names and choice lists are saved in Live sets and automation: never rename or reorder
-// them, only add new ones.
+// them, only add new ones. The IDs are Chordism's (PLAN.md §3.4), so its presets load.
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -17,15 +17,14 @@ namespace chordchimp::params
     inline constexpr const char* chordOctave  = "chordOctave";
     inline constexpr const char* testPattern  = "testPattern";
 
-    // Phase 2 (appended).
+    // Phase 2 (appended). Its choices are the progressions without Custom (Progressions.h):
+    // Chordism's values are converted on the way in (fromChordism).
     inline constexpr const char* progression  = "progression";
-    juce::String customDegree (int slot);     // "customDegree1".."customDegree7"
 
     // Phase 3 (appended): the effects.
     inline constexpr const char* stack        = "stack";
     inline constexpr const char* strum        = "strum";
     inline constexpr const char* strumRate    = "strumRate";
-    inline constexpr const char* strumMs      = "strumMs";
     inline constexpr const char* arp          = "arp";
     inline constexpr const char* arpRate      = "arpRate";
     inline constexpr const char* arpRange     = "arpRange";
@@ -37,30 +36,26 @@ namespace chordchimp::params
     inline constexpr const char* seqPattern   = "seqPattern";
     inline constexpr const char* seqSwing     = "seqSwing";
     inline constexpr const char* seqGate      = "seqGate";
-    inline constexpr const char* seqSustain   = "seqSustain";
     inline constexpr const char* velocity     = "velocity";
     inline constexpr const char* velocityPeak = "velocityPeak";
     inline constexpr const char* velocityRange = "velocityRange";
     inline constexpr const char* hold         = "hold";
-
-    // Phase 4 (2026-10-19): the 64 "seqNStepM" bools of Phase 3 were replaced by one 16-bit
-    // mask per pattern (bit s = step s + 1). Saved states are migrated (ChordChimpProcessor).
-    juce::String seqStep (int pattern, int step);   // the old IDs "seq1Step1".."seq4Step16", for migration
-    juce::String seqSteps (int pattern);            // "seq1Steps".."seq4Steps"
 
     // Phase 7 (appended): voice leading.
     inline constexpr const char* voiceLeading  = "voiceLeading";
 
     // ChordChimp Phase 1 (2026-10-25) removed Chordism's Split, Mute CG / SS, the shifters and
     // Test shifter, every Smart Scale and pattern parameter, Test smart, Sync group and
-    // Look-ahead (PLAN.md §3.5). A saved state's or preset's values for them are ignored.
+    // Look-ahead; Phase 2 its Custom 1-7, Strum time, Seq sustain and the four step patterns
+    // (PLAN.md §3.5). A saved state's or preset's values for them are ignored.
+    constexpr int numParameters = 26;
+
+    // A Chordism preset's tree, made ChordChimp's: the Progression value becomes a choice
+    // (Chordism's Custom: Diatonic). The other kept values mean the same.
+    void fromChordism (juce::ValueTree& tree);
 
     // Parameters a preset doesn't touch: Enable and the test rig (PresetManager).
     bool isPresetParameter (const juce::String& paramId);
-
-    // A sequencer pattern as Live shows it: "x" for an active step, "." for a rest, step 1 first.
-    juce::String stepsText (int mask);
-    int stepsFromText (const juce::String& text);
 
     juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
 
@@ -84,12 +79,10 @@ namespace chordchimp::params
         std::atomic<float>* chordOctave;
         std::atomic<float>* testPattern;
         std::atomic<float>* progression;
-        std::array<std::atomic<float>*, numChordSlots> customDegree {};
 
         std::atomic<float>* fxStack;
         std::atomic<float>* fxStrum;
         std::atomic<float>* fxStrumRate;
-        std::atomic<float>* fxStrumMs;
         std::atomic<float>* fxArp;
         std::atomic<float>* fxArpRate;
         std::atomic<float>* fxArpRange;
@@ -101,15 +94,10 @@ namespace chordchimp::params
         std::atomic<float>* fxSeqPattern;
         std::atomic<float>* fxSeqSwing;
         std::atomic<float>* fxSeqGate;
-        std::atomic<float>* fxSeqSustain;
         std::atomic<float>* fxVelocity;
         std::atomic<float>* fxVelocityPeak;
         std::atomic<float>* fxVelocityRange;
         std::atomic<float>* fxHold;
-        std::array<std::atomic<float>*, numSeqPatterns> fxSeqSteps {};
         std::atomic<float>* fxVoiceLeading;
     };
-
-    // MIDI note name as Live writes it (60 = C3).
-    juce::String liveNoteName (int note);
 }

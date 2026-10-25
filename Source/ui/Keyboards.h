@@ -2,8 +2,7 @@
 // (ChordChimpProcessor::pushUiNote), so clicking a key is the same as pressing it.
 //
 //   ChordKeyboard   one octave: each white key shows its Roman numeral and chord name, with a
-//                   stripe on the last one played (black keys play nothing). Right-click a white
-//                   key for its degree (Custom progression).
+//                   stripe on the last one played (black keys play nothing).
 //   OutputKeyboard  88 keys: the notes ChordChimp sends (red) and the keys held (outlined).
 //                   Hideable.
 #pragma once
@@ -50,7 +49,7 @@ namespace chordchimp::ui
                          public juce::SettableTooltipClient
     {
     public:
-        ChordKeyboard (ChordChimpProcessor&, Bindings&);
+        explicit ChordKeyboard (ChordChimpProcessor&);
         void refresh (const UiModel&);
 
         void paint (juce::Graphics&) override;
@@ -58,10 +57,7 @@ namespace chordchimp::ui
         void mouseUp (const juce::MouseEvent&) override;
 
     private:
-        void slotMenu (int slot);
-
         ChordChimpProcessor& processor;
-        Bindings& bindings;
         PlayingKeys playing;
         UiModel model;
         PianoLayout layout;

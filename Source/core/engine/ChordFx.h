@@ -22,7 +22,7 @@
 //
 // Scheduling: what happens later (the next strummed tone, a strike's or a step's end, the next
 // strike or step, a held chord's bar end) waits in a fixed-size EventQueue, in musical time
-// (or in samples, for Strum in ms while stopped). Every performance has at most a handful of
+// (or in samples, for Strum while stopped). Every performance has at most a handful of
 // events queued, so the queue can't overflow. A tempo change needs nothing (musical events
 // find their sample in the block they fall in); on a loop wrap or locate, `transportJump`
 // moves the note-offs and strum tones with the music (they keep their lengths) and puts each
@@ -56,7 +56,6 @@ namespace chordchimp
         StackMode stack = StackMode::Off;
         StrumMode strum = StrumMode::Off;
         int strumRate = 2;                // index into the strum rates (1/64)
-        double strumMs = 20.0;            // between tones while stopped
         ArpPattern arp = ArpPattern::Off;
         int arpRate = 5;                  // index into the pattern rates (1/16)
         int arpRange = 1;                 // octaves, 1..3
@@ -612,7 +611,7 @@ namespace chordchimp
             p.strumStartPpq = ppqAt (sample);
             p.strumStartAbs = clock.blockStart() + sample;
             p.strumStepPpq = strumRatePpq (fx.strumRate);
-            p.strumStepSamples = (fx.strumMs > 0.0 ? fx.strumMs : 0.0) * clock.sampleRate() / 1000.0;
+            p.strumStepSamples = p.strumStepPpq * clock.samplesPerQuarter();   // while stopped: the clock's tempo
             playStrumNote (key, sample);
         }
 

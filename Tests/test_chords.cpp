@@ -203,24 +203,28 @@ static void testReferenceSet()
 static void testProgressionOrders()
 {
     std::cout << "== progressions ==\n";
-    const auto pop = makeChords (ChordGroup::Sevenths, Scale::Major, progressionDegrees (Progression::Pop, identityOrder()));
+    const auto pop = makeChords (ChordGroup::Sevenths, Scale::Major, progressionDegrees (Progression::Pop));
     check (pop[1].degree == 4 && pop[0].degree == 0 && pop[1] == makeGroupSlot (ChordGroup::Sevenths, Scale::Major, 4),
            "Pop progression: the D key plays V in the group's shape");
 
-    DegreeOrder custom { 4, 4, 0, 9, -3, 2, 1 };
-    const auto c = progressionDegrees (Progression::Custom, custom);
-    check (c == DegreeOrder { 4, 4, 0, 6, 0, 2, 1 }, "Custom order: repeats allowed, degrees clamped to 0..6");
+    check (progressionDegrees (Progression::Custom) == identityOrder(), "Chordism's Custom plays as Diatonic");
 
     bool permutations = true;
     for (int p = 0; p < numProgressions; ++p)
     {
-        if ((Progression) p == Progression::Custom)
-            continue;
         auto d = progressionInfo ((Progression) p).degrees;
         std::sort (d.begin(), d.end());
         permutations &= d == identityOrder();
     }
-    check (permutations, "every progression preset keeps all seven chords on some key");
+    check (permutations, "every progression keeps all seven chords on some key");
+
+    // The parameter's choices: the enum without Custom, both ways.
+    bool roundTrip = numProgressionChoices == numProgressions - 1;
+    for (int c = 0; c < numProgressionChoices; ++c)
+        roundTrip &= progressionChoice (progressionFromChoice (c)) == c && progressionFromChoice (c) != Progression::Custom;
+    check (roundTrip && progressionFromChoice (1) == Progression::Pop && progressionChoice (Progression::Thirds) == 7
+               && progressionChoice (Progression::Custom) == 0 && progressionFromChoice (99) == Progression::Diatonic,
+           "Progression choices: Diatonic, Pop … Thirds (Custom skipped; out of range is Diatonic)");
 }
 
 //==============================================================================

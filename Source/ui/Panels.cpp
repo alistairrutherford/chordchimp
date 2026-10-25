@@ -62,7 +62,7 @@ namespace chordchimp::ui
           enable (b, params::enable, "On"), key (b, params::key), scale (b, params::scale), progression (b, params::progression),
           group (b, params::chordGroup)
     {
-        logo.setTooltip ("Setup: custom progression, test pattern");
+        logo.setTooltip ("Setup: the test pattern");
         logo.onClick = std::move (openSetup);
         logo.setColour (juce::TextButton::buttonColourId, colours::background);
         logo.setColour (juce::TextButton::textColourOffId, colours::text);
@@ -113,7 +113,7 @@ namespace chordchimp::ui
     }
 
     //==========================================================================
-    ChordFxPanel::ChordFxPanel (Bindings& b) : grid (b, 5, colours::chord), steps (b, colours::chord)
+    ChordFxPanel::ChordFxPanel (Bindings& b) : grid (b, 5, colours::chord), steps (colours::chord)
     {
         grid.add (params::stack);
         grid.add (params::chordOctave, "Octave");
@@ -122,7 +122,7 @@ namespace chordchimp::ui
         grid.addGap();
         grid.add (params::strum);
         grid.add (params::strumRate, "Strum rate");
-        grid.add (params::strumMs, "Strum time (stopped)");
+        grid.addGap();
         grid.add (params::velocityPeak, "Velocity peak");
         grid.add (params::velocityRange, "Velocity range");
         grid.add (params::arp);
@@ -139,15 +139,13 @@ namespace chordchimp::ui
         grid.add (params::seqPattern, "Pattern");
         grid.add (params::seqSwing, "Swing");
         grid.add (params::seqGate, "Gate");
-        grid.add (params::seqSustain, "Sustain");
         addAndMakeVisible (grid);
         caption (stepsCaption, "STEPS");
         addAndMakeVisible (stepsCaption);
         addAndMakeVisible (steps);
-        steps.bind (params::seqSteps (0));
     }
 
-    void ChordFxPanel::refresh (const UiModel& m) { steps.bind (params::seqSteps (m.settings.fx.seq.pattern)); }
+    void ChordFxPanel::refresh (const UiModel& m) { steps.setSteps (m.settings.fx.seq.steps()); }
 
     void ChordFxPanel::resized()
     {
@@ -160,7 +158,7 @@ namespace chordchimp::ui
 
     //==========================================================================
     SetupPanel::SetupPanel (Bindings& b, std::function<void()> close)
-        : left (b, 2, colours::chord), right (b, 2, colours::chord)
+        : right (b, 2, colours::chord)
     {
         heading.setText ("Setup", juce::dontSendNotification);
         heading.setFont (font (18.0f, true));
@@ -168,11 +166,6 @@ namespace chordchimp::ui
         addAndMakeVisible (heading);
         closeButton.onClick = std::move (close);
         addAndMakeVisible (closeButton);
-
-        left.addSection ("Custom progression (degree per white key)");
-        for (int n = 0; n < numChordSlots; ++n)
-            left.add (params::customDegree (n), "Key " + juce::String::charToString ("CDEFGAB"[n]));
-        addAndMakeVisible (left);
 
         right.addSection ("Test pattern (LiveBridge)");
         right.add (params::testPattern);
@@ -191,9 +184,6 @@ namespace chordchimp::ui
         auto top = r.removeFromTop (32);
         closeButton.setBounds (top.removeFromRight (80).reduced (0, 3));
         heading.setBounds (top);
-        const int w = r.getWidth() / 3;
-        left.setBounds (r.removeFromLeft (w - 8));
-        r.removeFromLeft (8);
-        right.setBounds (r.removeFromLeft (w - 8).removeFromTop (ParamGrid::sectionHeight + ParamGrid::rowHeight));
+        right.setBounds (r.removeFromLeft (r.getWidth() / 3).removeFromTop (ParamGrid::sectionHeight + ParamGrid::rowHeight));
     }
 }

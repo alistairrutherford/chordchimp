@@ -7,8 +7,8 @@
 //   Random       a shuffled order per strike, from a seeded generator: the same playing
 //                gives the same strums (it's reseeded on reset and when the transport starts)
 //
-// Strum Rate is the time between tones, as a note value while the host plays and in
-// milliseconds while it's stopped. Plain C++, no allocation.
+// Strum Rate is the time between tones, a note value: while the host is stopped, at the
+// internal clock's tempo (the last one the host gave). Plain C++, no allocation.
 #pragma once
 
 #include <cstdint>

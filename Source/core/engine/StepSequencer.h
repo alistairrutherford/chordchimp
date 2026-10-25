@@ -1,7 +1,7 @@
-// Step Sequencer (PLAN.md §4.5): a 16-step gate on the chord zone.
+// Step Sequencer (PLAN.md §3.3): a 16-step gate on the chords.
 //
 // Each bar is divided into sixteenth-note slots, counted from the bar line; slot j uses step
-// j mod 16 of the active pattern (one of four pattern memories). While a chord is held, it
+// j mod 16 of the chosen pattern (one of four fixed factory patterns). While a chord is held, it
 // sounds in the windows of the active steps and is silent in between; each window restrikes
 // it (strummed, with Strum). A key pressed inside an open window sounds at once, to the end of
 // that window (unless less than a quarter of the step is left); a key pressed in a closed one
@@ -10,8 +10,9 @@
 //   Swing    pushes the even steps (2, 4, … 16) later, by up to half a sixteenth at 100%
 //            (about 33% gives a triplet feel)
 //   Gate     the part of the step the chord sounds, 0-100% (full = the whole sixteenth)
-//   Sustain  a step sounds through the inactive steps after it, up to the sixteenth before the
-//            next active step, and Gate applies to that last sixteenth
+//
+// ChordChimp Phase 2 (2026-10-25): the patterns can't be edited and Sustain is gone (no factory
+// preset used either).
 //
 // With Repeat, the repeats sound only inside the windows; with Arp, the arp's tones sound only
 // inside the windows (cut at a window's end). Plain C++.
@@ -31,8 +32,8 @@ namespace chordchimp
 
     using SeqPatterns = std::array<uint16_t, numSeqPatterns>;   // bit s = step s + 1 is on
 
-    // Factory patterns for the four memories (ChordChimp's own).
-    inline SeqPatterns defaultSeqPatterns() noexcept
+    // The four patterns (Chordism's factory patterns).
+    inline SeqPatterns seqPatterns() noexcept
     {
         return { {
             0x1111,   // 1: four on the floor (steps 1 5 9 13)
@@ -46,12 +47,10 @@ namespace chordchimp
     {
         bool on = false;
         int pattern = 0;                  // 0..3
-        SeqPatterns patterns = defaultSeqPatterns();
         double swing = 0.0;               // 0..1
         double gate = 0.5;                // 0..1
-        bool sustain = false;
 
-        uint16_t steps() const noexcept { return patterns[(size_t) (pattern >= 0 && pattern < numSeqPatterns ? pattern : 0)]; }
+        uint16_t steps() const noexcept { return seqPatterns()[(size_t) (pattern >= 0 && pattern < numSeqPatterns ? pattern : 0)]; }
         bool active (int slot) const noexcept { return ((steps() >> (slot % numSeqSteps)) & 1) != 0; }
     };
 
@@ -120,20 +119,7 @@ namespace chordchimp
             w.valid = true;
             w.start = start (s);
             w.slotLength = end (s) - w.start;
-            const double gate = grid::clampGate (seq.gate);
-            Slot last = s;                // the slot Gate applies to
-            if (seq.sustain)
-            {
-                Slot n = next (s);
-                for (int i = 0; i < searchLimit() && ! active (n); ++i)
-                {
-                    last = n;
-                    n = next (n);
-                }
-                if (! active (n))
-                    last = s;
-            }
-            w.end = start (last) + gate * (end (last) - start (last));
+            w.end = w.start + grid::clampGate (seq.gate) * w.slotLength;
             return w;
         }
 

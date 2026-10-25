@@ -2,7 +2,7 @@
 // across blocks.
 //
 // Fixed capacity, allocated with its owner (prepareToPlay), never resized. An event is timed
-// either in musical time (PPQ; the rhythmic effects) or in absolute samples (Strum in ms while
+// either in musical time (PPQ; the rhythmic effects) or in absolute samples (Strum while
 // stopped). A musical event's sample is worked out from the clock in the block it falls in, so
 // a tempo change moves every musical event to its new sample by itself. On a loop wrap or a
 // locate the owner moves the musical events (`forEach`), see ChordFx.h.

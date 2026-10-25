@@ -5,14 +5,6 @@
 
 namespace chordchimp::ui
 {
-    namespace
-    {
-        void addTicked (juce::PopupMenu& m, int id, const juce::String& text, bool ticked)
-        {
-            m.addItem (id, text, true, ticked);
-        }
-    }
-
     //==========================================================================
     bool PianoLayout::isBlack (int note) noexcept { return keys::whiteLetter (note) < 0; }
 
@@ -85,11 +77,11 @@ namespace chordchimp::ui
         }
     }
 
-    ChordKeyboard::ChordKeyboard (ChordChimpProcessor& p, Bindings& b) : processor (p), bindings (b), playing (p)
+    ChordKeyboard::ChordKeyboard (ChordChimpProcessor& p) : processor (p), playing (p)
     {
         layout.lo = 0;
         layout.hi = 11;
-        setTooltip ("Chord keys: click to play. Right-click a white key for its degree.");
+        setTooltip ("Chord keys: click to play.");
     }
 
     void ChordKeyboard::refresh (const UiModel& m)
@@ -146,50 +138,11 @@ namespace chordchimp::ui
     {
         layout.area = getLocalBounds().toFloat();
         const int pc = layout.noteAt (e.position, chordBlackHeight);
-        if (pc < 0 || PianoLayout::isBlack (pc))
-            return;
-        if (e.mods.isPopupMenu())
-            slotMenu (keys::whiteLetter (pc));
-        else
+        if (pc >= 0 && ! PianoLayout::isBlack (pc) && ! e.mods.isPopupMenu())
             playing.press (KeyRouter::homeC + pc, 100);
     }
 
     void ChordKeyboard::mouseUp (const juce::MouseEvent&) { playing.release(); }
-
-    void ChordKeyboard::slotMenu (int slot)
-    {
-        const auto& s = model.settings;
-        const int degree = model.display.chords[(size_t) slot].degree;
-        static const char* numerals[7] = { "I", "II", "III", "IV", "V", "VI", "VII" };
-
-        juce::PopupMenu degrees;
-        for (int dgr = 0; dgr < 7; ++dgr)
-            addTicked (degrees, 100 + dgr, numerals[dgr], dgr == degree);
-
-        juce::PopupMenu m;
-        m.addSectionHeader ("Key " + juce::String (slot + 1) + ": " + juce::String (nameSlot (model.display.chords[(size_t) slot], model.display.context).text()));
-        m.addSubMenu ("Degree", degrees);
-
-        juce::Component::SafePointer<ChordKeyboard> self (this);
-        m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this), [self, slot, s] (int r)
-        {
-            if (self == nullptr || r == 0)
-                return;
-            auto& b = self->bindings;
-            if (r >= 100 && r < 107)
-            {
-                // A degree for one key makes the progression Custom, starting from the current order.
-                if (s.progression != Progression::Custom)
-                {
-                    const auto order = progressionDegrees (s.progression, s.customOrder);
-                    for (int n = 0; n < numChordSlots; ++n)
-                        b.set (params::customDegree (n), (float) order[(size_t) n]);
-                    b.set (params::progression, (float) (int) Progression::Custom);
-                }
-                b.set (params::customDegree (slot), (float) (r - 100));
-            }
-        });
-    }
 
     //==========================================================================
     OutputKeyboard::OutputKeyboard (ChordChimpProcessor& p) : processor (p), playing (p)

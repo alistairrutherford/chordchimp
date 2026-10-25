@@ -1,9 +1,10 @@
-// Chord Progressions (PLAN.md §2, §4.2): which scale degree each white key of the chord zone
-// plays. A progression is seven degrees, one per white key (C = slot 0 … B = slot 6). The
-// presets are permutations, so every chord of the scale stays on some key; Custom takes its
-// seven degrees from the "Custom 1–7" parameters and may repeat a degree.
+// Chord Progressions (PLAN.md §3.2): which scale degree each white key plays. A progression is
+// seven degrees, one per white key (C = slot 0 … B = slot 6). Each is a permutation, so every
+// chord of the scale stays on some key.
 //
-// The order is the order of the host parameter's choices (saved by index): only append.
+// The enum keeps Chordism's order, Custom included, so Chordism's values still name the same
+// progressions. ChordChimp has no Custom (PLAN.md §3.5): the host parameter's choices are the
+// enum without it (progressionChoice / progressionFromChoice), and Custom plays as Diatonic.
 #pragma once
 
 #include "ChordGroups.h"
@@ -14,7 +15,7 @@ namespace chordchimp
     enum class Progression : uint8_t
     {
         Diatonic,         // 1 2 3 4 5 6 7
-        Custom,           // the seven custom degrees
+        Custom,           // Chordism's custom order: not offered, plays as Diatonic
         Pop,              // 1 5 6 4 …
         Fifties,          // 1 6 4 5 …
         TwoFiveOne,       // 2 5 1 …
@@ -40,7 +41,7 @@ namespace chordchimp
     {
         static constexpr ProgressionInfo table[numProgressions] = {
             { "Diatonic (1-7)",           { 0, 1, 2, 3, 4, 5, 6 } },
-            { "Custom",                   { 0, 1, 2, 3, 4, 5, 6 } },
+            { "Diatonic (1-7)",           { 0, 1, 2, 3, 4, 5, 6 } },   // Custom
             { "Pop (1-5-6-4)",            { 0, 4, 5, 3, 1, 2, 6 } },
             { "Fifties (1-6-4-5)",        { 0, 5, 3, 4, 1, 2, 6 } },
             { "Two-Five-One (2-5-1)",     { 1, 4, 0, 5, 3, 2, 6 } },
@@ -55,16 +56,21 @@ namespace chordchimp
 
     constexpr DegreeOrder identityOrder() noexcept { return { 0, 1, 2, 3, 4, 5, 6 }; }
 
-    // The degree each slot plays: the preset's, or `custom` for Custom (clamped to 0..6).
-    inline DegreeOrder progressionDegrees (Progression p, const DegreeOrder& custom) noexcept
-    {
-        if (p != Progression::Custom)
-            return progressionInfo (p).degrees;
+    // The degree each slot plays.
+    inline DegreeOrder progressionDegrees (Progression p) noexcept { return progressionInfo (p).degrees; }
 
-        DegreeOrder d {};
-        for (size_t i = 0; i < d.size(); ++i)
-            d[i] = (int8_t) (custom[i] < 0 ? 0 : (custom[i] > 6 ? 6 : custom[i]));
-        return d;
+    // The Progression parameter's choices: every progression but Custom, in the enum's order.
+    constexpr int numProgressionChoices = numProgressions - 1;
+
+    constexpr int progressionChoice (Progression p) noexcept
+    {
+        const int i = (int) p;
+        return i <= (int) Progression::Diatonic || i == (int) Progression::Custom || i >= numProgressions ? 0 : i - 1;
+    }
+
+    constexpr Progression progressionFromChoice (int choice) noexcept
+    {
+        return choice <= 0 || choice >= numProgressionChoices ? Progression::Diatonic : (Progression) (choice + 1);
     }
 
     // The seven chords: slot n plays degree order[n] in group `g`'s shape.

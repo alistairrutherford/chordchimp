@@ -9,7 +9,7 @@ namespace chordchimp
 
         float f (Scale s) { return (float) (int) s; }
         float f (ChordGroup g) { return (float) (int) g; }
-        float f (Progression p) { return (float) (int) p; }
+        float f (Progression p) { return (float) progressionChoice (p); }   // the parameter's choice
         float f (StackMode m) { return (float) (int) m; }
         float f (StrumMode m) { return (float) (int) m; }
         float f (ArpPattern p) { return (float) (int) p; }

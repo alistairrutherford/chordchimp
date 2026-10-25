@@ -3,8 +3,8 @@
 // the parameter's own text. It can be re-bound to another parameter.
 //
 // Bindings records every parameter some control has been bound to, so a test can check that
-// every feature is reachable from the editor (Tests/Snapshot). StepSeqView edits a sequencer
-// pattern's 16 steps (one packed parameter, Parameters.h).
+// every feature is reachable from the editor (Tests/Snapshot). StepSeqView shows the chosen
+// sequencer pattern's 16 steps.
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -64,39 +64,21 @@ namespace chordchimp::ui
         std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sliderAttachment;
     };
 
-    // The 16 steps of a sequencer pattern: one packed parameter (seqNSteps).
+    // The 16 steps of the chosen sequencer pattern (read-only: the patterns are fixed).
     class StepSeqView : public juce::Component,
-                        public juce::SettableTooltipClient,
-                        private juce::AudioProcessorParameter::Listener,
-                        private juce::AsyncUpdater
+                        public juce::SettableTooltipClient
     {
     public:
-        StepSeqView (Bindings&, juce::Colour accent);
-        ~StepSeqView() override;
+        explicit StepSeqView (juce::Colour accent);
 
-        void bind (const juce::String& paramId);
-        void setPlayingStep (int step);   // -1 for none
-
+        void setSteps (uint16_t mask);    // bit s = step s + 1
         void paint (juce::Graphics&) override;
-        void mouseDown (const juce::MouseEvent&) override;
-        void mouseDrag (const juce::MouseEvent&) override;
-        void mouseUp (const juce::MouseEvent&) override;
 
     private:
-        void parameterValueChanged (int, float) override { triggerAsyncUpdate(); }
-        void parameterGestureChanged (int, bool) override {}
-        void handleAsyncUpdate() override { repaint(); }
-        int mask() const;
-        int stepAt (juce::Point<float>) const;
         juce::Rectangle<float> stepBounds (int step) const;
 
-        Bindings& bindings;
         juce::Colour accent;
         juce::Font numberFont;
-        juce::String paramId;
-        juce::RangedAudioParameter* param = nullptr;
-        int playing = -1;
-        bool dragValue = true;
-        int lastDragStep = -1;
+        uint16_t steps = 0;
     };
 }

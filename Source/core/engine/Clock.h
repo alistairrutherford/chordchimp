@@ -12,7 +12,7 @@
 // pressed with nothing else playing then starts its patterns on a bar line of their own.
 //
 // Absolute sample time (`blockStart` + offset) counts every sample processed, for events timed
-// in milliseconds. Plain C++, no allocation.
+// in samples (Strum while stopped). Plain C++, no allocation.
 #pragma once
 
 #include "Transport.h"

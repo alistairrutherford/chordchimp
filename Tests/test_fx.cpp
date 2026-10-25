@@ -193,30 +193,28 @@ static void testBuildingBlocks()
             }
     check (inRange && arpIndex (ArpPattern::LinearUp, 0, 0) == -1, "every pattern stays within 1-12 tones; no tones, no index");
 
-    // Step grid: swing, gate, sustain.
+    // Step grid: the fixed patterns, swing, gate.
+    check (seqPatterns() == SeqPatterns { 0x1111, 0x4444, 0x1449, 0x4949 }, "the four patterns are Chordism's factory ones");
     StepSeqSettings seq;
-    seq.patterns[0] = 0x0003;   // steps 1, 2
+    seq.pattern = 2;            // steps 1 4 7 11 13
     seq.swing = 1.0;
     seq.gate = 0.5;
     StepGrid g (seq, 0.0, 4.0);
-    const auto w0 = g.windowAt (0.1), w1 = g.windowAt (0.4);
-    check (w0.valid && w0.start == 0.0 && std::abs (w0.end - 0.1875) < 1e-12 && w1.valid && std::abs (w1.start - 0.375) < 1e-12
-               && std::abs (w1.end - 0.4375) < 1e-12 && ! g.windowAt (0.3).valid,
-           "swing 100%: step 2 at 0.375 (a dotted sixteenth), gate 50% of each slot");
+    const auto w0 = g.windowAt (0.1), w3 = g.windowAt (0.9);
+    check (w0.valid && w0.start == 0.0 && std::abs (w0.end - 0.1875) < 1e-12 && w3.valid && std::abs (w3.start - 0.875) < 1e-12
+               && std::abs (w3.end - 0.9375) < 1e-12 && ! g.windowAt (0.3).valid,
+           "swing 100%: step 4 at 0.875 (an eighth of a beat late), gate 50% of each slot");
     double next = 0.0;
-    check (g.nextStart (0.0, false, next) && std::abs (next - 0.375) < 1e-12 && g.nextStart (0.5, true, next) && next == 4.0,
-           "next active steps: 0.375, then the next bar");
+    check (g.nextStart (0.0, false, next) && std::abs (next - 0.875) < 1e-12 && g.nextStart (3.5, true, next) && next == 4.0,
+           "next active steps: 0.875, and after step 13 the next bar");
     seq.swing = 0.0;
-    seq.patterns[0] = 0x0101;   // steps 1, 9
-    seq.sustain = true;
     seq.gate = 1.0;
-    const auto sus = StepGrid (seq, 0.0, 4.0).windowAt (1.9);
-    seq.gate = 0.5;
-    const auto susHalf = StepGrid (seq, 0.0, 4.0).windowAt (1.0);
-    check (sus.valid && sus.start == 0.0 && std::abs (sus.end - 2.0) < 1e-12 && susHalf.valid && std::abs (susHalf.end - 1.875) < 1e-12,
-           "sustain: step 1 sounds to step 9 (gate on the last sixteenth)");
-    seq.patterns[0] = 0x8000;   // step 16 only: never in a 3/4 bar
-    check (! StepGrid (seq, 0.0, 3.0).nextStart (0.0, true, next), "3/4: step 16 never comes");
+    seq.pattern = 0;            // steps 1 5 9 13
+    const auto full = StepGrid (seq, 0.0, 4.0).windowAt (2.2);
+    check (full.valid && full.start == 2.0 && std::abs (full.end - 2.25) < 1e-12, "gate 100%: step 9 sounds its whole sixteenth");
+    seq.pattern = 1;            // steps 3 7 11 15
+    check (StepGrid (seq, 0.0, 3.0).nextStart (2.9, true, next) && std::abs (next - 3.5) < 1e-12,
+           "3/4: step 15 never comes; after step 11 the next bar's step 3");
 
     VelocitySettings v;
     check (v.apply (77, 0.3) == 77, "Velocity Off keeps the key's velocity");
@@ -288,13 +286,13 @@ static void testStrumTiming()
         return finish (h, e, worst);
     });
 
-    // Stopped: Strum Rate in ms, from the key press.
-    sweep ("Strum Up while stopped: 30 ms between tones", [] (const Config& c, int64_t& worst)
+    // Stopped: Strum Rate at the last tempo, from the key press.
+    sweep ("Strum Up 1/32 while stopped: at the last tempo, from the key press", [] (const Config& c, int64_t& worst)
     {
         Host h (c.rate, c.bpm);
         h.playing = false;
         h.settings.fx.strum = StrumMode::Up;
-        h.settings.fx.strumMs = 30.0;
+        h.settings.fx.strumRate = 4;   // 1/32
         const int64_t press = 1000, up = 1000 + (int64_t) (0.5 * c.rate);
         h.keyAt (press, C, true);
         h.keyAt (up, C, false);
@@ -303,7 +301,7 @@ static void testStrumTiming()
         Expect e (h.spq());
         for (int i = 0; i < 3; ++i)
         {
-            e.onAt (press + (int64_t) std::llround (i * 0.030 * c.rate), cMajor[(size_t) i]);
+            e.onAt (press + (int64_t) std::llround (i * 0.125 * h.spq()), cMajor[(size_t) i]);
             e.offAt (up, cMajor[(size_t) i]);
         }
         return finish (h, e, worst);
@@ -444,35 +442,35 @@ static void testRepeatAndSeqTiming()
         return finish (h, e, worst);
     });
 
-    sweep ("Step seq swing 100% gate 50%, and sustain", [] (const Config& c, int64_t& worst)
+    sweep ("Step seq pattern 3 swing 100% gate 50%, then pattern 4 gate 100%", [] (const Config& c, int64_t& worst)
     {
         Host h (c.rate, c.bpm);
         auto& seq = h.settings.fx.seq;
         seq.on = true;
-        seq.pattern = 1;
-        seq.patterns[1] = 0x0003;      // steps 1, 2
+        seq.pattern = 2;               // steps 1 4 7 11 13
         seq.swing = 1.0;
         seq.gate = 0.5;
         h.key (0.0, C, true);
         h.key (8.0, C, false);
         h.run (h.at (8.0), c.block);   // two bars swung
         seq.swing = 0.0;
-        seq.patterns[1] = 0x0101;      // steps 1, 9
-        seq.sustain = true;
+        seq.gate = 1.0;
+        seq.pattern = 3;               // steps 1 4 7 9 12 15
         h.key (8.0, D, true);
         h.key (16.0, D, false);
         h.run (h.at (16.5), c.block);
 
         Expect e (h.spq());
+        // Pattern 3 swung: each window starts on its (swung) slot and lasts half of it.
+        const double windows[][2] = { { 0.0, 0.1875 }, { 0.875, 0.9375 }, { 1.5, 1.6875 }, { 2.5, 2.6875 }, { 3.0, 3.1875 } };
         for (int bar = 0; bar < 2; ++bar)
-            for (int n : cMajor)
-            {
-                e.note (4.0 * bar, 4.0 * bar + 0.1875, n);
-                e.note (4.0 * bar + 0.375, 4.0 * bar + 0.4375, n);
-            }
-        for (int half = 0; half < 4; ++half)
-            for (int n : dMinor)
-                e.note (8.0 + 2.0 * half, 8.0 + 2.0 * half + 1.875, n);
+            for (const auto& w : windows)
+                for (int n : cMajor)
+                    e.note (4.0 * bar + w[0], 4.0 * bar + w[1], n);
+        for (int bar = 2; bar < 4; ++bar)
+            for (int step : { 0, 3, 6, 8, 11, 14 })
+                for (int n : dMinor)
+                    e.note (4.0 * bar + 0.25 * step, 4.0 * bar + 0.25 * step + 0.25, n);
         return finish (h, e, worst);
     });
 
@@ -481,8 +479,7 @@ static void testRepeatAndSeqTiming()
         Host h (c.rate, c.bpm);
         auto& fx = h.settings.fx;
         fx.seq.on = true;
-        fx.seq.pattern = 2;
-        fx.seq.patterns[2] = 0x0101;   // steps 1, 9
+        fx.seq.pattern = 0;            // steps 1 5 9 13
         fx.seq.gate = 1.0;
         fx.repeat = { true, 7, 0.5 };  // 1/32
         fx.velocity = { VelocityCurve::Up, 120, 1.0 };
@@ -491,7 +488,7 @@ static void testRepeatAndSeqTiming()
         h.run (h.at (5.5), c.block);
 
         Expect e (h.spq());
-        for (double t : { 0.0, 0.125, 2.0, 2.125, 4.0, 4.125 })
+        for (double t : { 0.0, 0.125, 1.0, 1.125, 2.0, 2.125, 3.0, 3.125, 4.0, 4.125 })
         {
             const int step = (int) std::floor (std::fmod (t, 4.0) * 4.0 + 1e-9);
             const int vel = std::max (1, (int) std::lround (120.0 * step / 15.0));

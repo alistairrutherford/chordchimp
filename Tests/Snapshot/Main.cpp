@@ -9,12 +9,13 @@
 //   2. reachable  every host parameter is bound to a control of the editor (going through the
 //                 four sequencer patterns, as a user would)
 //   3. state      a saved state restores every parameter and the UI's preferences into a new
-//                 instance; a state from before Chordism's Phase 4 (64 step bools) restores the
-//                 same sequencer patterns
-//   4. presets    every factory program loads its values over the defaults, Init is the
-//                 defaults, a preset's state round-trips into a new instance without touching
-//                 Enable or the test rig, a load ends every note, and a Chordism preset file loads
-//                 (its Smart Scale settings and Chord Editor edits ignored)
+//                 instance
+//   4. presets    the factory presets are Chordism's (Tests/fixtures/chordism_presets.json:
+//                 same names and order, every kept setting the same, Bright Melody's arp the one
+//                 deliberate change), every factory program loads its values over the defaults,
+//                 Init is the defaults, a preset's state round-trips into a new instance without
+//                 touching Enable or the test rig, a load ends every note, and a Chordism preset
+//                 file loads (its Progression converted, its dropped settings ignored)
 //   5. Phase 8    hardening: no allocation in processBlock (a malloc hook counts every one on
 //                 the audio thread) with everything on, two instances, bypass, transport and loop
 //                 changes and on-screen keys; damaged saved states (garbage bytes, NaN and
@@ -189,7 +190,7 @@ namespace
     // The fixed state the snapshots show.
     void arrange (ChordChimpProcessor& p)
     {
-        set (p, params::progression, (float) (int) Progression::Pop);
+        set (p, params::progression, (float) progressionChoice (Progression::Pop));
         set (p, params::chordGroup, (float) (int) ChordGroup::Sevenths);
         set (p, params::arp, (float) (int) ArpPattern::ConvergeUp);
         set (p, params::velocity, (float) (int) VelocityCurve::House);
@@ -215,8 +216,62 @@ namespace
         return differ.isEmpty();
     }
 
-    void testPresets()
+    void testPresets (const juce::File& fixtures)
     {
+        std::cout << "== presets vs Chordism (Tests/fixtures/chordism_presets.json) ==\n";
+        {
+            const auto file = fixtures.getParentDirectory().getChildFile ("chordism_presets.json");
+            const auto json = juce::JSON::parse (file);
+            const auto* chordism = json["presets"].getArray();
+            const auto& defaults = json["defaults"];
+            const auto& factory = factoryPresets();
+            check (chordism != nullptr && chordism->size() == (int) factory.size(),
+                   juce::String (factory.size()) + " factory presets, as in Chordism (" + json["chordism"].toString() + ")");
+
+            // Deliberate changes (PLAN.md §3.4): Bright Melody's melody became a chord arp.
+            auto changed = [] (const juce::String& name, const juce::String& id)
+            {
+                return name == "Bright Melody" && (id == params::arp || id == params::arpRate || id == params::arpRange);
+            };
+
+            auto p = std::make_unique<ChordChimpProcessor>();
+            p->prepareToPlay (48000.0, 512);
+            int compared = 0, wrong = 0;
+            juce::String firstWrong;
+            for (int i = 0; chordism != nullptr && i < juce::jmin ((int) factory.size(), chordism->size()); ++i)
+            {
+                const auto& theirs = (*chordism)[i];
+                const auto name = theirs["name"].toString();
+                if (name != factory[(size_t) i].name || theirs["category"].toString() != factory[(size_t) i].category)
+                {
+                    if (wrong++ == 0)
+                        firstWrong = "preset " + juce::String (i) + " is " + factory[(size_t) i].name + ", Chordism's " + name;
+                    continue;
+                }
+                p->setCurrentProgram (i);
+                for (auto* param : p->getParameters())
+                {
+                    auto* r = dynamic_cast<juce::RangedAudioParameter*> (param);
+                    if (r == nullptr || ! params::isPresetParameter (r->paramID) || changed (name, r->paramID))
+                        continue;
+                    const auto& set = theirs["values"];
+                    const juce::Identifier id (r->paramID);
+                    double want = set.hasProperty (id) ? (double) set[id] : (double) defaults[id];
+                    if (r->paramID == params::progression)
+                        want = progressionChoice ((Progression) (int) want);   // Chordism's value is the enum's
+                    ++compared;
+                    if (std::abs (get (*p, r->paramID) - want) > 1.0e-3 && wrong++ == 0)
+                        firstWrong = name + ": " + r->paramID + " = " + juce::String (get (*p, r->paramID)) + ", Chordism's " + juce::String (want);
+                }
+            }
+            check (wrong == 0 && compared == (int) factory.size() * (params::numParameters - 2) - 3,
+                   juce::String (compared) + " preset values (every preset parameter of every preset) are Chordism's"
+                       + (firstWrong.isEmpty() ? juce::String() : " (" + firstWrong + ")"));
+            p->setCurrentProgram ((int) factory.size() - 1);
+            check ((int) get (*p, params::arp) == (int) ArpPattern::LinearUp && (int) get (*p, params::arpRange) == 2,
+                   "Bright Melody plays a chord arp (Linear Up, range 2) in place of its melody");
+        }
+
         std::cout << "== presets ==\n";
         {
             auto p = std::make_unique<ChordChimpProcessor>();
@@ -261,7 +316,7 @@ namespace
             set (*p, params::scale, (float) (int) Scale::Dorian);
             set (*p, params::chordGroup, (float) (int) ChordGroup::Ninths);
             set (*p, params::stack, (float) (int) StackMode::PlusOne);
-            set (*p, params::seqSteps (2), (float) 0x1234);
+            set (*p, params::seqPattern, 3.0f);
             const auto tree = p->presetState();
             auto other = std::make_unique<ChordChimpProcessor>();
             set (*other, params::enable, 0.0f);
@@ -297,7 +352,7 @@ namespace
             // A Chordism user preset: its own root tag, Smart Scale and shifter settings, edits.
             const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("chordchimp-snapshot-chordism.xml");
             file.replaceWithText ("<Chordism name=\"Old\" category=\"User\"><PARAM id=\"key\" value=\"4\"/><PARAM id=\"chordGroup\" value=\"5\"/>"
-                                  "<PARAM id=\"chordOctave\" value=\"1\"/><PARAM id=\"mapping\" value=\"2\"/><PARAM id=\"split\" value=\"72\"/>"
+                                  "<PARAM id=\"chordOctave\" value=\"1\"/><PARAM id=\"progression\" value=\"2\"/><PARAM id=\"mapping\" value=\"2\"/><PARAM id=\"split\" value=\"72\"/>"
                                   "<PARAM id=\"shifter1Kind\" value=\"1\"/><PARAM id=\"pattern2Arp\" value=\"12\"/>"
                                   "<ChordEditor group=\"5\"><Degree index=\"4\"><Step index=\"4\" on=\"1\"/></Degree></ChordEditor></Chordism>");
             const auto tree = PresetManager::readFile (file);
@@ -309,8 +364,10 @@ namespace
             const auto chord = noteOns (block (*p, { juce::MidiMessage::noteOn (1, 48, (juce::uint8) 100) }));
             block (*p, { juce::MidiMessage::noteOff (1, 48) });
             check (tree.isValid() && (int) get (*p, params::key) == 4 && (int) get (*p, params::chordGroup) == 5
-                       && (int) get (*p, params::chordOctave) == 1 && chord == std::vector<int> { 64, 68, 71, 75 },
-                   "a Chordism preset file loads its kept settings (E, Sevenths, octave +1); the rest are ignored and C plays Emaj7");
+                       && (int) get (*p, params::chordOctave) == 1 && chord == std::vector<int> { 64, 68, 71, 75 }
+                       && (int) get (*p, params::progression) == progressionChoice (Progression::Pop),
+                   "a Chordism preset file loads its kept settings (E, Sevenths, octave +1, Pop as this plug-in's choice); "
+                   "the rest are ignored and C plays Emaj7");
         }
     }
 }
@@ -354,7 +411,6 @@ namespace
         set (p, params::arpRange, 3.0f);
         set (p, params::repeat, 1.0f);
         set (p, params::seq, 1.0f);
-        set (p, params::seqSustain, 1.0f);
         set (p, params::velocity, (float) (int) VelocityCurve::House);
         set (p, params::hold, (float) (int) HoldMode::Bar);
         set (p, params::voiceLeading, 1.0f);
@@ -827,7 +883,7 @@ int main (int argc, char** argv)
                 if (editor->boundParameters().count (withId->paramID) == 0)
                     missing.add (withId->paramID);
             }
-        check (missing.isEmpty(), juce::String (total) + " parameters, " + juce::String (missing.size()) + " without a control"
+        check (total == params::numParameters && missing.isEmpty(), juce::String (total) + " parameters, " + juce::String (missing.size()) + " without a control"
                                       + (missing.isEmpty() ? juce::String() : ": " + missing.joinIntoString (", ")));
     }
 
@@ -850,19 +906,7 @@ int main (int argc, char** argv)
     check (differing == 0, "every parameter restores (" + juce::String (differing) + " differ)");
     check (! (bool) restored->uiState.getProperty ("keyboard", true), "the editor's preferences restore");
 
-    // A state saved before Chordism's Phase 4: the sequencer steps as 64 bools.
-    auto xml = juce::parseXML ("<ChordChimp><PARAM id=\"seq\" value=\"1.0\"/><PARAM id=\"seq2Step1\" value=\"1.0\"/>"
-                               "<PARAM id=\"seq2Step2\" value=\"1.0\"/><PARAM id=\"seq2Step5\" value=\"0.0\"/>"
-                               "<PARAM id=\"seq3Step16\" value=\"1.0\"/></ChordChimp>");
-    juce::MemoryBlock old;
-    juce::AudioProcessor::copyXmlToBinary (*xml, old);
-    auto migrated = std::make_unique<ChordChimpProcessor>();
-    migrated->setStateInformation (old.getData(), (int) old.getSize());
-    check ((int) get (*migrated, params::seqSteps (1)) == 0x0003 && (int) get (*migrated, params::seqSteps (2)) == 0x8000
-               && (int) get (*migrated, params::seqSteps (0)) == (int) defaultSeqPatterns()[0],
-           "a pre-Phase 4 state's step bools become the packed patterns (missing patterns keep their defaults)");
-
-    testPresets();
+    testPresets (fixtures);
     testPhase8();
 
     std::cout << (failures == 0 ? "\nsnapshot: all passed\n" : "\n*** snapshot: " + std::to_string (failures) + " failure(s)\n");

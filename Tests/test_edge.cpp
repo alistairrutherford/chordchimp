@@ -72,7 +72,6 @@ namespace
         s.fx.arpRange = 3;
         s.fx.repeat = { true, numPatternRates - 1, 0.7 };
         s.fx.seq.on = true;
-        s.fx.seq.sustain = true;
         s.fx.seq.swing = 0.6;
         s.fx.velocity = { VelocityCurve::House, 120, 0.8 };
         s.fx.hold = HoldMode::Bar;

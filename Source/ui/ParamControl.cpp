@@ -102,40 +102,17 @@ namespace chordchimp::ui
     }
 
     //==========================================================================
-    StepSeqView::StepSeqView (Bindings& b, juce::Colour a) : bindings (b), accent (a), numberFont (font (10.0f)) {}
-
-    StepSeqView::~StepSeqView()
+    StepSeqView::StepSeqView (juce::Colour a) : accent (a), numberFont (font (10.0f))
     {
-        if (param != nullptr)
-            param->removeListener (this);
+        setTooltip ("The chosen pattern's steps");
     }
 
-    void StepSeqView::bind (const juce::String& id)
+    void StepSeqView::setSteps (uint16_t mask)
     {
-        if (id == paramId)
-            return;
-        if (param != nullptr)
-            param->removeListener (this);
-        paramId = id;
-        param = bindings.param (id);
-        if (param != nullptr)
+        if (mask != steps)
         {
-            param->addListener (this);
-            bindings.bound (id);
-            setTooltip (param->getName (64) + ": click or drag to set steps");
-        }
-        repaint();
-    }
-
-    void StepSeqView::setPlayingStep (int step)
-    {
-        if (step != playing)
-        {
-            // Only the two steps whose outline changes.
-            for (const int s : { playing, step })
-                if (s >= 0 && s < 16)
-                    repaint (stepBounds (s).getSmallestIntegerContainer().expanded (1));
-            playing = step;
+            steps = mask;
+            repaint();
         }
     }
 
@@ -145,67 +122,17 @@ namespace chordchimp::ui
         return juce::Rectangle<float> (w * (float) step, 0.0f, w, (float) getHeight()).reduced (1.5f, 1.0f);
     }
 
-    int StepSeqView::mask() const
-    {
-        return param != nullptr ? juce::roundToInt (param->convertFrom0to1 (param->getValue())) : 0;
-    }
-
-    int StepSeqView::stepAt (juce::Point<float> p) const
-    {
-        return juce::jlimit (0, 15, (int) (p.x / ((float) getWidth() / 16.0f)));
-    }
-
     void StepSeqView::paint (juce::Graphics& g)
     {
-        const int m = mask();
-        const auto clip = g.getClipBounds().toFloat();
         for (int s = 0; s < 16; ++s)
         {
-            auto r = stepBounds (s);
-            if (! r.expanded (1.0f).intersects (clip))
-                continue;
-            const bool on = ((m >> s) & 1) != 0;
+            const auto r = stepBounds (s);
+            const bool on = ((steps >> s) & 1) != 0;
             g.setColour (on ? accent : (s % 4 == 0 ? colours::raised.brighter (0.08f) : colours::raised));
             g.fillRoundedRectangle (r, 3.0f);
-            if (s == playing)
-            {
-                g.setColour (colours::text);
-                g.drawRoundedRectangle (r, 3.0f, 1.5f);
-            }
             g.setColour (on ? colours::background : colours::faint);
             g.setFont (numberFont);
             g.drawText (juce::String (s + 1), r, juce::Justification::centred);
         }
-    }
-
-    void StepSeqView::mouseDown (const juce::MouseEvent& e)
-    {
-        if (param == nullptr)
-            return;
-        const int s = stepAt (e.position);
-        dragValue = ((mask() >> s) & 1) == 0;
-        lastDragStep = -1;
-        param->beginChangeGesture();
-        mouseDrag (e);
-    }
-
-    void StepSeqView::mouseUp (const juce::MouseEvent&)
-    {
-        if (param != nullptr)
-            param->endChangeGesture();
-    }
-
-    void StepSeqView::mouseDrag (const juce::MouseEvent& e)
-    {
-        if (param == nullptr)
-            return;
-        const int s = stepAt (e.position);
-        if (s == lastDragStep)
-            return;
-        lastDragStep = s;
-        int m = mask();
-        m = dragValue ? (m | (1 << s)) : (m & ~(1 << s));
-        param->setValueNotifyingHost (param->convertTo0to1 ((float) m));
-        repaint();
     }
 }

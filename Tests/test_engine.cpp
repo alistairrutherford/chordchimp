@@ -336,20 +336,16 @@ static void testProgressions()
     }
     check (all, "Pop (1-5-6-4): C D E F G A B play I V vi IV ii iii vii*");
 
-    rig.settings.progression = Progression::Custom;
-    rig.settings.customOrder = { 3, 3, 0, 0, 4, 5, 6 };
-    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 50, 90, 0) })) == std::vector<int> { 53, 57, 60 }, "Custom: the D key plays IV");
+    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 50, 90, 0) })) == std::vector<int> { 55, 59, 62 }, "Pop: the D key plays V");
 
     // Progression change while held: the key replays its new degree; key-up releases it.
     rig.settings.progression = Progression::Diatonic;
     auto& moved = rig.run ({});
-    check (notesOff (moved) == std::vector<int> { 53, 57, 60 } && notesOn (moved) == std::vector<int> { 50, 53, 57 },
-           "progression change while held: IV -> ii (F restrikes)");
-    rig.settings.progression = Progression::Custom;
-    rig.settings.customOrder[1] = 6;
-    auto& custom = rig.run ({});
-    check (notesOn (custom) == std::vector<int> { 59, 62, 65 }, "custom degree change while held: the D key replays as vii*");
-    check (notesOff (rig.run ({ MidiEvent::noteOff (0, 50, 0) })) == std::vector<int> { 59, 62, 65 }
+    check (notesOff (moved) == std::vector<int> { 55, 59, 62 } && notesOn (moved) == std::vector<int> { 50, 53, 57 },
+           "progression change while held: V -> ii");
+    rig.settings.progression = Progression::Custom;   // Chordism's Custom: plays as Diatonic
+    check (rig.run ({}).size() == 0, "Chordism's Custom plays as Diatonic: nothing restrikes");
+    check (notesOff (rig.run ({ MidiEvent::noteOff (0, 50, 0) })) == std::vector<int> { 50, 53, 57 }
                && rig.engine.getVoices().isEmpty() && rig.rx.clean(),
            "and its key-up releases exactly what it plays");
 }
@@ -470,12 +466,11 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
 
         // Progressions while notes are held.
         if (chance (0.02)) rig.settings.progression = (Progression) pick (0, numProgressions - 1);
-        if (chance (0.02)) rig.settings.customOrder[(size_t) pick (0, 6)] = (int8_t) pick (0, 6);
         // Phase 3: chord effects, holds, loops and time signatures while notes are held.
         auto& fx = rig.settings.fx;
         auto unit = [&] { return std::uniform_real_distribution<double> (0.0, 1.0) (rng); };
         if (chance (0.03)) fx.stack = (StackMode) pick (0, numStackModes - 1);
-        if (chance (0.03)) { fx.strum = (StrumMode) pick (0, numStrumModes - 1); fx.strumRate = pick (0, numStrumRates - 1); fx.strumMs = pick (0, 120); }
+        if (chance (0.03)) { fx.strum = (StrumMode) pick (0, numStrumModes - 1); fx.strumRate = pick (0, numStrumRates - 1); }
         if (chance (0.03)) { fx.arp = chance (0.4) ? ArpPattern::Off : (ArpPattern) pick (1, numArpPatterns - 1); fx.arpRange = pick (1, 3); }
         if (chance (0.03)) { fx.arpRate = pick (0, numPatternRates - 1); fx.arpGate = unit(); }
         if (chance (0.03)) fx.repeat = { chance (0.5), pick (0, numPatternRates - 1), unit() };
@@ -483,10 +478,8 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
         if (chance (0.03))
         {
             fx.seq.pattern = pick (0, numSeqPatterns - 1);
-            fx.seq.patterns[(size_t) pick (0, numSeqPatterns - 1)] = (uint16_t) pick (0, 0xffff);
             fx.seq.swing = unit();
             fx.seq.gate = unit();
-            fx.seq.sustain = chance (0.5);
         }
         if (chance (0.02)) fx.velocity = { (VelocityCurve) pick (0, numVelocityCurves - 1), pick (1, 127), unit() };
         if (chance (0.02)) fx.hold = (HoldMode) pick (0, numHoldModes - 1);

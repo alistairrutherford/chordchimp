@@ -38,7 +38,6 @@ namespace chordchimp
         Scale scale = Scale::Major;
         ChordGroup group = ChordGroup::Triads;
         Progression progression = Progression::Diatonic;
-        DegreeOrder customOrder = identityOrder();
         int chordOctave = 0;
         bool testPattern = false;
         int outputChannel = 0;            // 0..15
@@ -157,7 +156,7 @@ namespace chordchimp
         void refreshChords (int sample, BlockEvents* out, std::array<bool, numChordSlots>* changedOut = nullptr) noexcept
         {
             const ChordContext ctx { current.key, current.scale, current.chordOctave };
-            const ChordSet next = makeChords (current.group, current.scale, progressionDegrees (current.progression, current.customOrder));
+            const ChordSet next = makeChords (current.group, current.scale, progressionDegrees (current.progression));
 
             const bool ctxChanged = ctx.key != context.key || ctx.scale != context.scale || ctx.outputOctave != context.outputOctave;
             std::array<bool, numChordSlots> changed {};

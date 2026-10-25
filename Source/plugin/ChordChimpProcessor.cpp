@@ -6,36 +6,6 @@ namespace chordchimp
 {
     namespace
     {
-
-        // Phase 3 saved each sequencer step as a bool ("seq1Step1"…); Phase 4 keeps one mask
-        // per pattern ("seq1Steps", Parameters.h). Folds the old steps of a saved state into
-        // the masks, so a set saved before Phase 4 plays the same patterns.
-        void migrateSeqSteps (juce::ValueTree& tree)
-        {
-            for (int p = 0; p < numSeqPatterns; ++p)
-            {
-                int mask = 0;
-                bool found = false;
-                for (int s = 0; s < numSeqSteps; ++s)
-                {
-                    auto step = tree.getChildWithProperty ("id", params::seqStep (p, s));
-                    if (! step.isValid())
-                        continue;
-                    found = true;
-                    if ((double) step.getProperty ("value") > 0.5)
-                        mask |= 1 << s;
-                    tree.removeChild (step, nullptr);
-                }
-                if (found && ! tree.getChildWithProperty ("id", params::seqSteps (p)).isValid())
-                {
-                    juce::ValueTree param ("PARAM");
-                    param.setProperty ("id", params::seqSteps (p), nullptr);
-                    param.setProperty ("value", mask, nullptr);
-                    tree.appendChild (param, nullptr);
-                }
-            }
-        }
-
         // Phase 8: a saved value that isn't a finite number (a damaged set or preset file) is
         // dropped rather than making the parameter NaN: a restore keeps the parameter's value,
         // a preset gives it its default.
@@ -293,7 +263,6 @@ namespace chordchimp
     void ChordChimpProcessor::applyPreset (const juce::ValueTree& preset, const juce::String& category, const juce::String& name)
     {
         auto tree = preset.createCopy();
-        migrateSeqSteps (tree);
         dropNonFiniteValues (tree);
         for (auto* p : getParameters())
         {
@@ -362,7 +331,6 @@ namespace chordchimp
             tree.removeChild (ui, nullptr);
         }
         restoringState = false;
-        migrateSeqSteps (tree);
         dropNonFiniteValues (tree);
 
         pendingProgram = -1;              // a restore replaces a program change still waiting

@@ -4,10 +4,10 @@ A MIDI chord generator plug-in (VST3) for Ableton Live on macOS: every white key
 chord. A simplified fork of [Chordism](../chordism): no Smart Scale and no keyboard split. The
 plan and status are in [PLAN.md](PLAN.md).
 
-**Status:** Phase 1 done: the Smart Scale, split, shifters, Instance Sync, look-ahead, Chord
-Editor and MIDI import/export are gone; every white key plays its chord in any octave. The
-parameter list and the single-page UI are Phases 2 and 3. Some comments that cite `PLAN.md §…`
-still refer to Chordism's plan.
+**Status:** Phase 2 done: every white key plays its chord in any octave (no Smart Scale, split,
+shifters, Instance Sync, look-ahead, Chord Editor or MIDI import/export), with 26 parameters and
+Chordism's 22 factory presets. The single-page UI is Phase 3. Some comments that cite
+`PLAN.md §…` still refer to Chordism's plan.
 
 ## Install
 
@@ -42,4 +42,5 @@ Tests/run_tests.sh          # core tests (no JUCE)
 Tests/run_snapshot.sh       # editor snapshots, parameters, state, presets
 Tests/run_validation.sh     # pluginval strictness 10 on the installed VST3
 Tests/run_bench.sh          # CPU per instance
+Tools/dump_chordism_presets.sh   # regenerate Tests/fixtures/chordism_presets.json from ../chordism
 ```

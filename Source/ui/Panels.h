@@ -3,9 +3,8 @@
 //   TopBar         logo (opens Setup) · Enable · Preset browser · Key · Scale · Progression ·
 //                  Chord Group · keyboard show/hide
 //   ChordFxPanel   the effects: Stack, Octave, Hold; Strum; Arp; Repeat, Voice leading;
-//                  Velocity; Step Sequencer and its steps
-//   SetupPanel     everything else, as an overlay: the custom progression and the test
-//                  pattern (LiveBridge)
+//                  Velocity; Step Sequencer and its pattern's steps
+//   SetupPanel     everything else, as an overlay: the test pattern (LiveBridge)
 #pragma once
 
 #include "Keyboards.h"
@@ -78,6 +77,6 @@ namespace chordchimp::ui
     private:
         juce::TextButton closeButton { "Done" };
         juce::Label heading;
-        ParamGrid left, right;
+        ParamGrid right;
     };
 }
