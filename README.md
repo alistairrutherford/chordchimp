@@ -1,0 +1,43 @@
+# ChordChimp
+
+A MIDI chord generator plug-in (VST3) for Ableton Live on macOS: every white key plays a full
+chord. A simplified fork of [Chordism](../chordism): no Smart Scale and no keyboard split. The
+plan and status are in [PLAN.md](PLAN.md).
+
+**Status:** Phase 0 (fork and identity). The code is still Chordism's, renamed; the cut-down comes
+in Phase 1. Comments that cite `PLAN.md §…` refer to Chordism's plan until then.
+
+## Install
+
+Needs Xcode (open it once after installing) and JUCE 8.0.14:
+
+```sh
+git clone --branch 8.0.14 https://github.com/juce-framework/JUCE.git ~/Development/JUCE
+Tools/install.sh              # build, sign ad hoc, install for this user
+```
+
+`Tools/install.sh` builds the VST3 and the Standalone (Release, universal) in `dist/build`, signs
+both ad hoc and installs `~/Library/Audio/Plug-Ins/VST3/ChordChimp.vst3` and
+`~/Applications/ChordChimp.app` for the current user. `--juce DIR` for JUCE elsewhere,
+`--validate` to run pluginval on the installed plug-in, `--uninstall` to remove both. Then rescan
+plug-ins in Live.
+
+ChordChimp has its own bundle ID (`com.alistairrutherford.chordchimp`), plug-in code (`Cchp`) and
+preset folder (`~/Music/ChordChimp/Presets`), so it installs and loads next to Chordism.
+
+## Build (development)
+
+```sh
+PROJUCER=~/Development/JUCE/extras/Projucer/Builds/MacOSX/build/Release/Projucer.app/Contents/MacOS/Projucer
+"$PROJUCER" --resave ChordChimp.jucer
+xcodebuild -project Builds/MacOSX/ChordChimp.xcodeproj -target "ChordChimp - All" -configuration Release build
+```
+
+## Test
+
+```sh
+Tests/run_tests.sh          # core tests (no JUCE)
+Tests/run_snapshot.sh       # editor snapshots, parameters, state, presets
+Tests/run_validation.sh     # pluginval strictness 10 on the installed VST3
+Tests/run_bench.sh          # CPU per instance
+```

@@ -1,0 +1,2008 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		C4ABE850F9D83C3451CBB9DB /* ChordChimp - All */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = AD365078834721AD9965790D;
+			buildPhases = (
+			);
+			dependencies = (
+				8631E52A68D6C1997F0180D8,
+				D440353BD6EB59D5526342D1,
+				CC6DDA85CBAE3A48AE33D569,
+				BB84D140CBD0E5CD81055AF7,
+			);
+			name = "ChordChimp - All";
+			productName = ChordChimp;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		017E3998609BBCBF4B98C6B8 /* include_juce_data_structures.mm */ = {isa = PBXBuildFile; fileRef = A3CFF0B6A0EBC1E0D4B5F666; };
+		068272D214AB18A49D28B46F /* ChordEditorState.cpp */ = {isa = PBXBuildFile; fileRef = 895237A05D289F9A597A8307; };
+		0E3C57D4DE3CC8879930EB46 /* FactoryPresets.cpp */ = {isa = PBXBuildFile; fileRef = D35D666E789721AD584FD6E6; };
+		135D09A4404845C7B3873896 /* include_juce_core_CompilationTime.cpp */ = {isa = PBXBuildFile; fileRef = 32FC506D750EC0F1B6A03B35; };
+		15FA9497FFCCF26E30E29A85 /* include_juce_audio_utils.mm */ = {isa = PBXBuildFile; fileRef = 39744E2756D9A3B8EC4D2EEA; };
+		215908DE8B43EBDEE76645DB /* include_juce_audio_formats.mm */ = {isa = PBXBuildFile; fileRef = F5D31ECFC91054FFD3D749A3; };
+		265B6A91D17D1863CFC6F55B /* include_juce_graphics_Harfbuzz.cpp */ = {isa = PBXBuildFile; fileRef = 2487E1F0BB083A8558040476; };
+		36282F736BB4A84C1DCF9EBF /* Shared Code */ = {isa = PBXBuildFile; fileRef = 9F553A049FF605959AD95C04; };
+		3634C70EACAABE6F7E24501C /* Security.framework */ = {isa = PBXBuildFile; fileRef = 12689FA3F6B6EE02347B478D; };
+		382EAB805C2BD2F80017E3E2 /* QuartzCore.framework */ = {isa = PBXBuildFile; fileRef = 117C364619812C4BC0B5EA01; };
+		3B563D1C17D0F344AB70588C /* PresetBar.cpp */ = {isa = PBXBuildFile; fileRef = 68742B25B7A6CE56009DB4C5; };
+		40D53A62A9592828D881017B /* PresetManager.cpp */ = {isa = PBXBuildFile; fileRef = 7EDC462575DC9735FE9A2122; };
+		43BE581F263DDC149178C14E /* Accelerate.framework */ = {isa = PBXBuildFile; fileRef = 5628AA6DEA6686BCB6C7ED3C; };
+		44EFEBB5C9831E4B6983D95D /* include_juce_graphics.mm */ = {isa = PBXBuildFile; fileRef = 8D08FD4A633AA25746866B4D; };
+		4823FAB6D1A4A640F33BE816 /* ParamControl.cpp */ = {isa = PBXBuildFile; fileRef = 0E6DCDF67956B7FD43C66B88; };
+		4844C15ED9C728FDC05B139F /* include_juce_core.mm */ = {isa = PBXBuildFile; fileRef = B76C37333C3111C3EB233D1E; };
+		4C72DB864E2A48D2D3BCA928 /* include_juce_audio_processors_headless_lv2_libs.cpp */ = {isa = PBXBuildFile; fileRef = EE3DCF26D81A6157A4B165A7; };
+		4F9F8CDA1AECDE980975A496 /* include_juce_audio_plugin_client_VST3.mm */ = {isa = PBXBuildFile; fileRef = E3A9DDD35EF9038036D479B4; };
+		51C7071C411799703AF8FAE2 /* juce_VST3ManifestHelper.cpp */ = {isa = PBXBuildFile; fileRef = 848BBA430B33249007A67882; settings = { COMPILER_FLAGS = "-w -DJUCE_SKIP_PRECOMPILED_HEADER"; }; };
+		5369A4A7BDE3C53A5EB75E7C /* include_juce_events.mm */ = {isa = PBXBuildFile; fileRef = E74414F0814EBB53C48E6E63; };
+		54A4333633F70D10BC2D39C1 /* include_juce_gui_basics_3.cpp */ = {isa = PBXBuildFile; fileRef = 435AAFFB1370F25151E25F3F; };
+		5C363ED5AB9E9063B021225D /* CoreAudioKit.framework */ = {isa = PBXBuildFile; fileRef = AE0BE1BBE33FA52D67881601; };
+		66D1A19655FB43845A2271D6 /* AudioToolbox.framework */ = {isa = PBXBuildFile; fileRef = DD29E3C8ADBF71C3A741CB6D; };
+		79B6C88D011D57CB0370BA1F /* WebKit.framework */ = {isa = PBXBuildFile; fileRef = 6F48858563758E13D5A5292C; };
+		7A04A1EFC397A98B3F469428 /* include_juce_gui_basics_5.cpp */ = {isa = PBXBuildFile; fileRef = F2347E976ADF994A03559394; };
+		7DB12F036BD2EE56381C1F23 /* include_juce_gui_basics.mm */ = {isa = PBXBuildFile; fileRef = 52A5C4C11A4FB633CCA644C9; };
+		859F58368441E85B500E169F /* Foundation.framework */ = {isa = PBXBuildFile; fileRef = BA17310291C19BABC22ABA39; };
+		8740A7361A509E81FEFF0FF5 /* include_juce_gui_basics_2.cpp */ = {isa = PBXBuildFile; fileRef = E1CD3ED7C817E805B401021C; };
+		8B509537AD58336CFF5C83DF /* Parameters.cpp */ = {isa = PBXBuildFile; fileRef = 44599121BB28D78037060345; };
+		90C6F97498C3F51DBA5953F8 /* RecentFilesMenuTemplate.nib */ = {isa = PBXBuildFile; fileRef = 10CDB8D3175896FFE2B7CC10; };
+		91B346C4A4EE06D60FF38F45 /* CoreMIDI.framework */ = {isa = PBXBuildFile; fileRef = 552084419B16CEC16EE41392; };
+		95B840824CA1D84BDCAE2880 /* Cocoa.framework */ = {isa = PBXBuildFile; fileRef = E401BB2F85A320B7BE561EE0; };
+		99E265667C10BB727C25E71B /* include_juce_audio_processors.mm */ = {isa = PBXBuildFile; fileRef = 1352417AB54A50667A4E8884; };
+		A08DC16C8CC7C8F70587C686 /* VST3 Manifest Helper */ = {isa = PBXBuildFile; fileRef = 453A9403A96F7CE544B0C19A; };
+		A37B474456D54A2CC13D5855 /* DiscRecording.framework */ = {isa = PBXBuildFile; fileRef = 7675E00F10E2216A2C7B385E; };
+		A91BB465079F66B6E68E7BD2 /* IOKit.framework */ = {isa = PBXBuildFile; fileRef = 8309803C57CE39E9607AA764; };
+		AF20C0E73E41A6F5221ACBF5 /* include_juce_audio_processors_headless.mm */ = {isa = PBXBuildFile; fileRef = B6DDDA0FE6F4EB94B590A384; };
+		AF753CBF42CD7F1DDF6D18B2 /* Metal.framework */ = {isa = PBXBuildFile; fileRef = 2289517D0802F3CFE244810F; settings = { ATTRIBUTES = (Weak, ); }; };
+		B2C819B1A8B16DE38A62AF27 /* MetalKit.framework */ = {isa = PBXBuildFile; fileRef = 32ED7882D82ABAD887084C08; settings = { ATTRIBUTES = (Weak, ); }; };
+		B794BBCB6EC738BE18453B06 /* ChordEditorPanel.cpp */ = {isa = PBXBuildFile; fileRef = 78BCF05CCE5AC440E9C0DD47; };
+		BB4E71F0041B9E3C328A4BC9 /* Keyboards.cpp */ = {isa = PBXBuildFile; fileRef = BA140EB09B2336FC2EBEF2CC; };
+		BBDA52C712A981334B0198F2 /* Theme.cpp */ = {isa = PBXBuildFile; fileRef = E6B3246C106E3E558E58C35E; };
+		BC0EFD79D137CA2814F20CE7 /* include_juce_audio_basics.mm */ = {isa = PBXBuildFile; fileRef = F2286272171AC9C611194F13; };
+		C0977995A140AF9B15BAE748 /* CoreAudio.framework */ = {isa = PBXBuildFile; fileRef = 86475390A7A8CB9876324934; };
+		C7D9EDBE62DC15987478193D /* Panels.cpp */ = {isa = PBXBuildFile; fileRef = 0FA054AABC7CBE7BA47A9BE9; };
+		D179E0D56AF84D035D2C4C3C /* include_juce_graphics_Sheenbidi.c */ = {isa = PBXBuildFile; fileRef = 0B1B3A937671859D501B5417; };
+		D85443B2A16C1FA51B488986 /* include_juce_gui_basics_4.cpp */ = {isa = PBXBuildFile; fileRef = 9EEE4A86530AB2F5F179C01C; };
+		DBFEAD383164CCAA86872F65 /* include_juce_gui_extra.mm */ = {isa = PBXBuildFile; fileRef = 3C6F07F74050EB48C568E538; };
+		DC5E7E7F98749385E355237A /* ChordChimpEditor.cpp */ = {isa = PBXBuildFile; fileRef = 0C0C8DDEA86811A6676B9B0E; };
+		E25DC00B29159EAAF4018327 /* include_juce_audio_plugin_client_ARA.cpp */ = {isa = PBXBuildFile; fileRef = E9559A6437434BE72BA8F901; };
+		F149A6CFE1A08F306B945B59 /* include_juce_audio_devices.mm */ = {isa = PBXBuildFile; fileRef = CBC13BAFEE52930EF1D3EFEA; };
+		F1E4C97A1CCE9BE8DD6B9B8D /* VST3 */ = {isa = PBXBuildFile; fileRef = C5577CBEA12A018A708862AF; };
+		F6D796E3A62D9838CE069D35 /* include_juce_audio_processors_headless_ara.cpp */ = {isa = PBXBuildFile; fileRef = C4C6192E709E72238D667B2C; };
+		F95F2812B1991D07672CF292 /* ChordChimpProcessor.cpp */ = {isa = PBXBuildFile; fileRef = 765B8F15D5DC410E0BF9EAC2; };
+		FA0170B25853CD0F645B1ECD /* Standalone Plugin */ = {isa = PBXBuildFile; fileRef = 51FE1AC46A5B341B99A8E355; };
+		FD62C75EB1DF8D44BE9F796D /* include_juce_audio_plugin_client_Standalone.cpp */ = {isa = PBXBuildFile; fileRef = 696E8E84A1A0584F78C5CC33; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		06066B6AFD612F7708B097E7 /* juce_gui_basics */ /* juce_gui_basics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_gui_basics; path = /Users/alistairrutherford/Development/JUCE/modules/juce_gui_basics; sourceTree = "<absolute>"; };
+		08BA459547B6779E1707349B /* ChordTypes.h */ /* ChordTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordTypes.h; path = ../../Source/core/theory/ChordTypes.h; sourceTree = SOURCE_ROOT; };
+		0ABFC60D2EF1305E5F2BE130 /* SnapshotExchange.h */ /* SnapshotExchange.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SnapshotExchange.h; path = ../../Source/core/engine/SnapshotExchange.h; sourceTree = SOURCE_ROOT; };
+		0B1B3A937671859D501B5417 /* include_juce_graphics_Sheenbidi.c */ /* include_juce_graphics_Sheenbidi.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = include_juce_graphics_Sheenbidi.c; path = ../../JuceLibraryCode/include_juce_graphics_Sheenbidi.c; sourceTree = SOURCE_ROOT; };
+		0B6A48B65AFD3CBC38520922 /* ChordEditorPanel.h */ /* ChordEditorPanel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordEditorPanel.h; path = ../../Source/ui/ChordEditorPanel.h; sourceTree = SOURCE_ROOT; };
+		0C0C8DDEA86811A6676B9B0E /* ChordChimpEditor.cpp */ /* ChordChimpEditor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ChordChimpEditor.cpp; path = ../../Source/ui/ChordChimpEditor.cpp; sourceTree = SOURCE_ROOT; };
+		0CF6E6D9CE9366EF91F9F373 /* juce_core */ /* juce_core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_core; path = /Users/alistairrutherford/Development/JUCE/modules/juce_core; sourceTree = "<absolute>"; };
+		0E6DCDF67956B7FD43C66B88 /* ParamControl.cpp */ /* ParamControl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ParamControl.cpp; path = ../../Source/ui/ParamControl.cpp; sourceTree = SOURCE_ROOT; };
+		0FA054AABC7CBE7BA47A9BE9 /* Panels.cpp */ /* Panels.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Panels.cpp; path = ../../Source/ui/Panels.cpp; sourceTree = SOURCE_ROOT; };
+		10CDB8D3175896FFE2B7CC10 /* RecentFilesMenuTemplate.nib */ /* RecentFilesMenuTemplate.nib */ = {isa = PBXFileReference; lastKnownFileType = file.nib; name = RecentFilesMenuTemplate.nib; path = RecentFilesMenuTemplate.nib; sourceTree = SOURCE_ROOT; };
+		117C364619812C4BC0B5EA01 /* QuartzCore.framework */ /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		12689FA3F6B6EE02347B478D /* Security.framework */ /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		1352417AB54A50667A4E8884 /* include_juce_audio_processors.mm */ /* include_juce_audio_processors.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_processors.mm; path = ../../JuceLibraryCode/include_juce_audio_processors.mm; sourceTree = SOURCE_ROOT; };
+		137856B2C066D73BAA5867A4 /* Parameters.h */ /* Parameters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Parameters.h; path = ../../Source/plugin/Parameters.h; sourceTree = SOURCE_ROOT; };
+		1581BFFEAEDB19539DA3E281 /* ChordFx.h */ /* ChordFx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordFx.h; path = ../../Source/core/engine/ChordFx.h; sourceTree = SOURCE_ROOT; };
+		18D0E12DA62636DA8CD7A778 /* NoteValues.h */ /* NoteValues.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NoteValues.h; path = ../../Source/core/engine/NoteValues.h; sourceTree = SOURCE_ROOT; };
+		1A31FA8E1A6875D8021B8520 /* ChordEditor.h */ /* ChordEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordEditor.h; path = ../../Source/core/theory/ChordEditor.h; sourceTree = SOURCE_ROOT; };
+		221555FCD0AEC82D5D6B297E /* juce_audio_basics */ /* juce_audio_basics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_basics; path = /Users/alistairrutherford/Development/JUCE/modules/juce_audio_basics; sourceTree = "<absolute>"; };
+		2289517D0802F3CFE244810F /* Metal.framework */ /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		244377A177529B16BCC79E77 /* juce_audio_utils */ /* juce_audio_utils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_utils; path = /Users/alistairrutherford/Development/JUCE/modules/juce_audio_utils; sourceTree = "<absolute>"; };
+		247E0462925D9E71B541F083 /* Hold.h */ /* Hold.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Hold.h; path = ../../Source/core/engine/Hold.h; sourceTree = SOURCE_ROOT; };
+		2487E1F0BB083A8558040476 /* include_juce_graphics_Harfbuzz.cpp */ /* include_juce_graphics_Harfbuzz.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_graphics_Harfbuzz.cpp; path = ../../JuceLibraryCode/include_juce_graphics_Harfbuzz.cpp; sourceTree = SOURCE_ROOT; };
+		255A1B5BA6268D9E6F4CFB1A /* FactoryPresets.h */ /* FactoryPresets.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FactoryPresets.h; path = ../../Source/plugin/FactoryPresets.h; sourceTree = SOURCE_ROOT; };
+		283CB1FC4AFB09C4968147DC /* Info-VST3.plist */ /* Info-VST3.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-VST3.plist"; path = "Info-VST3.plist"; sourceTree = SOURCE_ROOT; };
+		2CF864A8DE84902D3CEA44FC /* JucePluginDefines.h */ /* JucePluginDefines.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JucePluginDefines.h; path = ../../JuceLibraryCode/JucePluginDefines.h; sourceTree = SOURCE_ROOT; };
+		2E9A6064E8644A10CACE9E7E /* VoiceTracker.h */ /* VoiceTracker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = VoiceTracker.h; path = ../../Source/core/engine/VoiceTracker.h; sourceTree = SOURCE_ROOT; };
+		2EF5589F1B40811F6430E658 /* juce_audio_devices */ /* juce_audio_devices */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_devices; path = /Users/alistairrutherford/Development/JUCE/modules/juce_audio_devices; sourceTree = "<absolute>"; };
+		2FBD271B3D8D66B9DD32A17E /* ParamControl.h */ /* ParamControl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ParamControl.h; path = ../../Source/ui/ParamControl.h; sourceTree = SOURCE_ROOT; };
+		32ED7882D82ABAD887084C08 /* MetalKit.framework */ /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		32F9888D1300E934A05012AA /* VoiceLeading.h */ /* VoiceLeading.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = VoiceLeading.h; path = ../../Source/core/theory/VoiceLeading.h; sourceTree = SOURCE_ROOT; };
+		32FC506D750EC0F1B6A03B35 /* include_juce_core_CompilationTime.cpp */ /* include_juce_core_CompilationTime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_core_CompilationTime.cpp; path = ../../JuceLibraryCode/include_juce_core_CompilationTime.cpp; sourceTree = SOURCE_ROOT; };
+		330A0F6AADFC60647CF4487F /* TestPattern.h */ /* TestPattern.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TestPattern.h; path = ../../Source/core/engine/TestPattern.h; sourceTree = SOURCE_ROOT; };
+		36313F116C27738D2BCB75BB /* PatternEngine.h */ /* PatternEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PatternEngine.h; path = ../../Source/core/engine/PatternEngine.h; sourceTree = SOURCE_ROOT; };
+		36B4352495868603650C9006 /* VelocityAlgorithm.h */ /* VelocityAlgorithm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = VelocityAlgorithm.h; path = ../../Source/core/engine/VelocityAlgorithm.h; sourceTree = SOURCE_ROOT; };
+		3753FBBD9FB9BB2B01DC11F7 /* juce_graphics */ /* juce_graphics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_graphics; path = /Users/alistairrutherford/Development/JUCE/modules/juce_graphics; sourceTree = "<absolute>"; };
+		37ED30BB25D88221390231EE /* ChordChimpProcessor.h */ /* ChordChimpProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordChimpProcessor.h; path = ../../Source/plugin/ChordChimpProcessor.h; sourceTree = SOURCE_ROOT; };
+		39744E2756D9A3B8EC4D2EEA /* include_juce_audio_utils.mm */ /* include_juce_audio_utils.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_utils.mm; path = ../../JuceLibraryCode/include_juce_audio_utils.mm; sourceTree = SOURCE_ROOT; };
+		3C24D0D32928670DC3CEE401 /* PresetBar.h */ /* PresetBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PresetBar.h; path = ../../Source/ui/PresetBar.h; sourceTree = SOURCE_ROOT; };
+		3C6F07F74050EB48C568E538 /* include_juce_gui_extra.mm */ /* include_juce_gui_extra.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_gui_extra.mm; path = ../../JuceLibraryCode/include_juce_gui_extra.mm; sourceTree = SOURCE_ROOT; };
+		4269DF0BA144E4CBC86A5424 /* juce_audio_processors */ /* juce_audio_processors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_processors; path = /Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors; sourceTree = "<absolute>"; };
+		435AAFFB1370F25151E25F3F /* include_juce_gui_basics_3.cpp */ /* include_juce_gui_basics_3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_gui_basics_3.cpp; path = ../../JuceLibraryCode/include_juce_gui_basics_3.cpp; sourceTree = SOURCE_ROOT; };
+		44599121BB28D78037060345 /* Parameters.cpp */ /* Parameters.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Parameters.cpp; path = ../../Source/plugin/Parameters.cpp; sourceTree = SOURCE_ROOT; };
+		453A9403A96F7CE544B0C19A /* VST3 Manifest Helper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = juce_vst3_helper; sourceTree = BUILT_PRODUCTS_DIR; };
+		49AF0B5182AD7B77BD1D67A5 /* juce_events */ /* juce_events */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_events; path = /Users/alistairrutherford/Development/JUCE/modules/juce_events; sourceTree = "<absolute>"; };
+		4A548B99CB81B493EE45585A /* juce_data_structures */ /* juce_data_structures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_data_structures; path = /Users/alistairrutherford/Development/JUCE/modules/juce_data_structures; sourceTree = "<absolute>"; };
+		51FE1AC46A5B341B99A8E355 /* Standalone Plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChordChimp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		52A5C4C11A4FB633CCA644C9 /* include_juce_gui_basics.mm */ /* include_juce_gui_basics.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_gui_basics.mm; path = ../../JuceLibraryCode/include_juce_gui_basics.mm; sourceTree = SOURCE_ROOT; };
+		552084419B16CEC16EE41392 /* CoreMIDI.framework */ /* CoreMIDI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMIDI.framework; path = System/Library/Frameworks/CoreMIDI.framework; sourceTree = SDKROOT; };
+		5628AA6DEA6686BCB6C7ED3C /* Accelerate.framework */ /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		5F5CFFB2125FDA88E10BACC8 /* StepSequencer.h */ /* StepSequencer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = StepSequencer.h; path = ../../Source/core/engine/StepSequencer.h; sourceTree = SOURCE_ROOT; };
+		6472ADCF6787E04EA0E057F5 /* Melody.h */ /* Melody.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Melody.h; path = ../../Source/core/engine/Melody.h; sourceTree = SOURCE_ROOT; };
+		68742B25B7A6CE56009DB4C5 /* PresetBar.cpp */ /* PresetBar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = PresetBar.cpp; path = ../../Source/ui/PresetBar.cpp; sourceTree = SOURCE_ROOT; };
+		696E8E84A1A0584F78C5CC33 /* include_juce_audio_plugin_client_Standalone.cpp */ /* include_juce_audio_plugin_client_Standalone.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_plugin_client_Standalone.cpp; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_Standalone.cpp; sourceTree = SOURCE_ROOT; };
+		6993DAB5B04D9B9719523AC9 /* Scales.h */ /* Scales.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Scales.h; path = ../../Source/core/theory/Scales.h; sourceTree = SOURCE_ROOT; };
+		6A62DF8E1613D9376A177BFE /* ScaleMapper.h */ /* ScaleMapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ScaleMapper.h; path = ../../Source/core/engine/ScaleMapper.h; sourceTree = SOURCE_ROOT; };
+		6F48858563758E13D5A5292C /* WebKit.framework */ /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		75775A13C7E8D7ECE60918A9 /* juce_audio_formats */ /* juce_audio_formats */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_formats; path = /Users/alistairrutherford/Development/JUCE/modules/juce_audio_formats; sourceTree = "<absolute>"; };
+		75C0B83DE3B81817235BEC5A /* Progressions.h */ /* Progressions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Progressions.h; path = ../../Source/core/theory/Progressions.h; sourceTree = SOURCE_ROOT; };
+		765B8F15D5DC410E0BF9EAC2 /* ChordChimpProcessor.cpp */ /* ChordChimpProcessor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ChordChimpProcessor.cpp; path = ../../Source/plugin/ChordChimpProcessor.cpp; sourceTree = SOURCE_ROOT; };
+		7675E00F10E2216A2C7B385E /* DiscRecording.framework */ /* DiscRecording.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DiscRecording.framework; path = System/Library/Frameworks/DiscRecording.framework; sourceTree = SDKROOT; };
+		775B01DD02F8129DA2BD59EE /* ChordImporter.h */ /* ChordImporter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordImporter.h; path = ../../Source/core/midiio/ChordImporter.h; sourceTree = SOURCE_ROOT; };
+		78BCF05CCE5AC440E9C0DD47 /* ChordEditorPanel.cpp */ /* ChordEditorPanel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ChordEditorPanel.cpp; path = ../../Source/ui/ChordEditorPanel.cpp; sourceTree = SOURCE_ROOT; };
+		7AE7D5F5706E41A0DCDBA1E6 /* ChordChimpEngine.h */ /* ChordChimpEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordChimpEngine.h; path = ../../Source/core/engine/ChordChimpEngine.h; sourceTree = SOURCE_ROOT; };
+		7C19E873F62E81486EE9187F /* Stack.h */ /* Stack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Stack.h; path = ../../Source/core/engine/Stack.h; sourceTree = SOURCE_ROOT; };
+		7EDC462575DC9735FE9A2122 /* PresetManager.cpp */ /* PresetManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = PresetManager.cpp; path = ../../Source/plugin/PresetManager.cpp; sourceTree = SOURCE_ROOT; };
+		8309803C57CE39E9607AA764 /* IOKit.framework */ /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		8419DBA515819CD8B133D31C /* juce_audio_plugin_client */ /* juce_audio_plugin_client */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_plugin_client; path = /Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client; sourceTree = "<absolute>"; };
+		848BBA430B33249007A67882 /* juce_VST3ManifestHelper.cpp */ /* juce_VST3ManifestHelper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_VST3ManifestHelper.cpp; path = /Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/VST3/juce_VST3ManifestHelper.cpp; sourceTree = "<absolute>"; };
+		86475390A7A8CB9876324934 /* CoreAudio.framework */ /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		895237A05D289F9A597A8307 /* ChordEditorState.cpp */ /* ChordEditorState.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ChordEditorState.cpp; path = ../../Source/plugin/ChordEditorState.cpp; sourceTree = SOURCE_ROOT; };
+		8A7CC48128F2F692A4C68F6B /* MidiFile.h */ /* MidiFile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MidiFile.h; path = ../../Source/core/midiio/MidiFile.h; sourceTree = SOURCE_ROOT; };
+		8BB9A5440BBD0914217F7788 /* ChordModel.h */ /* ChordModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordModel.h; path = ../../Source/core/theory/ChordModel.h; sourceTree = SOURCE_ROOT; };
+		8D08FD4A633AA25746866B4D /* include_juce_graphics.mm */ /* include_juce_graphics.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_graphics.mm; path = ../../JuceLibraryCode/include_juce_graphics.mm; sourceTree = SOURCE_ROOT; };
+		951D5640B59012467201D6DD /* Clock.h */ /* Clock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Clock.h; path = ../../Source/core/engine/Clock.h; sourceTree = SOURCE_ROOT; };
+		9A286C49E2467DDB8DD70EA3 /* PresetManager.h */ /* PresetManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PresetManager.h; path = ../../Source/plugin/PresetManager.h; sourceTree = SOURCE_ROOT; };
+		9A317560384E95BE3C905CB8 /* Keyboards.h */ /* Keyboards.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Keyboards.h; path = ../../Source/ui/Keyboards.h; sourceTree = SOURCE_ROOT; };
+		9E9EBAF9BDA0981E8329DC38 /* ChordEditorState.h */ /* ChordEditorState.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordEditorState.h; path = ../../Source/plugin/ChordEditorState.h; sourceTree = SOURCE_ROOT; };
+		9EEE4A86530AB2F5F179C01C /* include_juce_gui_basics_4.cpp */ /* include_juce_gui_basics_4.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_gui_basics_4.cpp; path = ../../JuceLibraryCode/include_juce_gui_basics_4.cpp; sourceTree = SOURCE_ROOT; };
+		9F553A049FF605959AD95C04 /* Shared Code */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libChordChimp.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		A34822536A75891383EFA1A2 /* Info-VST3_Manifest_Helper.plist */ /* Info-VST3_Manifest_Helper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-VST3_Manifest_Helper.plist"; path = "Info-VST3_Manifest_Helper.plist"; sourceTree = SOURCE_ROOT; };
+		A3CFF0B6A0EBC1E0D4B5F666 /* include_juce_data_structures.mm */ /* include_juce_data_structures.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_data_structures.mm; path = ../../JuceLibraryCode/include_juce_data_structures.mm; sourceTree = SOURCE_ROOT; };
+		A779580595E0BCCE829F26DC /* SharedSession.h */ /* SharedSession.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SharedSession.h; path = ../../Source/core/engine/SharedSession.h; sourceTree = SOURCE_ROOT; };
+		AC207B153FDB21336477876B /* MidiEvents.h */ /* MidiEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MidiEvents.h; path = ../../Source/core/engine/MidiEvents.h; sourceTree = SOURCE_ROOT; };
+		ADF990EE2F15B628E399200C /* juce_audio_processors_headless */ /* juce_audio_processors_headless */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_processors_headless; path = /Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless; sourceTree = "<absolute>"; };
+		AE0BE1BBE33FA52D67881601 /* CoreAudioKit.framework */ /* CoreAudioKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioKit.framework; path = System/Library/Frameworks/CoreAudioKit.framework; sourceTree = SDKROOT; };
+		AECCA4A9D0E271E678391BCA /* Transport.h */ /* Transport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Transport.h; path = ../../Source/core/engine/Transport.h; sourceTree = SOURCE_ROOT; };
+		B644826F14029B719CD5ACD3 /* Panels.h */ /* Panels.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Panels.h; path = ../../Source/ui/Panels.h; sourceTree = SOURCE_ROOT; };
+		B6DDDA0FE6F4EB94B590A384 /* include_juce_audio_processors_headless.mm */ /* include_juce_audio_processors_headless.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_processors_headless.mm; path = ../../JuceLibraryCode/include_juce_audio_processors_headless.mm; sourceTree = SOURCE_ROOT; };
+		B76C37333C3111C3EB233D1E /* include_juce_core.mm */ /* include_juce_core.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_core.mm; path = ../../JuceLibraryCode/include_juce_core.mm; sourceTree = SOURCE_ROOT; };
+		BA140EB09B2336FC2EBEF2CC /* Keyboards.cpp */ /* Keyboards.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Keyboards.cpp; path = ../../Source/ui/Keyboards.cpp; sourceTree = SOURCE_ROOT; };
+		BA17310291C19BABC22ABA39 /* Foundation.framework */ /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		BA9EF2046DF5E83E736C2B23 /* ChordNamer.h */ /* ChordNamer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordNamer.h; path = ../../Source/core/theory/ChordNamer.h; sourceTree = SOURCE_ROOT; };
+		BF42FD6173BF243369EB0666 /* ChordChimpEditor.h */ /* ChordChimpEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordChimpEditor.h; path = ../../Source/ui/ChordChimpEditor.h; sourceTree = SOURCE_ROOT; };
+		C4C6192E709E72238D667B2C /* include_juce_audio_processors_headless_ara.cpp */ /* include_juce_audio_processors_headless_ara.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_processors_headless_ara.cpp; path = ../../JuceLibraryCode/include_juce_audio_processors_headless_ara.cpp; sourceTree = SOURCE_ROOT; };
+		C5577CBEA12A018A708862AF /* VST3 */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChordChimp.vst3; sourceTree = BUILT_PRODUCTS_DIR; };
+		CBC13BAFEE52930EF1D3EFEA /* include_juce_audio_devices.mm */ /* include_juce_audio_devices.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_devices.mm; path = ../../JuceLibraryCode/include_juce_audio_devices.mm; sourceTree = SOURCE_ROOT; };
+		CBF2E3A27940EF456B70D194 /* Shifters.h */ /* Shifters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Shifters.h; path = ../../Source/core/engine/Shifters.h; sourceTree = SOURCE_ROOT; };
+		CD1D2DA1488D7438BFAA2C4D /* EventQueue.h */ /* EventQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = EventQueue.h; path = ../../Source/core/engine/EventQueue.h; sourceTree = SOURCE_ROOT; };
+		D158690D5CDFD2A9B8AC2266 /* Info-Standalone_Plugin.plist */ /* Info-Standalone_Plugin.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-Standalone_Plugin.plist"; path = "Info-Standalone_Plugin.plist"; sourceTree = SOURCE_ROOT; };
+		D18B96ED77EA9013136EC558 /* Strum.h */ /* Strum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Strum.h; path = ../../Source/core/engine/Strum.h; sourceTree = SOURCE_ROOT; };
+		D35D666E789721AD584FD6E6 /* FactoryPresets.cpp */ /* FactoryPresets.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = FactoryPresets.cpp; path = ../../Source/plugin/FactoryPresets.cpp; sourceTree = SOURCE_ROOT; };
+		D83035428B746A8176FF0137 /* Arp.h */ /* Arp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Arp.h; path = ../../Source/core/engine/Arp.h; sourceTree = SOURCE_ROOT; };
+		DC909102FDCF627D5B560B4D /* Repeat.h */ /* Repeat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Repeat.h; path = ../../Source/core/engine/Repeat.h; sourceTree = SOURCE_ROOT; };
+		DD29E3C8ADBF71C3A741CB6D /* AudioToolbox.framework */ /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		DE63B3DEA6295F5518853F8D /* InputRouter.h */ /* InputRouter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = InputRouter.h; path = ../../Source/core/engine/InputRouter.h; sourceTree = SOURCE_ROOT; };
+		E1246DABFC38414430C3A700 /* juce_gui_extra */ /* juce_gui_extra */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_gui_extra; path = /Users/alistairrutherford/Development/JUCE/modules/juce_gui_extra; sourceTree = "<absolute>"; };
+		E1CD3ED7C817E805B401021C /* include_juce_gui_basics_2.cpp */ /* include_juce_gui_basics_2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_gui_basics_2.cpp; path = ../../JuceLibraryCode/include_juce_gui_basics_2.cpp; sourceTree = SOURCE_ROOT; };
+		E3A9DDD35EF9038036D479B4 /* include_juce_audio_plugin_client_VST3.mm */ /* include_juce_audio_plugin_client_VST3.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_plugin_client_VST3.mm; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_VST3.mm; sourceTree = SOURCE_ROOT; };
+		E3AC96C635E473780D88C915 /* ExportRecorder.h */ /* ExportRecorder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ExportRecorder.h; path = ../../Source/core/midiio/ExportRecorder.h; sourceTree = SOURCE_ROOT; };
+		E401BB2F85A320B7BE561EE0 /* Cocoa.framework */ /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		E50E3482DBBBB129C32914AE /* ChordTimeline.h */ /* ChordTimeline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordTimeline.h; path = ../../Source/core/engine/ChordTimeline.h; sourceTree = SOURCE_ROOT; };
+		E6B3246C106E3E558E58C35E /* Theme.cpp */ /* Theme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Theme.cpp; path = ../../Source/ui/Theme.cpp; sourceTree = SOURCE_ROOT; };
+		E6DDB422F35A506569598BFD /* RomanNumeral.h */ /* RomanNumeral.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = RomanNumeral.h; path = ../../Source/core/theory/RomanNumeral.h; sourceTree = SOURCE_ROOT; };
+		E74414F0814EBB53C48E6E63 /* include_juce_events.mm */ /* include_juce_events.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_events.mm; path = ../../JuceLibraryCode/include_juce_events.mm; sourceTree = SOURCE_ROOT; };
+		E9559A6437434BE72BA8F901 /* include_juce_audio_plugin_client_ARA.cpp */ /* include_juce_audio_plugin_client_ARA.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_plugin_client_ARA.cpp; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_ARA.cpp; sourceTree = SOURCE_ROOT; };
+		ED6C9375CF48E108B61A90B0 /* ChordGroups.h */ /* ChordGroups.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ChordGroups.h; path = ../../Source/core/theory/ChordGroups.h; sourceTree = SOURCE_ROOT; };
+		EE3DCF26D81A6157A4B165A7 /* include_juce_audio_processors_headless_lv2_libs.cpp */ /* include_juce_audio_processors_headless_lv2_libs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_processors_headless_lv2_libs.cpp; path = ../../JuceLibraryCode/include_juce_audio_processors_headless_lv2_libs.cpp; sourceTree = SOURCE_ROOT; };
+		F2286272171AC9C611194F13 /* include_juce_audio_basics.mm */ /* include_juce_audio_basics.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_basics.mm; path = ../../JuceLibraryCode/include_juce_audio_basics.mm; sourceTree = SOURCE_ROOT; };
+		F2347E976ADF994A03559394 /* include_juce_gui_basics_5.cpp */ /* include_juce_gui_basics_5.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_gui_basics_5.cpp; path = ../../JuceLibraryCode/include_juce_gui_basics_5.cpp; sourceTree = SOURCE_ROOT; };
+		F5D31ECFC91054FFD3D749A3 /* include_juce_audio_formats.mm */ /* include_juce_audio_formats.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_formats.mm; path = ../../JuceLibraryCode/include_juce_audio_formats.mm; sourceTree = SOURCE_ROOT; };
+		FA2673430C732254642ECA4C /* JuceHeader.h */ /* JuceHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JuceHeader.h; path = ../../JuceLibraryCode/JuceHeader.h; sourceTree = SOURCE_ROOT; };
+		FF0D099B9C631D4924863EF0 /* Theme.h */ /* Theme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Theme.h; path = ../../Source/ui/Theme.h; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		59BD251050514500FB6A4179 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43BE581F263DDC149178C14E,
+				66D1A19655FB43845A2271D6,
+				95B840824CA1D84BDCAE2880,
+				C0977995A140AF9B15BAE748,
+				5C363ED5AB9E9063B021225D,
+				91B346C4A4EE06D60FF38F45,
+				A37B474456D54A2CC13D5855,
+				859F58368441E85B500E169F,
+				A91BB465079F66B6E68E7BD2,
+				382EAB805C2BD2F80017E3E2,
+				3634C70EACAABE6F7E24501C,
+				79B6C88D011D57CB0370BA1F,
+				AF753CBF42CD7F1DDF6D18B2,
+				B2C819B1A8B16DE38A62AF27,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		679FF4DBDD409A7C0D5F0B47 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43BE581F263DDC149178C14E,
+				66D1A19655FB43845A2271D6,
+				95B840824CA1D84BDCAE2880,
+				C0977995A140AF9B15BAE748,
+				5C363ED5AB9E9063B021225D,
+				91B346C4A4EE06D60FF38F45,
+				A37B474456D54A2CC13D5855,
+				859F58368441E85B500E169F,
+				A91BB465079F66B6E68E7BD2,
+				382EAB805C2BD2F80017E3E2,
+				3634C70EACAABE6F7E24501C,
+				79B6C88D011D57CB0370BA1F,
+				AF753CBF42CD7F1DDF6D18B2,
+				B2C819B1A8B16DE38A62AF27,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		86E101B50FE6D4487A5B2A74 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43BE581F263DDC149178C14E,
+				66D1A19655FB43845A2271D6,
+				95B840824CA1D84BDCAE2880,
+				C0977995A140AF9B15BAE748,
+				5C363ED5AB9E9063B021225D,
+				91B346C4A4EE06D60FF38F45,
+				A37B474456D54A2CC13D5855,
+				859F58368441E85B500E169F,
+				A91BB465079F66B6E68E7BD2,
+				382EAB805C2BD2F80017E3E2,
+				3634C70EACAABE6F7E24501C,
+				79B6C88D011D57CB0370BA1F,
+				AF753CBF42CD7F1DDF6D18B2,
+				B2C819B1A8B16DE38A62AF27,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		03C9C25F0E400E986A4BE041 /* plugin */ = {
+			isa = PBXGroup;
+			children = (
+				37ED30BB25D88221390231EE,
+				765B8F15D5DC410E0BF9EAC2,
+				137856B2C066D73BAA5867A4,
+				44599121BB28D78037060345,
+				9E9EBAF9BDA0981E8329DC38,
+				895237A05D289F9A597A8307,
+				9A286C49E2467DDB8DD70EA3,
+				7EDC462575DC9735FE9A2122,
+				255A1B5BA6268D9E6F4CFB1A,
+				D35D666E789721AD584FD6E6,
+			);
+			name = plugin;
+			sourceTree = "<group>";
+		};
+		1020928CA01A8BB71D0F52D5 /* core/midiio */ = {
+			isa = PBXGroup;
+			children = (
+				8A7CC48128F2F692A4C68F6B,
+				E3AC96C635E473780D88C915,
+				775B01DD02F8129DA2BD59EE,
+			);
+			name = core/midiio;
+			sourceTree = "<group>";
+		};
+		1D0531F7C74F788E45F3F2DD /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				492A8CE3502477A51F335895,
+				B7B47F9D96D3FE2BBF887DB9,
+				3BB5A99C45EE6E2F78370F07,
+				A7B54C56C753F849A57830D3,
+				6AA55E8125A15CC5DB456A9D,
+				B7AFE5721CEFC3423EDF26B8,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		3BB5A99C45EE6E2F78370F07 /* JUCE Library Code */ = {
+			isa = PBXGroup;
+			children = (
+				F2286272171AC9C611194F13,
+				CBC13BAFEE52930EF1D3EFEA,
+				F5D31ECFC91054FFD3D749A3,
+				E9559A6437434BE72BA8F901,
+				696E8E84A1A0584F78C5CC33,
+				E3A9DDD35EF9038036D479B4,
+				1352417AB54A50667A4E8884,
+				B6DDDA0FE6F4EB94B590A384,
+				C4C6192E709E72238D667B2C,
+				EE3DCF26D81A6157A4B165A7,
+				39744E2756D9A3B8EC4D2EEA,
+				B76C37333C3111C3EB233D1E,
+				32FC506D750EC0F1B6A03B35,
+				A3CFF0B6A0EBC1E0D4B5F666,
+				E74414F0814EBB53C48E6E63,
+				8D08FD4A633AA25746866B4D,
+				2487E1F0BB083A8558040476,
+				0B1B3A937671859D501B5417,
+				52A5C4C11A4FB633CCA644C9,
+				E1CD3ED7C817E805B401021C,
+				435AAFFB1370F25151E25F3F,
+				9EEE4A86530AB2F5F179C01C,
+				F2347E976ADF994A03559394,
+				3C6F07F74050EB48C568E538,
+				FA2673430C732254642ECA4C,
+				2CF864A8DE84902D3CEA44FC,
+			);
+			name = "JUCE Library Code";
+			sourceTree = "<group>";
+		};
+		3FBF0A694827C3A2D790E07F /* core/theory */ = {
+			isa = PBXGroup;
+			children = (
+				6993DAB5B04D9B9719523AC9,
+				8BB9A5440BBD0914217F7788,
+				ED6C9375CF48E108B61A90B0,
+				75C0B83DE3B81817235BEC5A,
+				1A31FA8E1A6875D8021B8520,
+				BA9EF2046DF5E83E736C2B23,
+				E6DDB422F35A506569598BFD,
+				08BA459547B6779E1707349B,
+				32F9888D1300E934A05012AA,
+			);
+			name = core/theory;
+			sourceTree = "<group>";
+		};
+		492A8CE3502477A51F335895 /* ChordChimp */ = {
+			isa = PBXGroup;
+			children = (
+				A9C415CE1761585BA82E2B9F,
+			);
+			name = ChordChimp;
+			sourceTree = "<group>";
+		};
+		4EED880DC3A13CE41661B919 /* core/engine */ = {
+			isa = PBXGroup;
+			children = (
+				AC207B153FDB21336477876B,
+				AECCA4A9D0E271E678391BCA,
+				DE63B3DEA6295F5518853F8D,
+				2E9A6064E8644A10CACE9E7E,
+				330A0F6AADFC60647CF4487F,
+				7AE7D5F5706E41A0DCDBA1E6,
+				CBF2E3A27940EF456B70D194,
+				0ABFC60D2EF1305E5F2BE130,
+				951D5640B59012467201D6DD,
+				CD1D2DA1488D7438BFAA2C4D,
+				18D0E12DA62636DA8CD7A778,
+				7C19E873F62E81486EE9187F,
+				D18B96ED77EA9013136EC558,
+				D83035428B746A8176FF0137,
+				DC909102FDCF627D5B560B4D,
+				5F5CFFB2125FDA88E10BACC8,
+				36B4352495868603650C9006,
+				247E0462925D9E71B541F083,
+				1581BFFEAEDB19539DA3E281,
+				6A62DF8E1613D9376A177BFE,
+				36313F116C27738D2BCB75BB,
+				6472ADCF6787E04EA0E057F5,
+				A779580595E0BCCE829F26DC,
+				E50E3482DBBBB129C32914AE,
+			);
+			name = core/engine;
+			sourceTree = "<group>";
+		};
+		6AA55E8125A15CC5DB456A9D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				5628AA6DEA6686BCB6C7ED3C,
+				DD29E3C8ADBF71C3A741CB6D,
+				E401BB2F85A320B7BE561EE0,
+				86475390A7A8CB9876324934,
+				AE0BE1BBE33FA52D67881601,
+				552084419B16CEC16EE41392,
+				7675E00F10E2216A2C7B385E,
+				BA17310291C19BABC22ABA39,
+				8309803C57CE39E9607AA764,
+				117C364619812C4BC0B5EA01,
+				12689FA3F6B6EE02347B478D,
+				6F48858563758E13D5A5292C,
+				2289517D0802F3CFE244810F,
+				32ED7882D82ABAD887084C08,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		96F818506E969092FE51A05C /* ui */ = {
+			isa = PBXGroup;
+			children = (
+				BF42FD6173BF243369EB0666,
+				0C0C8DDEA86811A6676B9B0E,
+				FF0D099B9C631D4924863EF0,
+				E6B3246C106E3E558E58C35E,
+				2FBD271B3D8D66B9DD32A17E,
+				0E6DCDF67956B7FD43C66B88,
+				9A317560384E95BE3C905CB8,
+				BA140EB09B2336FC2EBEF2CC,
+				0B6A48B65AFD3CBC38520922,
+				78BCF05CCE5AC440E9C0DD47,
+				B644826F14029B719CD5ACD3,
+				0FA054AABC7CBE7BA47A9BE9,
+				3C24D0D32928670DC3CEE401,
+				68742B25B7A6CE56009DB4C5,
+			);
+			name = ui;
+			sourceTree = "<group>";
+		};
+		A7B54C56C753F849A57830D3 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				283CB1FC4AFB09C4968147DC,
+				D158690D5CDFD2A9B8AC2266,
+				A34822536A75891383EFA1A2,
+				10CDB8D3175896FFE2B7CC10,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		A9C415CE1761585BA82E2B9F /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				3FBF0A694827C3A2D790E07F,
+				4EED880DC3A13CE41661B919,
+				1020928CA01A8BB71D0F52D5,
+				03C9C25F0E400E986A4BE041,
+				96F818506E969092FE51A05C,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		B7AFE5721CEFC3423EDF26B8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C5577CBEA12A018A708862AF,
+				51FE1AC46A5B341B99A8E355,
+				9F553A049FF605959AD95C04,
+				453A9403A96F7CE544B0C19A,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B7B47F9D96D3FE2BBF887DB9 /* JUCE Modules */ = {
+			isa = PBXGroup;
+			children = (
+				221555FCD0AEC82D5D6B297E,
+				2EF5589F1B40811F6430E658,
+				75775A13C7E8D7ECE60918A9,
+				8419DBA515819CD8B133D31C,
+				4269DF0BA144E4CBC86A5424,
+				ADF990EE2F15B628E399200C,
+				244377A177529B16BCC79E77,
+				0CF6E6D9CE9366EF91F9F373,
+				4A548B99CB81B493EE45585A,
+				49AF0B5182AD7B77BD1D67A5,
+				3753FBBD9FB9BB2B01DC11F7,
+				06066B6AFD612F7708B097E7,
+				E1246DABFC38414430C3A700,
+			);
+			name = "JUCE Modules";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		262F814BAB7A34A6A58C41B0 /* ChordChimp - VST3 Manifest Helper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ECCECB419163DCB440B80413;
+			buildPhases = (
+				ABF81217D9DFB5844078603A,
+				679FF4DBDD409A7C0D5F0B47,
+				B23BEC6AAB691623A0CBD0CD,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "ChordChimp - VST3 Manifest Helper";
+			productName = ChordChimp;
+			productReference = 453A9403A96F7CE544B0C19A;
+			productType = "com.apple.product-type.tool";
+		};
+		D58BB1835712F10FFEA69BC6 /* ChordChimp - Shared Code */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8222CBBF4543FD822254FCD0;
+			buildPhases = (
+				84A0F05AF6801DF09383BE61,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "ChordChimp - Shared Code";
+			productName = ChordChimp;
+			productReference = 9F553A049FF605959AD95C04;
+			productType = "com.apple.product-type.library.static";
+		};
+		DBA1B3C8DB257933512E1BA0 /* ChordChimp - VST3 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D31BD2BEF55FBFE1A64FA361;
+			buildPhases = (
+				0242E6F6FF0D9AB14052EA6C,
+				7CDDE191518B8E077CF7E185,
+				59BD251050514500FB6A4179,
+				48B9F9CA163C464C58201E2E,
+				2FD2B246FC790BBD97CC1AFB,
+				084D1C999F536A2ADA717C1E,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				184738BD34304B4B9DB7A406,
+				329DD96110564844C4CF4385,
+			);
+			name = "ChordChimp - VST3";
+			productName = ChordChimp;
+			productReference = C5577CBEA12A018A708862AF;
+			productType = "com.apple.product-type.bundle";
+		};
+		F34AF3F6510828814943C890 /* ChordChimp - Standalone Plugin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4BCF24552F4DEA822E19FCB;
+			buildPhases = (
+				6B1EDF9F24F1E67665385B67,
+				AA45D8357F9BC95F09DF9A87,
+				86E101B50FE6D4487A5B2A74,
+				3F9ED7B39DE6AD0FCE55BDA7,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3A42682E04CCD24383E84330,
+			);
+			name = "ChordChimp - Standalone Plugin";
+			productName = ChordChimp;
+			productReference = 51FE1AC46A5B341B99A8E355;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A3729E7942C108EBE1A82409 = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1340;
+				ORGANIZATIONNAME = "Alistair Rutherford";
+				TargetAttributes = {
+					262F814BAB7A34A6A58C41B0 = {
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 0;
+							};
+							com.apple.HardenedRuntime = {
+								enabled = 0;
+							};
+							com.apple.InAppPurchase = {
+								enabled = 0;
+							};
+							com.apple.InterAppAudio = {
+								enabled = 0;
+							};
+							com.apple.Push = {
+								enabled = 0;
+							};
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
+						};
+					};
+					C4ABE850F9D83C3451CBB9DB = {
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 0;
+							};
+							com.apple.HardenedRuntime = {
+								enabled = 0;
+							};
+							com.apple.InAppPurchase = {
+								enabled = 0;
+							};
+							com.apple.InterAppAudio = {
+								enabled = 0;
+							};
+							com.apple.Push = {
+								enabled = 0;
+							};
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
+						};
+					};
+					D58BB1835712F10FFEA69BC6 = {
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 0;
+							};
+							com.apple.HardenedRuntime = {
+								enabled = 0;
+							};
+							com.apple.InAppPurchase = {
+								enabled = 0;
+							};
+							com.apple.InterAppAudio = {
+								enabled = 0;
+							};
+							com.apple.Push = {
+								enabled = 0;
+							};
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
+						};
+					};
+					DBA1B3C8DB257933512E1BA0 = {
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 0;
+							};
+							com.apple.HardenedRuntime = {
+								enabled = 0;
+							};
+							com.apple.InAppPurchase = {
+								enabled = 0;
+							};
+							com.apple.InterAppAudio = {
+								enabled = 0;
+							};
+							com.apple.Push = {
+								enabled = 0;
+							};
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
+						};
+					};
+					F34AF3F6510828814943C890 = {
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 0;
+							};
+							com.apple.HardenedRuntime = {
+								enabled = 0;
+							};
+							com.apple.InAppPurchase = {
+								enabled = 0;
+							};
+							com.apple.InterAppAudio = {
+								enabled = 0;
+							};
+							com.apple.Push = {
+								enabled = 0;
+							};
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
+						};
+					};
+				};
+			};
+			buildConfigurationList = 1879DCA0250AA79136D1BC29;
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 1D0531F7C74F788E45F3F2DD;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C4ABE850F9D83C3451CBB9DB,
+				DBA1B3C8DB257933512E1BA0,
+				F34AF3F6510828814943C890,
+				D58BB1835712F10FFEA69BC6,
+				262F814BAB7A34A6A58C41B0,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0242E6F6FF0D9AB14052EA6C = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90C6F97498C3F51DBA5953F8,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6B1EDF9F24F1E67665385B67 = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90C6F97498C3F51DBA5953F8,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		084D1C999F536A2ADA717C1E /* Install Target */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Install Target";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n\nif [[ \"${CONFIGURATION}\" == \"Debug\" ]]; then\n  destinationPath=\"${HOME}/Library/Audio/Plug-Ins/VST3/$(basename \"${TARGET_BUILD_DIR}/${WRAPPER_NAME:-${EXECUTABLE_NAME}}\")\"\nfi\n\nif [[ \"${CONFIGURATION}\" == \"Release\" ]]; then\n  destinationPath=\"${HOME}/Library/Audio/Plug-Ins/VST3/$(basename \"${TARGET_BUILD_DIR}/${WRAPPER_NAME:-${EXECUTABLE_NAME}}\")\"\nfi\n\nif [[ -n \"${destinationPath-}\" ]]; then\n  echo Running rm -rf \\\"${destinationPath}\\\"\n  rm -rf \"${destinationPath}\"\n  echo Running ditto \\\"${TARGET_BUILD_DIR}/${WRAPPER_NAME:-${EXECUTABLE_NAME}}\\\" \\\"${destinationPath}\\\"\n  ditto \"${TARGET_BUILD_DIR}/${WRAPPER_NAME:-${EXECUTABLE_NAME}}\" \"${destinationPath}\"\nfi\n";
+		};
+		2FD2B246FC790BBD97CC1AFB /* Sign Target */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Sign Target";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n\necho Signing Identity:	${EXPANDED_CODE_SIGN_IDENTITY_NAME:-${CODE_SIGN_IDENTITY}}\n\nentitlementsFile=\"${TARGET_TEMP_DIR}/${FULL_PRODUCT_NAME}.xcent\"\n\nif [[ ! -f \"${entitlementsFile}\" ]]; then\n  entitlementsFile=\"\"\nfi\n\necho Entitlements File:	${entitlementsFile:-None}\necho\necho Running codesign --force --sign \\\"${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY}}\\\" --verbose=4 --timestamp  ${entitlementsFile:+--entitlements \\\"${entitlementsFile}\\\"} --generate-entitlement-der \\\"${CODESIGNING_FOLDER_PATH}\\\"\ncodesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY}}\" --verbose=4 --timestamp  ${entitlementsFile:+--entitlements \"${entitlementsFile}\"} --generate-entitlement-der \"${CODESIGNING_FOLDER_PATH}\"\necho\necho Running codesign --verify --deep --verbose=4 \\\"${CODESIGNING_FOLDER_PATH}\\\"\ncodesign --verify --deep --verbose=4 \"${CODESIGNING_FOLDER_PATH}\"\n";
+		};
+		3F9ED7B39DE6AD0FCE55BDA7 /* Sign Target */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Sign Target";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n\necho Signing Identity:	${EXPANDED_CODE_SIGN_IDENTITY_NAME:-${CODE_SIGN_IDENTITY}}\n\nentitlementsFile=\"${TARGET_TEMP_DIR}/${FULL_PRODUCT_NAME}.xcent\"\n\nif [[ ! -f \"${entitlementsFile}\" ]]; then\n  entitlementsFile=\"\"\nfi\n\necho Entitlements File:	${entitlementsFile:-None}\necho\necho Running codesign --force --sign \\\"${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY}}\\\" --verbose=4 --timestamp  ${entitlementsFile:+--entitlements \\\"${entitlementsFile}\\\"} --generate-entitlement-der \\\"${CODESIGNING_FOLDER_PATH}\\\"\ncodesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY}}\" --verbose=4 --timestamp  ${entitlementsFile:+--entitlements \"${entitlementsFile}\"} --generate-entitlement-der \"${CODESIGNING_FOLDER_PATH}\"\necho\necho Running codesign --verify --deep --verbose=4 \\\"${CODESIGNING_FOLDER_PATH}\\\"\ncodesign --verify --deep --verbose=4 \"${CODESIGNING_FOLDER_PATH}\"\n";
+		};
+		48B9F9CA163C464C58201E2E /* Create VST3 Manifest */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Create VST3 Manifest";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n\necho Running \\\"${CONFIGURATION_BUILD_DIR}/juce_vst3_helper\\\" \\> \\\"${CONFIGURATION_BUILD_DIR}/${WRAPPER_NAME}/Contents/Resources/moduleinfo.json\\\"\n\"${CONFIGURATION_BUILD_DIR}/juce_vst3_helper\" > \"${CONFIGURATION_BUILD_DIR}/${WRAPPER_NAME}/Contents/Resources/moduleinfo.json\"\n";
+		};
+		B23BEC6AAB691623A0CBD0CD /* Sign Target */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Sign Target";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n\necho Signing Identity:	${EXPANDED_CODE_SIGN_IDENTITY_NAME:-${CODE_SIGN_IDENTITY}}\n\nentitlementsFile=\"${TARGET_TEMP_DIR}/${FULL_PRODUCT_NAME}.xcent\"\n\nif [[ ! -f \"${entitlementsFile}\" ]]; then\n  entitlementsFile=\"\"\nfi\n\necho Entitlements File:	${entitlementsFile:-None}\necho\necho Running codesign --force --sign \\\"${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY}}\\\" --verbose=4 --timestamp  ${entitlementsFile:+--entitlements \\\"${entitlementsFile}\\\"} --generate-entitlement-der \\\"${CODESIGNING_FOLDER_PATH}\\\"\ncodesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY}}\" --verbose=4 --timestamp  ${entitlementsFile:+--entitlements \"${entitlementsFile}\"} --generate-entitlement-der \"${CODESIGNING_FOLDER_PATH}\"\necho\necho Running codesign --verify --deep --verbose=4 \\\"${CODESIGNING_FOLDER_PATH}\\\"\ncodesign --verify --deep --verbose=4 \"${CODESIGNING_FOLDER_PATH}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7CDDE191518B8E077CF7E185 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4F9F8CDA1AECDE980975A496,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		84A0F05AF6801DF09383BE61 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F95F2812B1991D07672CF292,
+				8B509537AD58336CFF5C83DF,
+				068272D214AB18A49D28B46F,
+				40D53A62A9592828D881017B,
+				0E3C57D4DE3CC8879930EB46,
+				DC5E7E7F98749385E355237A,
+				BBDA52C712A981334B0198F2,
+				4823FAB6D1A4A640F33BE816,
+				BB4E71F0041B9E3C328A4BC9,
+				B794BBCB6EC738BE18453B06,
+				C7D9EDBE62DC15987478193D,
+				3B563D1C17D0F344AB70588C,
+				BC0EFD79D137CA2814F20CE7,
+				F149A6CFE1A08F306B945B59,
+				215908DE8B43EBDEE76645DB,
+				E25DC00B29159EAAF4018327,
+				99E265667C10BB727C25E71B,
+				AF20C0E73E41A6F5221ACBF5,
+				F6D796E3A62D9838CE069D35,
+				4C72DB864E2A48D2D3BCA928,
+				15FA9497FFCCF26E30E29A85,
+				4844C15ED9C728FDC05B139F,
+				135D09A4404845C7B3873896,
+				017E3998609BBCBF4B98C6B8,
+				5369A4A7BDE3C53A5EB75E7C,
+				44EFEBB5C9831E4B6983D95D,
+				265B6A91D17D1863CFC6F55B,
+				D179E0D56AF84D035D2C4C3C,
+				7DB12F036BD2EE56381C1F23,
+				8740A7361A509E81FEFF0FF5,
+				54A4333633F70D10BC2D39C1,
+				D85443B2A16C1FA51B488986,
+				7A04A1EFC397A98B3F469428,
+				DBFEAD383164CCAA86872F65,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA45D8357F9BC95F09DF9A87 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FD62C75EB1DF8D44BE9F796D,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ABF81217D9DFB5844078603A = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				51C7071C411799703AF8FAE2,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		184738BD34304B4B9DB7A406 = {
+			isa = PBXTargetDependency;
+			target = D58BB1835712F10FFEA69BC6;
+		};
+		329DD96110564844C4CF4385 = {
+			isa = PBXTargetDependency;
+			target = 262F814BAB7A34A6A58C41B0;
+		};
+		3A42682E04CCD24383E84330 = {
+			isa = PBXTargetDependency;
+			target = D58BB1835712F10FFEA69BC6;
+		};
+		8631E52A68D6C1997F0180D8 = {
+			isa = PBXTargetDependency;
+			target = DBA1B3C8DB257933512E1BA0;
+		};
+		BB84D140CBD0E5CD81055AF7 = {
+			isa = PBXTargetDependency;
+			target = 262F814BAB7A34A6A58C41B0;
+		};
+		CC6DDA85CBAE3A48AE33D569 = {
+			isa = PBXTargetDependency;
+			target = D58BB1835712F10FFEA69BC6;
+		};
+		D440353BD6EB59D5526342D1 = {
+			isa = PBXTargetDependency;
+			target = F34AF3F6510828814943C890;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		06130435363BB84DB730B361 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				DEAD_CODE_STRIPPING = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				EXCLUDED_ARCHS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_NDEBUG=1",
+					"NDEBUG=1",
+					"JUCE_PROJUCER_VERSION=0x8000e",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_USE_CURL=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JUCE_WEB_BROWSER=0",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=1",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=0",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"ChordChimp\\\"",
+					"JucePlugin_Desc=\\\"One\\ key\\ plays\\ a\\ chord:\\ a\\ MIDI\\ chord\\ generator\\\"",
+					"JucePlugin_Manufacturer=\\\"Alistair\\ Rutherford\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"https://github.com/alistairrutherford/chordchimp\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x41527574",
+					"JucePlugin_PluginCode=0x43636870",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=1",
+					"JucePlugin_ProducesMidiOutput=1",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Tools\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=ChordChimpAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"ChordChimpAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=com.alistairrutherford.chordchimp",
+					"JucePlugin_AAXIdentifier=com.AlistairRutherford.ChordChimp",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757269",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"Alistair\\ Rutherford:\\ ChordChimp\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.AlistairRutherford.ChordChimp.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.AlistairRutherford.ChordChimp.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GENERATE_PKGINFO_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK",
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/alistairrutherford/Development/JUCE/modules",
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info-VST3.plist;
+				INFOPLIST_PREPROCESS = NO;
+				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/VST3";
+				LIBRARY_STYLE = Bundle;
+				LLVM_LTO = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MTL_HEADER_SEARCH_PATHS = "/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/alistairrutherford/Development/JUCE/modules /Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited) -bundle -lChordChimp";
+				PRODUCT_BUNDLE_IDENTIFIER = com.alistairrutherford.chordchimp;
+				PRODUCT_NAME = "ChordChimp";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+				WRAPPER_EXTENSION = vst3;
+			};
+			name = Release;
+		};
+		08C236C7933DA54C85EA8401 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		13AB08880B44B4FAD7F9B460 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = NO;
+				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OTHER_CODE_SIGN_FLAGS = "--dryrun";
+				PRODUCT_NAME = "ChordChimp";
+				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wreorder";
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		3406293FB85C574BFF1A64D9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				EXCLUDED_ARCHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_DEBUG=1",
+					"DEBUG=1",
+					"JUCE_PROJUCER_VERSION=0x8000e",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_USE_CURL=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JUCE_WEB_BROWSER=0",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=1",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=1",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"ChordChimp\\\"",
+					"JucePlugin_Desc=\\\"One\\ key\\ plays\\ a\\ chord:\\ a\\ MIDI\\ chord\\ generator\\\"",
+					"JucePlugin_Manufacturer=\\\"Alistair\\ Rutherford\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"https://github.com/alistairrutherford/chordchimp\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x41527574",
+					"JucePlugin_PluginCode=0x43636870",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=1",
+					"JucePlugin_ProducesMidiOutput=1",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Tools\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=ChordChimpAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"ChordChimpAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=com.alistairrutherford.chordchimp",
+					"JucePlugin_AAXIdentifier=com.AlistairRutherford.ChordChimp",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757269",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"Alistair\\ Rutherford:\\ ChordChimp\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.AlistairRutherford.ChordChimp.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.AlistairRutherford.ChordChimp.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+					"JUCE_SHARED_CODE=1",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK",
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/alistairrutherford/Development/JUCE/modules",
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MTL_HEADER_SEARCH_PATHS = "/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/alistairrutherford/Development/JUCE/modules /Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.alistairrutherford.chordchimp;
+				PRODUCT_NAME = "ChordChimp";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+			};
+			name = Debug;
+		};
+		49BD81B664E0BF9A45659694 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				DEAD_CODE_STRIPPING = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				EXCLUDED_ARCHS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_NDEBUG=1",
+					"NDEBUG=1",
+					"JUCE_PROJUCER_VERSION=0x8000e",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_USE_CURL=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JUCE_WEB_BROWSER=0",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=1",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=1",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"ChordChimp\\\"",
+					"JucePlugin_Desc=\\\"One\\ key\\ plays\\ a\\ chord:\\ a\\ MIDI\\ chord\\ generator\\\"",
+					"JucePlugin_Manufacturer=\\\"Alistair\\ Rutherford\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"https://github.com/alistairrutherford/chordchimp\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x41527574",
+					"JucePlugin_PluginCode=0x43636870",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=1",
+					"JucePlugin_ProducesMidiOutput=1",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Tools\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=ChordChimpAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"ChordChimpAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=com.alistairrutherford.chordchimp",
+					"JucePlugin_AAXIdentifier=com.AlistairRutherford.ChordChimp",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757269",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"Alistair\\ Rutherford:\\ ChordChimp\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.AlistairRutherford.ChordChimp.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.AlistairRutherford.ChordChimp.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+					"JUCE_SHARED_CODE=1",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK",
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/alistairrutherford/Development/JUCE/modules",
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LLVM_LTO = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MTL_HEADER_SEARCH_PATHS = "/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/alistairrutherford/Development/JUCE/modules /Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.alistairrutherford.chordchimp;
+				PRODUCT_NAME = "ChordChimp";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+			};
+			name = Release;
+		};
+		531BF4F71CCBAFB4E31B30B8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				EXCLUDED_ARCHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_DEBUG=1",
+					"DEBUG=1",
+					"JUCE_PROJUCER_VERSION=0x8000e",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_USE_CURL=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JUCE_WEB_BROWSER=0",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=1",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"ChordChimp\\\"",
+					"JucePlugin_Desc=\\\"One\\ key\\ plays\\ a\\ chord:\\ a\\ MIDI\\ chord\\ generator\\\"",
+					"JucePlugin_Manufacturer=\\\"Alistair\\ Rutherford\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"https://github.com/alistairrutherford/chordchimp\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x41527574",
+					"JucePlugin_PluginCode=0x43636870",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=1",
+					"JucePlugin_ProducesMidiOutput=1",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Tools\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=ChordChimpAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"ChordChimpAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=com.alistairrutherford.chordchimp",
+					"JucePlugin_AAXIdentifier=com.AlistairRutherford.ChordChimp",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757269",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"Alistair\\ Rutherford:\\ ChordChimp\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.AlistairRutherford.ChordChimp.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.AlistairRutherford.ChordChimp.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK",
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/alistairrutherford/Development/JUCE/modules",
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info-Standalone_Plugin.plist;
+				INFOPLIST_PREPROCESS = NO;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MTL_HEADER_SEARCH_PATHS = "/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/alistairrutherford/Development/JUCE/modules /Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited) -lChordChimp";
+				PRODUCT_BUNDLE_IDENTIFIER = com.alistairrutherford.chordchimp;
+				PRODUCT_NAME = "ChordChimp";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+			};
+			name = Debug;
+		};
+		5C1CEB213D72A489C6840AB3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		64A8F977E949C6F683613BE8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				EXCLUDED_ARCHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_DEBUG=1",
+					"DEBUG=1",
+					"JUCE_PROJUCER_VERSION=0x8000e",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_USE_CURL=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JUCE_WEB_BROWSER=0",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=1",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=0",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"ChordChimp\\\"",
+					"JucePlugin_Desc=\\\"One\\ key\\ plays\\ a\\ chord:\\ a\\ MIDI\\ chord\\ generator\\\"",
+					"JucePlugin_Manufacturer=\\\"Alistair\\ Rutherford\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"https://github.com/alistairrutherford/chordchimp\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x41527574",
+					"JucePlugin_PluginCode=0x43636870",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=1",
+					"JucePlugin_ProducesMidiOutput=1",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Tools\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=ChordChimpAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"ChordChimpAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=com.alistairrutherford.chordchimp",
+					"JucePlugin_AAXIdentifier=com.AlistairRutherford.ChordChimp",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757269",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"Alistair\\ Rutherford:\\ ChordChimp\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.AlistairRutherford.ChordChimp.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.AlistairRutherford.ChordChimp.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GENERATE_PKGINFO_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK",
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/alistairrutherford/Development/JUCE/modules",
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info-VST3.plist;
+				INFOPLIST_PREPROCESS = NO;
+				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/VST3";
+				LIBRARY_STYLE = Bundle;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MTL_HEADER_SEARCH_PATHS = "/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/alistairrutherford/Development/JUCE/modules /Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited) -bundle -lChordChimp";
+				PRODUCT_BUNDLE_IDENTIFIER = com.alistairrutherford.chordchimp;
+				PRODUCT_NAME = "ChordChimp";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+				WRAPPER_EXTENSION = vst3;
+			};
+			name = Debug;
+		};
+		AD31EA0929BA8FDD974642D7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				DEAD_CODE_STRIPPING = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				EXCLUDED_ARCHS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_NDEBUG=1",
+					"NDEBUG=1",
+					"JUCE_PROJUCER_VERSION=0x8000e",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_USE_CURL=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JUCE_WEB_BROWSER=0",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=0",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"ChordChimp\\\"",
+					"JucePlugin_Desc=\\\"One\\ key\\ plays\\ a\\ chord:\\ a\\ MIDI\\ chord\\ generator\\\"",
+					"JucePlugin_Manufacturer=\\\"Alistair\\ Rutherford\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"https://github.com/alistairrutherford/chordchimp\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x41527574",
+					"JucePlugin_PluginCode=0x43636870",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=1",
+					"JucePlugin_ProducesMidiOutput=1",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Tools\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=ChordChimpAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"ChordChimpAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=com.alistairrutherford.chordchimp",
+					"JucePlugin_AAXIdentifier=com.AlistairRutherford.ChordChimp",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757269",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"Alistair\\ Rutherford:\\ ChordChimp\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.AlistairRutherford.ChordChimp.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.AlistairRutherford.ChordChimp.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK",
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/alistairrutherford/Development/JUCE/modules",
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info-VST3_Manifest_Helper.plist;
+				INFOPLIST_PREPROCESS = NO;
+				LLVM_LTO = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MTL_HEADER_SEARCH_PATHS = "/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/alistairrutherford/Development/JUCE/modules /Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.alistairrutherford.chordchimp;
+				PRODUCT_NAME = "juce_vst3_helper";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+			};
+			name = Release;
+		};
+		BC26814F6DFC0C836B3C257F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				DEAD_CODE_STRIPPING = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				EXCLUDED_ARCHS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_NDEBUG=1",
+					"NDEBUG=1",
+					"JUCE_PROJUCER_VERSION=0x8000e",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_USE_CURL=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JUCE_WEB_BROWSER=0",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=1",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"ChordChimp\\\"",
+					"JucePlugin_Desc=\\\"One\\ key\\ plays\\ a\\ chord:\\ a\\ MIDI\\ chord\\ generator\\\"",
+					"JucePlugin_Manufacturer=\\\"Alistair\\ Rutherford\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"https://github.com/alistairrutherford/chordchimp\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x41527574",
+					"JucePlugin_PluginCode=0x43636870",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=1",
+					"JucePlugin_ProducesMidiOutput=1",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Tools\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=ChordChimpAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"ChordChimpAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=com.alistairrutherford.chordchimp",
+					"JucePlugin_AAXIdentifier=com.AlistairRutherford.ChordChimp",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757269",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"Alistair\\ Rutherford:\\ ChordChimp\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.AlistairRutherford.ChordChimp.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.AlistairRutherford.ChordChimp.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK",
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/alistairrutherford/Development/JUCE/modules",
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info-Standalone_Plugin.plist;
+				INFOPLIST_PREPROCESS = NO;
+				LLVM_LTO = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MTL_HEADER_SEARCH_PATHS = "/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/alistairrutherford/Development/JUCE/modules /Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited) -lChordChimp";
+				PRODUCT_BUNDLE_IDENTIFIER = com.alistairrutherford.chordchimp;
+				PRODUCT_NAME = "ChordChimp";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+			};
+			name = Release;
+		};
+		D5B0DB75D815BE8FAA4BF4E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = NO;
+				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OTHER_CODE_SIGN_FLAGS = "--dryrun";
+				PRODUCT_NAME = "ChordChimp";
+				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wreorder";
+				ZERO_LINK = NO;
+			};
+			name = Debug;
+		};
+		FA21A86CE20984699AA37E84 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				EXCLUDED_ARCHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_DEBUG=1",
+					"DEBUG=1",
+					"JUCE_PROJUCER_VERSION=0x8000e",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_USE_CURL=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JUCE_WEB_BROWSER=0",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=0",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"ChordChimp\\\"",
+					"JucePlugin_Desc=\\\"One\\ key\\ plays\\ a\\ chord:\\ a\\ MIDI\\ chord\\ generator\\\"",
+					"JucePlugin_Manufacturer=\\\"Alistair\\ Rutherford\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"https://github.com/alistairrutherford/chordchimp\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x41527574",
+					"JucePlugin_PluginCode=0x43636870",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=1",
+					"JucePlugin_ProducesMidiOutput=1",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Tools\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=ChordChimpAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"ChordChimpAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=com.alistairrutherford.chordchimp",
+					"JucePlugin_AAXIdentifier=com.AlistairRutherford.ChordChimp",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757269",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"Alistair\\ Rutherford:\\ ChordChimp\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.AlistairRutherford.ChordChimp.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.AlistairRutherford.ChordChimp.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK",
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/alistairrutherford/Development/JUCE/modules",
+					"/Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info-VST3_Manifest_Helper.plist;
+				INFOPLIST_PREPROCESS = NO;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MTL_HEADER_SEARCH_PATHS = "/Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors_headless/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/alistairrutherford/Development/JUCE/modules /Users/alistairrutherford/Development/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CODE_SIGN_FLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.alistairrutherford.chordchimp;
+				PRODUCT_NAME = "juce_vst3_helper";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1879DCA0250AA79136D1BC29 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				13AB08880B44B4FAD7F9B460,
+				D5B0DB75D815BE8FAA4BF4E3,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8222CBBF4543FD822254FCD0 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3406293FB85C574BFF1A64D9,
+				49BD81B664E0BF9A45659694,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AD365078834721AD9965790D = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				08C236C7933DA54C85EA8401,
+				5C1CEB213D72A489C6840AB3,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D31BD2BEF55FBFE1A64FA361 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				64A8F977E949C6F683613BE8,
+				06130435363BB84DB730B361,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D4BCF24552F4DEA822E19FCB = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				531BF4F71CCBAFB4E31B30B8,
+				BC26814F6DFC0C836B3C257F,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		ECCECB419163DCB440B80413 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA21A86CE20984699AA37E84,
+				AD31EA0929BA8FDD974642D7,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A3729E7942C108EBE1A82409 /* Project object */;
+}

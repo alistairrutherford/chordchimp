@@ -1,0 +1,553 @@
+#include "ChordChimpProcessor.h"
+#include "../ui/ChordChimpEditor.h"
+#include <cmath>
+
+namespace chordchimp
+{
+    namespace
+    {
+
+        // Phase 3 saved each sequencer step as a bool ("seq1Step1"…); Phase 4 keeps one mask
+        // per pattern ("seq1Steps", Parameters.h). Folds the old steps of a saved state into
+        // the masks, so a set saved before Phase 4 plays the same patterns.
+        void migrateSeqSteps (juce::ValueTree& tree)
+        {
+            for (int p = 0; p < numSeqPatterns; ++p)
+            {
+                int mask = 0;
+                bool found = false;
+                for (int s = 0; s < numSeqSteps; ++s)
+                {
+                    auto step = tree.getChildWithProperty ("id", params::seqStep (p, s));
+                    if (! step.isValid())
+                        continue;
+                    found = true;
+                    if ((double) step.getProperty ("value") > 0.5)
+                        mask |= 1 << s;
+                    tree.removeChild (step, nullptr);
+                }
+                if (found && ! tree.getChildWithProperty ("id", params::seqSteps (p)).isValid())
+                {
+                    juce::ValueTree param ("PARAM");
+                    param.setProperty ("id", params::seqSteps (p), nullptr);
+                    param.setProperty ("value", mask, nullptr);
+                    tree.appendChild (param, nullptr);
+                }
+            }
+        }
+
+        // Phase 8: a saved value that isn't a finite number (a damaged set or preset file) is
+        // dropped rather than making the parameter NaN: a restore keeps the parameter's value,
+        // a preset gives it its default.
+        void dropNonFiniteValues (juce::ValueTree& tree)
+        {
+            for (auto child : tree)
+                if (child.hasType ("PARAM") && child.hasProperty ("value") && ! std::isfinite ((double) child.getProperty ("value")))
+                    child.removeProperty ("value", nullptr);
+        }
+    }
+
+    juce::AudioProcessor::BusesProperties ChordChimpProcessor::makeBuses()
+    {
+        // An instrument with a silent stereo output: hosts route MIDI-only instruments more
+        // reliably when there's an audio bus.
+        return BusesProperties().withOutput ("Output", juce::AudioChannelSet::stereo(), true);
+    }
+
+    ChordChimpProcessor::ChordChimpProcessor()
+        : AudioProcessor (makeBuses()),
+          state (*this, nullptr, "ChordChimp", params::createLayout()),
+          snapshot (state)
+    {
+        generated.ensureSize (output.capacity * 4);
+        notifiedEditsVersion = chordEditor.getVersion();
+        engine.setSession (&SharedSession::process());
+        uiState.addListener (this);
+        startTimerHz (20);
+    }
+
+    ChordChimpProcessor::~ChordChimpProcessor()
+    {
+        stopTimer();
+        uiState.removeListener (this);
+    }
+
+    void ChordChimpProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+    {
+        preparedSampleRate.store (sampleRate);
+        generated.ensureSize (output.capacity * 4);
+        engine.requestReset();
+    }
+
+    void ChordChimpProcessor::releaseResources()
+    {
+        engine.requestReset();
+    }
+
+    // Phase 8: JUCE's VST3 wrapper calls this when the host stops processing (setProcessing
+    // (false)). No MIDI can go out then, so every note ends on the first block after it resumes:
+    // in Live, a device switched off leaves its chord sounding until it is on again.
+    void ChordChimpProcessor::reset()
+    {
+        engine.requestReset();
+    }
+
+    bool ChordChimpProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+    {
+        const auto out = layouts.getMainOutputChannelSet();
+        return layouts.getMainInputChannelSet().isDisabled()
+            && (out == juce::AudioChannelSet::mono() || out == juce::AudioChannelSet::stereo());
+    }
+
+    Transport ChordChimpProcessor::readTransport()
+    {
+        Transport t = lastTransport;
+        t.sampleRate = getSampleRate() > 0.0 ? getSampleRate() : preparedSampleRate.load();
+        t.playing = false;
+        t.looping = false;
+        t.hasBarStart = false;
+
+        if (auto* ph = getPlayHead())
+        {
+            if (auto pos = ph->getPosition())
+            {
+                t.playing = pos->getIsPlaying();
+                if (auto b = pos->getBpm(); b.hasValue() && std::isfinite (*b) && *b > 0.0)
+                    t.bpm = *b;
+                if (auto p = pos->getPpqPosition(); p.hasValue() && std::isfinite (*p))
+                    t.ppq = *p;
+                if (auto ts = pos->getTimeSignature(); ts.hasValue() && ts->numerator > 0 && ts->denominator > 0)
+                {
+                    t.numerator = ts->numerator;
+                    t.denominator = ts->denominator;
+                }
+                // Loop points and the bar position, for the effects' clock (Source/core/engine/Clock.h).
+                if (auto loop = pos->getLoopPoints(); loop.hasValue() && std::isfinite (loop->ppqStart) && std::isfinite (loop->ppqEnd))
+                {
+                    t.looping = pos->getIsLooping() && loop->ppqEnd > loop->ppqStart;
+                    t.loopStart = loop->ppqStart;
+                    t.loopEnd = loop->ppqEnd;
+                }
+                if (auto bar = pos->getPpqPositionOfLastBarStart(); bar.hasValue() && std::isfinite (*bar))
+                {
+                    t.hasBarStart = true;
+                    t.barStartPpq = *bar;
+                }
+            }
+        }
+        return t;
+    }
+
+    void ChordChimpProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
+    {
+        run (buffer, midi, false);
+    }
+
+    void ChordChimpProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
+    {
+        run (buffer, midi, true);
+    }
+
+    void ChordChimpProcessor::run (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi, bool bypassed)
+    {
+        juce::ScopedNoDenormals noDenormals;
+        buffer.clear();
+        const int numSamples = buffer.getNumSamples();
+
+        const Transport transport = readTransport();
+
+        // The editor snapshot first: a state restore publishes it after setting the parameters,
+        // so reading the parameters second never pairs restored edits with the old group.
+        const ChordEdits& edits = chordEditor.read();
+        EngineSettings settings = snapshot.engineSettings();
+        if (bypassed)
+        {
+            // Host bypass behaves like Enable off: generated notes end, input passes through.
+            settings.enabled = false;
+            settings.testPattern = false;
+        }
+
+        // Short messages go through the engine; anything longer (SysEx) passes straight on. Keys
+        // played on the editor come first, at the block's first sample.
+        input.clear();
+        generated.clear();
+        {
+            const auto scope = uiFifo.read (uiFifo.getNumReady());
+            for (int i = 0; i < scope.blockSize1; ++i) input.push (uiNotes[(size_t) (scope.startIndex1 + i)]);
+            for (int i = 0; i < scope.blockSize2; ++i) input.push (uiNotes[(size_t) (scope.startIndex2 + i)]);
+        }
+        for (const auto meta : midi)
+        {
+            if (meta.numBytes >= 1 && meta.numBytes <= 3)
+            {
+                MidiEvent e;
+                e.sample = meta.samplePosition;
+                e.size = (uint8_t) meta.numBytes;
+                for (int i = 0; i < meta.numBytes; ++i)
+                    e.data[i] = meta.data[i];
+                // A host flooding more than the buffer holds loses note-ons first: the last
+                // slots are kept for key-ups, so no key is left down.
+                if (input.space() > inputReserve || e.isNoteOff() || e.isAllNotesOff())
+                    input.push (e);
+            }
+            else
+            {
+                generated.addEvent (meta.data, meta.numBytes, meta.samplePosition);
+            }
+        }
+
+        output.clear();
+        engine.process (settings, edits, transport, input.begin(), input.size(), numSamples, output);
+        recorder.record (transport, numSamples, output.begin(), output.size());
+
+        for (const auto& e : output)
+            generated.addEvent (e.data, e.size, e.sample);
+
+        // Copy rather than swap: swapping would hand `generated` the host's (possibly small)
+        // buffer, and the next block would allocate.
+        midi.clear();
+        midi.addEvents (generated, 0, -1, 0);
+
+        lastTransport = transport;
+        if (transport.playing)
+            lastTransport.ppq = transport.ppq + numSamples / transport.samplesPerBeat();
+
+        publishNoteStates();
+        lastChordSlot.store (engine.getLastChordSlot(), std::memory_order_relaxed);
+        soundingNotes.store (engine.getVoices().soundingNotes(), std::memory_order_relaxed);
+        transportPlaying.store (transport.playing, std::memory_order_relaxed);
+
+        ChordDisplay now { engine.getChords(), engine.getChordContext(), engine.getLastChordSlot(), engine.getActiveShifter(),
+                           engine.getSmartChord(), engine.hasSmartChord(), engine.isSmartChordRemote() };
+        if (! (now == lastDisplay))
+        {
+            lastDisplay = now;
+            display.publish (now);
+        }
+    }
+
+    void ChordChimpProcessor::publishNoteStates() noexcept
+    {
+        std::array<uint64_t, 2> s {}, k {}, p {};
+        for (int n = 0; n < 128; ++n)
+        {
+            const uint64_t bit = (uint64_t) 1 << (n & 63);
+            if (engine.getVoices().isSounding (n)) s[(size_t) (n >> 6)] |= bit;
+            if (engine.isKeyDown (n))              k[(size_t) (n >> 6)] |= bit;
+            if (engine.isPerforming (n))           p[(size_t) (n >> 6)] |= bit;
+        }
+        for (size_t i = 0; i < 2; ++i)
+        {
+            sounding[i].store (s[i], std::memory_order_relaxed);
+            keysDown[i].store (k[i], std::memory_order_relaxed);
+            performing[i].store (p[i], std::memory_order_relaxed);
+        }
+    }
+
+    void ChordChimpProcessor::pushUiNote (int note, int velocity, bool on) noexcept
+    {
+        if (note < 0 || note > 127)
+            return;
+        const auto scope = uiFifo.write (1);
+        const MidiEvent e = on ? MidiEvent::noteOn (0, note, juce::jlimit (1, 127, velocity), 0) : MidiEvent::noteOff (0, note, 0);
+        if (scope.blockSize1 > 0) uiNotes[(size_t) scope.startIndex1] = e;
+        else if (scope.blockSize2 > 0) uiNotes[(size_t) scope.startIndex2] = e;
+    }
+
+    //==========================================================================
+    void ChordChimpProcessor::timerCallback()
+    {
+        // A program the host chose off the message thread.
+        if (const int program = pendingProgram.exchange (-1); program >= 0)
+            loadProgram (program);
+
+        // The test rig's takes, for LiveBridge.
+        if (snapshot.engineSettings().testPattern)
+        {
+            const auto info = recorder.info();
+            if (info.take != 0 && ! info.recording && info.take != testTakeWritten && info.completedBars() > 0)
+            {
+                testTakeWritten = info.take;
+                juce::String error;
+                writeTake (testTakeFile(), error);
+            }
+        }
+
+        // Choosing a Chord Group resets the Chord Editor's edits.
+        chordEditor.sync (snapshot.chordGroup(), engine.getEditsDiscarded(), engine.getDiscardedVersion());
+        if (const auto v = chordEditor.getVersion(); v != notifiedEditsVersion.exchange (v))
+            notifyStateChanged();
+
+        syncKeyScale();
+    }
+
+    // Instance Sync (PLAN.md §4.7): Key and Scale are the group's. Joining a group takes its
+    // values (or gives it ours, if it has none); after that a change of ours is published, and a
+    // newer one from another member is adopted.
+    void ChordChimpProcessor::syncKeyScale()
+    {
+        auto& session = SharedSession::process();
+        const int group = snapshot.syncGroup();
+        if (group == 0)
+        {
+            syncedGroup = 0;
+            return;
+        }
+        const int key = snapshot.key(), scale = (int) snapshot.currentScale();
+        const auto shared = session.keyScale (group);
+        if (group != syncedGroup)
+        {
+            syncedGroup = group;
+            if (shared.valid)
+                adoptKeyScale (shared);
+            else
+            {
+                seenKeyScale = session.publishKeyScale (group, key, scale);
+                syncedKey = key;
+                syncedScale = scale;
+            }
+            return;
+        }
+        if (key != syncedKey || scale != syncedScale)
+        {
+            seenKeyScale = session.publishKeyScale (group, key, scale);
+            syncedKey = key;
+            syncedScale = scale;
+        }
+        else if (shared.valid && shared.version != seenKeyScale)
+        {
+            adoptKeyScale (shared);
+        }
+    }
+
+    void ChordChimpProcessor::adoptKeyScale (const SharedSession::KeyScale& shared)
+    {
+        auto set = [this] (const juce::String& id, int value)
+        {
+            if (auto* param = state.getParameter (id))
+                if (const float v = param->convertTo0to1 ((float) value); std::abs (param->getValue() - v) > 1.0e-6f)
+                    param->setValueNotifyingHost (v);
+        };
+        set (params::key, juce::jlimit (0, numKeys - 1, shared.key));
+        set (params::scale, juce::jlimit (0, numScales - 1, shared.scale));
+        syncedKey = snapshot.key();
+        syncedScale = (int) snapshot.currentScale();
+        seenKeyScale = shared.version;
+    }
+
+    void ChordChimpProcessor::notifyStateChanged()
+    {
+        if (! restoringState)
+            updateHostDisplay (ChangeDetails().withNonParameterStateChanged (true));
+    }
+
+    //==========================================================================
+    // Programs and presets.
+
+    int ChordChimpProcessor::getNumPrograms() { return (int) factoryPresets().size(); }
+
+    const juce::String ChordChimpProcessor::getProgramName (int index)
+    {
+        const auto& all = factoryPresets();
+        return index >= 0 && index < (int) all.size() ? all[(size_t) index].name : juce::String();
+    }
+
+    void ChordChimpProcessor::setCurrentProgram (int index)
+    {
+        if (index < 0 || index >= getNumPrograms())
+            return;
+        currentProgram = index;
+        if (juce::MessageManager::existsAndIsCurrentThread())
+            loadProgram (index);
+        else
+            pendingProgram = index;       // the timer loads it
+    }
+
+    void ChordChimpProcessor::loadProgram (int index)
+    {
+        const auto& p = factoryPresets()[(size_t) juce::jlimit (0, getNumPrograms() - 1, index)];
+        applyPreset (PresetManager::factoryTree (index), p.category, p.name);
+        currentProgram = index;
+    }
+
+    void ChordChimpProcessor::applyPreset (const juce::ValueTree& preset, const juce::String& category, const juce::String& name)
+    {
+        auto tree = preset.createCopy();
+        migrateSeqSteps (tree);
+        dropNonFiniteValues (tree);
+        for (auto* p : getParameters())
+        {
+            auto* param = dynamic_cast<juce::RangedAudioParameter*> (p);
+            if (param == nullptr || ! params::isPresetParameter (param->paramID))
+                continue;
+            const auto child = tree.getChildWithProperty ("id", param->paramID);
+            const float value = child.hasProperty ("value") ? param->convertTo0to1 ((float) (double) child.getProperty ("value"))
+                                                            : param->getDefaultValue();
+            if (std::abs (param->getValue() - value) > 1.0e-6f)
+                param->setValueNotifyingHost (value);
+        }
+        chordEditor.restore (tree.getChildWithName (ChordEditorState::treeType), snapshot.chordGroup());
+        engine.requestReset();            // all notes off on a preset change (PLAN.md §5)
+        setPresetIdentity (category, name);
+    }
+
+    juce::ValueTree ChordChimpProcessor::presetState()
+    {
+        juce::ValueTree tree ("ChordChimp");
+        for (const auto& child : state.copyState())
+            if (child.hasType ("PARAM") && params::isPresetParameter (child.getProperty ("id").toString()))
+                tree.appendChild (child.createCopy(), nullptr);
+        tree.appendChild (chordEditor.copyTree(), nullptr);
+        tree.setProperty ("version", JucePlugin_VersionString, nullptr);
+        return tree;
+    }
+
+    void ChordChimpProcessor::setPresetIdentity (const juce::String& category, const juce::String& name)
+    {
+        presetCategory = category;
+        presetName = name;
+        notifyStateChanged();
+    }
+
+    //==========================================================================
+    // MIDI import and export.
+
+    ChordImport ChordChimpProcessor::importMidiFile (const juce::File& file)
+    {
+        ChordImport result;
+        juce::MemoryBlock data;
+        if (! file.loadFileAsData (data))
+        {
+            result.message = "Couldn't read " + file.getFileName().toStdString();
+            return result;
+        }
+        MidiSong song;
+        std::string error;
+        if (! readMidiFile ((const uint8_t*) data.getData(), data.getSize(), song, error))
+        {
+            result.message = file.getFileName().toStdString() + ": " + error;
+            return result;
+        }
+        result = importMidi (song);
+        if (! result.ok)
+            return result;
+
+        auto set = [this] (const juce::String& id, float plain)
+        {
+            if (auto* param = state.getParameter (id))
+                param->setValueNotifyingHost (param->convertTo0to1 (plain));
+        };
+        set (params::key, (float) result.key);
+        set (params::scale, (float) (int) result.scale);
+        set (params::chordOctave, (float) result.chordOctave);
+        for (int n = 0; n < numChordSlots; ++n)
+            set (params::customDegree (n), (float) result.order[(size_t) n]);
+        set (params::progression, (float) (int) Progression::Custom);
+        chordEditor.setImported (snapshot.chordGroup(), result.degrees);
+        setPresetIdentity ("Imported", file.getFileNameWithoutExtension());
+        return result;
+    }
+
+    juce::File ChordChimpProcessor::testTakeFile()
+    {
+        return juce::File::getSpecialLocation (juce::File::userMusicDirectory).getChildFile ("ChordChimp").getChildFile ("Exports").getChildFile ("Test take.mid");
+    }
+
+    bool ChordChimpProcessor::writeTake (const juce::File& file, juce::String& error) const
+    {
+        TakeInfo info;
+        std::vector<RecordedEvent> events;
+        bool copied = false;
+        for (int attempt = 0; attempt < 4 && ! copied; ++attempt)
+            copied = recorder.snapshot (info, events);
+        if (! copied || info.completedBars() <= 0)
+        {
+            error = "Nothing to export yet: play at least one whole bar.";
+            return false;
+        }
+        const auto song = exportBars (info, events);
+        const auto bytes = writeMidiFile (song);
+        file.getParentDirectory().createDirectory();
+        if (! file.replaceWithData (bytes.data(), bytes.size()))
+        {
+            error = "Couldn't write " + file.getFullPathName();
+            return false;
+        }
+        return true;
+    }
+
+    juce::File ChordChimpProcessor::writeExport (juce::String& error)
+    {
+        const auto info = recorder.info();
+        const int bars = juce::jmin (info.completedBars(), ExportRecorder::maxBars);
+        const auto s = snapshot.engineSettings();
+        const juce::String name = "ChordChimp " + juce::String (keyName (s.key)).upToFirstOccurrenceOf ("/", false, false) + " "
+                                + scaleInfo (s.scale).name + " " + juce::String (bars) + (bars == 1 ? " bar" : " bars");
+        const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("ChordChimp Export")
+                              .getChildFile (juce::File::createLegalFileName (name) + ".mid");
+        return writeTake (file, error) ? file : juce::File();
+    }
+
+    juce::AudioProcessorEditor* ChordChimpProcessor::createEditor()
+    {
+        return new ChordChimpEditor (*this);
+    }
+
+    void ChordChimpProcessor::getStateInformation (juce::MemoryBlock& destData)
+    {
+        auto tree = state.copyState();
+        tree.appendChild (chordEditor.copyTree(), nullptr);
+        tree.appendChild (uiState.createCopy(), nullptr);
+        tree.setProperty ("program", currentProgram.load(), nullptr);
+        tree.setProperty ("presetName", presetName, nullptr);
+        tree.setProperty ("presetCategory", presetCategory, nullptr);
+        tree.setProperty ("version", JucePlugin_VersionString, nullptr);
+        if (auto xml = tree.createXml())
+            copyXmlToBinary (*xml, destData);
+    }
+
+    void ChordChimpProcessor::setStateInformation (const void* data, int sizeInBytes)
+    {
+        auto xml = getXmlFromBinary (data, sizeInBytes);
+        if (xml == nullptr || ! xml->hasTagName (state.state.getType()))
+            return;
+
+        auto tree = juce::ValueTree::fromXml (*xml);
+        currentProgram = juce::jlimit (0, getNumPrograms() - 1, (int) tree.getProperty ("program", 0));
+        presetName = tree.getProperty ("presetName", presetName).toString();
+        presetCategory = tree.getProperty ("presetCategory", presetCategory).toString();
+        const auto edits = tree.getChildWithName (ChordEditorState::treeType);
+        tree.removeChild (edits, nullptr);
+        const auto ui = tree.getChildWithName (uiState.getType());
+        restoringState = true;
+        if (ui.isValid())
+        {
+            uiState.copyPropertiesAndChildrenFrom (ui, nullptr);
+            tree.removeChild (ui, nullptr);
+        }
+        restoringState = false;
+        migrateSeqSteps (tree);
+        dropNonFiniteValues (tree);
+
+        // Parameters first, then the edits (made on the restored Chord Group): see run().
+        pendingProgram = -1;              // a restore replaces a program change still waiting
+        state.replaceState (tree);
+
+        // APVTS leaves a parameter alone when its value rounds to the saved one (a bool a host
+        // set to 0.3 is already "off"), so the host's raw value would survive the restore:
+        // set each saved one exactly. (APVTS adds a child without a value for a parameter the
+        // state doesn't have; that one keeps its value.)
+        for (auto* p : getParameters())
+            if (auto* param = dynamic_cast<juce::RangedAudioParameter*> (p))
+                if (const auto child = tree.getChildWithProperty ("id", param->paramID); child.hasProperty ("value"))
+                    if (const float v = param->convertTo0to1 ((float) (double) child.getProperty ("value")); std::abs (param->getValue() - v) > 1.0e-6f)
+                        param->setValueNotifyingHost (v);
+        chordEditor.restore (edits, snapshot.chordGroup());
+        notifiedEditsVersion = chordEditor.getVersion();   // a restore isn't a change to report
+    }
+}
+
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+{
+    return new chordchimp::ChordChimpProcessor();
+}
