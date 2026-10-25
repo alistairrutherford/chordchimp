@@ -1,5 +1,5 @@
-// Repeat (PLAN.md §4.5): restrikes the chord on every step of Repeat Rate while its key is held
-// (or held by Hold). Repeat Gate (0-100%) is the part of each step the chord sounds.
+// Repeat (Chordism's PLAN.md §4.5): restrikes the chord on every step of Repeat Rate while its key
+// is held (or held by Hold). Repeat Gate (0-100%) is the part of each step the chord sounds.
 //
 // The first strike is the key press itself; the next ones fall on the host grid (multiples of
 // the rate from ppq 0), so repeats stay in time with the song wherever the key went down. A

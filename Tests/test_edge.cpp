@@ -1,5 +1,6 @@
-// Phase 8 hardening (PLAN.md §7 row 8): the engine under hosts outside the ranges the other
-// suites sweep (R8 asks for 32-2048-sample blocks at 44.1/48/96 kHz; a host may do more).
+// Hardening (Chordism's Phase 8; PLAN.md §6, Phase 4): the engine under hosts outside the ranges
+// the other suites sweep (Chordism's R8 asks for 32-2048-sample blocks at 44.1/48/96 kHz; a host
+// may do more).
 //
 //   extremes      the test pattern's chords on the beat (within 1 sample) at 8-384 kHz, 20-999
 //                 BPM and 1-16384-sample blocks, and everything on at once in the same hosts

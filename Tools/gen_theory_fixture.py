@@ -94,7 +94,7 @@ def ladder(scale_name, build, key):
 
 
 def default_accidental(scale_name, degree, steps_above_root):
-    """The scale's default accidentals (PLAN.md §4.2): natural minor raises the 3rd of V
+    """The scale's default accidentals (Chordism's PLAN.md §4.2): natural minor raises the 3rd of V
     (the leading tone), so V comes out major."""
     if scale_name == "Natural Minor" and degree == 4 and steps_above_root % 7 == 2:
         return 1

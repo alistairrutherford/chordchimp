@@ -1,5 +1,5 @@
-// Hold (PLAN.md §4.5): the chord keeps playing (with its strum, arp, repeat and steps) after its
-// key is released.
+// Hold (Chordism's PLAN.md §4.5): the chord keeps playing (with its strum, arp, repeat and steps)
+// after its key is released.
 //
 //   Latch  until a new selection: the next chord key pressed ends every held chord
 //   Bar    the same, and at the latest the first bar line after the key is released

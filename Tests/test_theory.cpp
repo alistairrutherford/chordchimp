@@ -1,5 +1,5 @@
-// Theory core tests (PLAN.md R2, §8): every white key's chord in all 12 keys × all scales ×
-// all Chord Groups, against the music21 reference in fixtures/theory_reference.json
+// Theory core tests (Chordism's PLAN.md R2; PLAN.md §8): every white key's chord in all 12 keys ×
+// all scales × all Chord Groups, against the music21 reference in fixtures/theory_reference.json
 // (written by Tools/gen_theory_fixture.py).
 #include "TestUtil.h"
 #include "MiniJson.h"

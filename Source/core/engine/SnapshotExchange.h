@@ -1,6 +1,5 @@
-// Hands snapshots from one thread to another without locks or allocation (PLAN.md §5): the
-// message thread publishes Chord Editor data to the audio thread, and the audio thread
-// publishes what it played for the editor to show.
+// Hands snapshots from one thread to another without locks or allocation (Chordism's PLAN.md §5,
+// "Real-time safety rules"): the audio thread publishes what it played for the editor to show.
 //
 // Double-buffering with an atomic swap, in its safe form: three buffers. The writer fills its
 // back buffer and swaps it with the shared middle one; the reader swaps its front buffer with

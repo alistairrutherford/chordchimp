@@ -1,6 +1,6 @@
-// Chord naming (PLAN.md §4.2): a pitch-class set and its bass → a name with root, quality,
-// extensions, alterations and slash bass ("C", "Dm7", "Bm7b5", "G13b9", "Cmaj7/G").
-// Plain C++, no JUCE. Uses std::string: for the UI and tests, not the audio thread.
+// Chord naming (Chordism's PLAN.md §4.2): a pitch-class set and its bass → a name with root,
+// quality, extensions, alterations and slash bass ("C", "Dm7", "Bm7b5", "G13b9", "Cmaj7/G"). Plain
+// C++, no JUCE. Uses std::string: for the UI and tests, not the audio thread.
 //
 // Every pitch class of the chord is tried as the root. Each reading gets a cost (sus, 6th,
 // altered tones, tones it can't explain, a bass that isn't the root…) and the cheapest wins;
@@ -48,9 +48,10 @@ namespace chordchimp
 
     // The spelling of a key and scale. The tonic's letter is the one that writes the scale with
     // the fewest accidentals (Db major, not C#; F# minor, not Gb). A tie goes to sharps in scales
-    // with a major 3rd (F# major) and to flats in scales with a minor 3rd (Eb minor). Pitch classes outside the scale take the spelling with the smaller accidental. On a
-    // tie, scales with a major 3rd lower the tone above (Bb, Eb, Ab in C) except the #4 (F#), and
-    // scales with a minor 3rd raise the tone below (G# in A minor) except the b2 (Bb in A minor).
+    // with a major 3rd (F# major) and to flats in scales with a minor 3rd (Eb minor). Pitch classes
+    // outside the scale take the spelling with the smaller accidental. On a tie, scales with a
+    // major 3rd lower the tone above (Bb, Eb, Ab in C) except the #4 (F#), and scales with a minor
+    // 3rd raise the tone below (G# in A minor) except the b2 (Bb in A minor).
     inline Spelling makeSpelling (int key, Scale scale) noexcept
     {
         using namespace naming;
@@ -148,7 +149,8 @@ namespace chordchimp
             std::string quality;
         };
 
-        // Reads `m` (bit i = the tone i semitones above the root; bit 0 set) as a chord on that root.
+        // Reads `m` (bit i = the tone i semitones above the root; bit 0 set) as a chord on that
+        // root.
         inline Reading read (unsigned m)
         {
             auto has = [m] (int i) { return ((m >> i) & 1u) != 0; };

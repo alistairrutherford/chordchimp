@@ -1,5 +1,5 @@
-// Strum (PLAN.md §4.5): the chord's tones start one after another instead of together, and
-// are all held to the end of the chord.
+// Strum (Chordism's PLAN.md §4.5): the chord's tones start one after another instead of together,
+// and are all held to the end of the chord.
 //
 //   Up           lowest tone first
 //   Down         highest tone first

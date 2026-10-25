@@ -1,4 +1,4 @@
-// Arp (PLAN.md §4.4, §4.5): plays the chord's tones one per step, on the host grid.
+// Arp (Chordism's PLAN.md §4.5): plays the chord's tones one per step, on the host grid.
 //
 // The tones are the chord after Octave and Stack, ascending, repeated an octave up for each
 // extra octave of Range (1-3). Step k plays tone arpIndex(pattern, n, k) of those n tones.

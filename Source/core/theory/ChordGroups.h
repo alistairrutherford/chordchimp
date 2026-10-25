@@ -1,5 +1,5 @@
-// Factory Chord Groups (PLAN.md §4.2): families of chord shapes that fill in every slot's
-// steps at once. Choosing a group resets the Chord Editor's edits, as ChordPrism does.
+// Factory Chord Groups (Chordism's PLAN.md §4.2): families of chord shapes that fill in every
+// slot's steps at once. Choosing a group resets the Chord Editor's edits, as ChordPrism does.
 //
 // The order is the order of the host parameter's choices (saved by index): only append.
 #pragma once

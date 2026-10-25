@@ -1,4 +1,4 @@
-// Keys and seven-tone scales (PLAN.md §2, §4.2). Plain C++, no JUCE.
+// Keys and seven-tone scales (Chordism's PLAN.md §4.2). Plain C++, no JUCE.
 //
 // The order of `Scale` and `Key` is the order of the host parameters' choices, which Live
 // saves by index: only ever append new entries.

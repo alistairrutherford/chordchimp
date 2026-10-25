@@ -1,4 +1,5 @@
-// Octave and Stack, the first two stages of the chord-zone effect chain (PLAN.md §4.5).
+// Octave and Stack, the first two stages of the effect chain (PLAN.md §3.3; Chordism's PLAN.md
+// §4.5).
 //
 // Octave is the Chord Octave parameter (Phase 1): it moves the chord's ChordContext, so the
 // voicing already sounds in the chosen octave when it gets here. Stack then adds copies of

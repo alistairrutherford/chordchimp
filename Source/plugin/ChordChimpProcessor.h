@@ -1,6 +1,6 @@
 // The plug-in: a thin JUCE adapter around ChordEngine (Source/core/engine).
 //
-// Two builds from ChordChimp.jucer (PLAN.md §3): the VST3 instrument and the Standalone app.
+// Two builds from ChordChimp.jucer (PLAN.md §4.3): the VST3 instrument and the Standalone app.
 // Generated MIDI goes to the host's MIDI output (in Live: another track's "MIDI From"). The AU
 // builds and the CoreMIDI virtual port were removed on 2026-10-20.
 //

@@ -1,10 +1,10 @@
-// Which output notes each source owns (PLAN.md §4.5, "Note bookkeeping").
+// Which output notes each source owns (Chordism's PLAN.md §4.5, "Note bookkeeping").
 //
 // A source is anything that starts notes: an input key, a chord performance's strike or arp
 // step (held by its key, by Hold, or opened by a sequencer step; ChordFx.h). Releasing a source
-// ends exactly the notes it started, whatever changed in between (Key, Scale, Octave…). A pitch owned by several sources is
-// reference-counted: the first owner sends the note-on, the last one to let go sends the
-// note-off, so one source never cuts another's note.
+// ends exactly the notes it started, whatever changed in between (Key, Scale, Octave…). A pitch
+// owned by several sources is reference-counted: the first owner sends the note-on, the last one to
+// let go sends the note-off, so one source never cuts another's note.
 //
 // Plain C++, fixed size, real-time safe.
 #pragma once
@@ -88,7 +88,8 @@ namespace chordchimp
         }
         bool isEmpty() const noexcept { return sounding == 0; }
 
-        // Forget everything without sending note-offs (after the receiver was reset some other way).
+        // Forget everything without sending note-offs (after the receiver was reset some other
+        // way).
         void clear() noexcept
         {
             refs.fill (0);

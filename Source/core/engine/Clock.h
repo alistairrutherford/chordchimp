@@ -1,4 +1,4 @@
-// The engine's clock (PLAN.md §4.5): musical time for every sample of a block.
+// The engine's clock (Chordism's PLAN.md §4.5): musical time for every sample of a block.
 //
 // While the host plays, it follows the host transport: PPQ, tempo, time signature, bar
 // position and loop points. A block that crosses the loop end is split into segments, each a

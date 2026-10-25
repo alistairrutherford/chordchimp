@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds ChordChimp from this checkout and installs it for the current user (PLAN.md §7 row 8:
+# Builds ChordChimp from this checkout and installs it for the current user (PLAN.md §6, Phase 4:
 # personal use, ad-hoc signed; no Developer ID or .pkg).
 #
 #   Tools/install.sh                  build (Release, universal), sign ad hoc, install

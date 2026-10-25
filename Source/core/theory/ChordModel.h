@@ -1,4 +1,4 @@
-// The chord model of the Chord Generator and Chord Editor (PLAN.md §4.2). Plain C++, no JUCE.
+// The chord model (PLAN.md §3.2; the details in Chordism's PLAN.md §4.2). Plain C++, no JUCE.
 //
 // A chord is a stack of thirds on a scale degree. Each of the seven steps (1, 3, 5, 7, 9, 11,
 // 13) can be on or off, carry an accidental, and sound in any of five octaves:

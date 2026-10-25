@@ -1,5 +1,5 @@
-// Voice leading (PLAN.md §4.2): with Smooth, each new chord takes the inversion and octave
-// whose notes are closest to the chord played before it, so the voices move as little as
+// Voice leading (Chordism's PLAN.md §4.2): with Smooth, each new chord takes the inversion and
+// octave whose notes are closest to the chord played before it, so the voices move as little as
 // possible from chord to chord.
 //
 // The candidates for a chord are its inversions: inversion i keeps the chord's notes from the

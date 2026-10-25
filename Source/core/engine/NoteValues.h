@@ -1,4 +1,4 @@
-// Note values for the rhythmic effects, and the grid they run on (PLAN.md §4.4, §4.5).
+// Note values for the rhythmic effects, and the grid they run on (Chordism's PLAN.md §4.5).
 //
 // The order of each list is the order of a host parameter's choices: only ever append.
 // Lengths are in quarter notes (PPQ). Plain C++.

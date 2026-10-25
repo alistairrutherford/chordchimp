@@ -1,7 +1,7 @@
-// Roman numerals in ChordPrism's style (PLAN.md §4.2): upper case for a major chord, lower
-// case for minor, "*" after a diminished chord and "+" after an augmented one ("I", "ii",
-// "vii*", "III+"). A root moved by the editor's accidental is marked "b" or "#" ("bII").
-// Chords without a 3rd (power, sus) are written in upper case.
+// Roman numerals in ChordPrism's style (Chordism's PLAN.md §4.2): upper case for a major chord,
+// lower case for minor, "*" after a diminished chord and "+" after an augmented one ("I", "ii",
+// "vii*", "III+"). A root moved by the editor's accidental is marked "b" or "#" ("bII"). Chords
+// without a 3rd (power, sus) are written in upper case.
 //
 // The numeral is the slot's own: its degree, and the quality of its own 3rd and 5th steps, so
 // an inversion keeps its numeral. Plain C++, no JUCE; std::string, so not for the audio thread.

@@ -1,5 +1,5 @@
-// Velocity Algorithm (PLAN.md §4.5): replaces a note's velocity with a curve value at its
-// position in the bar.
+// Velocity Algorithm (Chordism's PLAN.md §4.5): replaces a note's velocity with a curve value at
+// its position in the bar.
 //
 // Each curve is 16 values (0..1), one per sixteenth of the bar (a bar of another length is
 // divided into 16 equal parts). A note-on at position x of the bar gets

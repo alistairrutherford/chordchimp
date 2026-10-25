@@ -61,7 +61,7 @@ namespace chordchimp
                 releaseAll (0, out);
 
             if (wasPlaying && ! t.playing)
-                releaseAll (0, out);   // transport stop: all notes off (PLAN.md §5)
+                releaseAll (0, out);   // transport stop: all notes off (Chordism's PLAN.md §5)
             if (! wasPlaying && t.playing)
                 performer.transportStarted();
             wasPlaying = t.playing;

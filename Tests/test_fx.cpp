@@ -1,8 +1,8 @@
-// Phase 3 tests (PLAN.md §7 row 3, §8): the Clock, the EventQueue, the effect building blocks
-// (Stack, Strum, Arp, Step Sequencer, Velocity Algorithm), and the chord-zone effect chain
-// under a fake host transport. Every timing test runs at 32-2048-sample blocks and 44.1, 48 and
-// 96 kHz, and must put each note-on and note-off within one sample of where its musical time
-// falls, through loop wraps (hosts that split their blocks at the loop end and hosts that don't),
+// Effect tests (Chordism's Phase 3; PLAN.md §8): the Clock, the EventQueue, the effect building
+// blocks (Stack, Strum, Arp, Step Sequencer, Velocity Algorithm), and the effect chain under a
+// fake host transport. Every timing test runs at 32-2048-sample blocks and 44.1, 48 and 96 kHz,
+// and must put each note-on and note-off within one sample of where its musical time falls,
+// through loop wraps (hosts that split their blocks at the loop end and hosts that don't),
 // locates and tempo changes, and while the transport is stopped.
 #include "FakeHost.h"
 #include <algorithm>

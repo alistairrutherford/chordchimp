@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The editor snapshot test (PLAN.md §7 row 5): builds Tests/Snapshot (a console app with the
+# The editor snapshot test (PLAN.md §8): builds Tests/Snapshot (a console app with the
 # processor and editor), renders the editor and compares it with Tests/fixtures/snapshot, and
 # checks that every parameter has a control and that state restores.
 #

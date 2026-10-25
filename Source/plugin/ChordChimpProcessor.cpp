@@ -275,7 +275,7 @@ namespace chordchimp
             if (std::abs (param->getValue() - value) > 1.0e-6f)
                 param->setValueNotifyingHost (value);
         }
-        engine.requestReset();            // all notes off on a preset change (PLAN.md §5)
+        engine.requestReset();            // all notes off on a preset change (Chordism §5)
         setPresetIdentity (category, name);
     }
 

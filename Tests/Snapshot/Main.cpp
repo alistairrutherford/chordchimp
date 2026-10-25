@@ -1,4 +1,4 @@
-// Editor snapshot test (PLAN.md §7 row 5, §8). Runs the real processor and editor without a
+// Editor snapshot test (PLAN.md §8). Runs the real processor and editor without a
 // host and checks:
 //
 //   1. snapshots  the editor in a fixed state (C major, the Pop progression, effects, keys held)
@@ -31,7 +31,7 @@
 // --update writes new reference images. --no-pixels renders the snapshots without comparing
 // them (CI: the references are tied to this Mac's font rendering). The images of this run are
 // always written to the output dir, for a look. --bench measures processBlock's CPU time
-// (PLAN.md §7 row 8: 8 instances under 1% CPU each; Tests/run_bench.sh); --bench-ui the
+// (PLAN.md §6, Phase 4: 8 instances under 1% CPU each; Tests/run_bench.sh); --bench-ui the
 // message thread's CPU with one editor open in a window while everything plays.
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../../Source/plugin/ChordChimpProcessor.h"

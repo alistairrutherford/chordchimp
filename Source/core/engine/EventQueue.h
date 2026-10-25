@@ -1,5 +1,5 @@
-// The scheduler's queue (PLAN.md §4.5, "Scheduling"): future note-ons and note-offs, kept
-// across blocks.
+// The scheduler's queue (Chordism's PLAN.md §4.5, "Scheduling"): future note-ons and note-offs,
+// kept across blocks.
 //
 // Fixed capacity, allocated with its owner (prepareToPlay), never resized. An event is timed
 // either in musical time (PPQ; the rhythmic effects) or in absolute samples (Strum while
