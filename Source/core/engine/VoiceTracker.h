@@ -1,9 +1,8 @@
 // Which output notes each source owns (PLAN.md §4.5, "Note bookkeeping").
 //
 // A source is anything that starts notes: an input key, a chord performance's strike or arp
-// step (held by its key, by Hold, or opened by a sequencer step; ChordFx.h), and a Smart Scale
-// key's tone, note repeat or pattern step (PatternEngine.h). Releasing a source ends exactly the notes it started, whatever
-// changed in between (Key, Scale, Split, Octave…). A pitch owned by several sources is
+// step (held by its key, by Hold, or opened by a sequencer step; ChordFx.h). Releasing a source
+// ends exactly the notes it started, whatever changed in between (Key, Scale, Octave…). A pitch owned by several sources is
 // reference-counted: the first owner sends the note-on, the last one to let go sends the
 // note-off, so one source never cuts another's note.
 //
@@ -20,9 +19,8 @@ namespace chordchimp
     {
     public:
         using Source = uint16_t;
-        // 0..127 input keys, 128..383 chord performances (ChordFx.h), 384..639 Smart Scale
-        // performances (PatternEngine.h): two per key.
-        static constexpr int maxSources = 640;
+        // 0..127 input keys, 128..383 chord performances (ChordFx.h): two per key.
+        static constexpr int maxSources = 384;
         static constexpr int maxNotesPerSource = 64;
 
         // Starts `note` for `source`. A source that already owns the pitch keeps it (no second

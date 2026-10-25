@@ -18,7 +18,7 @@ using testutil::check;
 
 namespace
 {
-    constexpr int C = 48, D = 50, E = 52, G = 55, Csharp = 49;
+    constexpr int C = 48, D = 50, E = 52, G = 55;
     const std::vector<int> cMajor { 48, 52, 55 }, dMinor { 50, 53, 57 }, gMajor { 55, 59, 62 }, eMinor { 52, 55, 59 };
 }
 
@@ -349,17 +349,17 @@ static void testArpTiming()
         return finish (h, e, worst);
     });
 
-    // A shifter mid-arp: the sounding tone isn't cut; the next step plays the new chord.
-    sweep ("Arp follows a shifter at its next step", [] (const Config& c, int64_t& worst)
+    // A Chord Group change mid-arp: the sounding tone isn't cut; the next step plays the new chord.
+    sweep ("Arp follows a Chord Group change at its next step", [] (const Config& c, int64_t& worst)
     {
         Host h (c.rate, c.bpm);
         h.settings.fx.arp = ArpPattern::LinearUp;
         h.settings.fx.arpRate = 1;     // 1/4
         h.settings.fx.arpGate = 1.0;
         h.key (0.0, C, true);
-        h.key (1.5, Csharp, true);     // shifter 1: Sevenths
         h.key (4.0, C, false);
-        h.key (4.0, Csharp, false);
+        h.run (h.at (1.5), c.block);
+        h.settings.group = ChordGroup::Sevenths;   // at the block that starts at beat 1.5
         h.run (h.at (4.5), c.block);
 
         Expect e (h.spq());
@@ -589,7 +589,7 @@ static void testHoldAndStack()
         return why;
     });
 
-    sweep ("Stack +1&2, a Stack change and a shifter restrike a strummed chord", [] (const Config& c, int64_t& worst)
+    sweep ("Stack +1&2, a Stack change and a Chord Group change restrike a strummed chord", [] (const Config& c, int64_t& worst)
     {
         Host h (c.rate, c.bpm);
         h.settings.fx.stack = StackMode::PlusOneAndTwo;
@@ -600,9 +600,9 @@ static void testHoldAndStack()
         h.settings.fx.strum = StrumMode::Up;
         h.settings.fx.strumRate = 6;   // 1/16
         h.key (2.0, C, true);
-        h.key (3.0, Csharp, true);     // shifter 1: Sevenths, restrums from beat 3
         h.key (4.5, C, false);
-        h.key (4.5, Csharp, false);
+        h.run (h.at (3.0), c.block);
+        h.settings.group = ChordGroup::Sevenths;   // restrums from beat 3
         h.run (h.at (4.0), c.block);
         h.settings.fx.stack = StackMode::PlusOne;   // at the block that starts at beat 4
         const double change = h.ppq;

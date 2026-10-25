@@ -1,16 +1,15 @@
-// Chord Editor and chord naming tests (PLAN.md R3, §4.2, §8).
+// Chord model and chord naming tests (PLAN.md §3.2, §8).
 //
-// R3: every chord of a reference set (triads to 13ths, altered chords, inversions, drop
-// voicings) is built with the Chord Editor's operations on a Chord Group's shape, played
-// through the engine by its white key, and must give exactly the expected MIDI notes and name.
-// The expected notes are written out by hand (MIDI 48 = C3, the chord zone's C).
+// A reference set of chords (triads to 13ths, altered chords, inversions, drop voicings) is
+// built by step edits on a Chord Group's shape (Chordism's Chord Editor operations, applied to
+// the slot directly) and must give exactly the expected MIDI notes, name and Roman numeral.
+// The expected notes are written out by hand (MIDI 48 = C2, the chords' default C).
 //
 // Also: names of pitch-class sets (root choice, slash bass), spelling in every key, and Roman
 // numerals in ChordPrism's style.
 #include "TestUtil.h"
-#include "core/engine/ChordChimpEngine.h"
+#include "core/theory/Progressions.h"
 #include "core/theory/ChordNamer.h"
-#include "core/theory/ChordTypes.h"
 #include "core/theory/RomanNumeral.h"
 #include <algorithm>
 #include <sstream>
@@ -29,7 +28,7 @@ namespace
         return o.str();
     }
 
-    // One Chord Editor operation, on a step written as its chord number (1, 3, 5 … 13).
+    // One step edit, on a step written as its chord number (1, 3, 5 … 13).
     struct Op
     {
         enum Kind { On, Off, Acc, OctaveOnly, AddOctave } kind;
@@ -45,21 +44,16 @@ namespace
 
     int stepOf (int number) { return (number - 1) / 2; }
 
-    void apply (ChordEdits& e, ChordGroup g, Scale s, int degree, const Op& op)
+    void apply (ChordSlot& slot, const Op& op)
     {
-        const int k = stepOf (op.number);
+        Step& step = slot.steps[(size_t) stepOf (op.number)];
         switch (op.kind)
         {
-            case Op::On:  editor::setOn (e, g, s, degree, k, true); break;
-            case Op::Off: editor::setOn (e, g, s, degree, k, false); break;
-            case Op::Acc: editor::setAccidental (e, g, s, degree, k, op.value); break;
-            case Op::AddOctave: editor::setOctave (e, g, s, degree, k, op.value, true); break;
-            case Op::OctaveOnly:
-                editor::setOctave (e, g, s, degree, k, op.value, true);
-                for (int o = minStepOctave; o <= maxStepOctave; ++o)
-                    if (o != op.value)
-                        editor::setOctave (e, g, s, degree, k, o, false);
-                break;
+            case Op::On:  step.on = true; break;
+            case Op::Off: step.on = false; break;
+            case Op::Acc: step.accidental = (int8_t) op.value; break;
+            case Op::AddOctave: step.octaveMask = (uint8_t) (step.octaveMask | octaveBit (op.value)); break;
+            case Op::OctaveOnly: step.octaveMask = octaveBit (op.value); break;
         }
     }
 
@@ -153,21 +147,11 @@ namespace
         };
     }
 
-    std::vector<int> playKey (ChordChimpEngine& engine, const EngineSettings& s, const ChordEdits& edits, int key)
+    std::vector<int> sortedNotes (const ChordSlot& slot, const ChordContext& ctx)
     {
-        BlockEvents out;
-        Transport t;
-        const MidiEvent down = MidiEvent::noteOn (0, key, 100, 0);
-        engine.process (s, edits, t, &down, 1, 64, out);
-        std::vector<int> notes;
-        for (const auto& e : out)
-            if (e.isNoteOn())
-                notes.push_back (e.note());
+        const ChordNotes n = chordNotes (slot, ctx);
+        std::vector<int> notes (n.begin(), n.end());
         std::sort (notes.begin(), notes.end());
-
-        out.clear();
-        const MidiEvent up = MidiEvent::noteOff (0, key, 0);
-        engine.process (s, edits, t, &up, 1, 64, out);
         return notes;
     }
 }
@@ -175,27 +159,17 @@ namespace
 //==============================================================================
 static void testReferenceSet()
 {
-    std::cout << "== R3 reference chords, built in the Chord Editor ==\n";
-    ChordChimpEngine engine;
-    uint32_t version = 0;
+    std::cout << "== reference chords, built by step edits ==\n";
     int built = 0;
 
     for (const auto& ref : referenceSet())
     {
-        EngineSettings s;
-        s.key = ref.key;
-        s.scale = ref.scale;
-        s.group = ChordGroup::Triads;
-
-        ChordEdits edits;
-        editor::reset (edits, s.group);
+        ChordSlot slot = makeGroupSlot (ChordGroup::Triads, ref.scale, ref.degree);
         for (const auto& op : ref.ops)
-            apply (edits, s.group, s.scale, ref.degree, op);
-        edits.version = ++version;
+            apply (slot, op);
 
-        const auto got = playKey (engine, s, edits, 48 + keys::whiteOffsets[ref.degree]);
-        const ChordSlot& slot = engine.getChords()[(size_t) ref.degree];
         const ChordContext ctx { ref.key, ref.scale, 0 };
+        const auto got = sortedNotes (slot, ctx);
         const std::string slotName = nameSlot (slot, ctx).text();
 
         unsigned mask = 0;
@@ -222,51 +196,16 @@ static void testReferenceSet()
         check (ok, what.str());
         built += ok ? 1 : 0;
     }
-    check (engine.getVoices().isEmpty(), "nothing left sounding after the reference set");
     std::cout << "        " << built << " reference chords built\n";
 }
 
 //==============================================================================
-static void testEditorModel()
+static void testProgressionOrders()
 {
-    std::cout << "== Chord Editor model ==\n";
-    const auto g = ChordGroup::Sevenths;
-    const auto s = Scale::NaturalMinor;
-
-    ChordEdits e;
-    editor::reset (e, g);
-    check (! e.any() && editor::slotFor (e, g, s, 4) == makeGroupSlot (g, s, 4), "no edits: a degree plays the group's shape");
-
-    editor::setOn (e, g, s, 4, 4, true);   // add the 9th to V
-    const auto v = editor::slotFor (e, g, s, 4);
-    check (e.degrees[4].edited && v.steps[4].on && v.steps[1].accidental == 1 && v.steps[3].on,
-           "the first edit starts from the group's shape, with the scale's default accidental (raised 3rd of V)");
-    check (! e.degrees[0].edited && editor::slotFor (e, g, s, 0) == makeGroupSlot (g, s, 0), "other degrees keep the group's shape");
-
-    editor::setAccidental (e, g, s, 4, 4, -5);
-    check (editor::slotFor (e, g, s, 4).steps[4].accidental == -2, "accidentals are clamped to -2..+2");
-    editor::setOctave (e, g, s, 4, 0, -1, true);
-    editor::setOctave (e, g, s, 4, 0, 2, true);
-    check (editor::slotFor (e, g, s, 4).steps[0].octaveMask == (octaveBit (-1) | octaveBit (0) | octaveBit (2)), "octaves stack");
-    editor::setOctave (e, g, s, 4, 0, 3, true);
-    check (editor::slotFor (e, g, s, 4).steps[0].octaveMask == (octaveBit (-1) | octaveBit (0) | octaveBit (2)), "an octave outside -2..+2 is ignored");
-
-    check (editor::slotFor (e, ChordGroup::Triads, s, 4) == makeGroupSlot (ChordGroup::Triads, s, 4),
-           "edits made on one group don't apply to another");
-
-    editor::setOn (e, ChordGroup::Triads, s, 1, 3, true);
-    check (e.group == ChordGroup::Triads && ! e.degrees[4].edited && e.degrees[1].edited,
-           "editing under another group starts again from that group (the old edits are reset)");
-
-    editor::resetDegree (e, 1);
-    check (! e.any(), "resetDegree returns a degree to the group's shape");
-
-    // Progressions reorder chords; edits follow the degree.
-    editor::reset (e, g);
-    editor::setOn (e, g, Scale::Major, 4, 4, true);
-    const auto pop = makeChords (g, Scale::Major, progressionDegrees (Progression::Pop, identityOrder()), &e);
-    check (pop[1].degree == 4 && pop[1].steps[4].on && pop[0].degree == 0 && ! pop[0].steps[4].on,
-           "Pop progression: the D key plays V, with V's edits");
+    std::cout << "== progressions ==\n";
+    const auto pop = makeChords (ChordGroup::Sevenths, Scale::Major, progressionDegrees (Progression::Pop, identityOrder()));
+    check (pop[1].degree == 4 && pop[0].degree == 0 && pop[1] == makeGroupSlot (ChordGroup::Sevenths, Scale::Major, 4),
+           "Pop progression: the D key plays V in the group's shape");
 
     DegreeOrder custom { 4, 4, 0, 9, -3, 2, 1 };
     const auto c = progressionDegrees (Progression::Custom, custom);
@@ -378,57 +317,11 @@ static void testRomanNumerals()
     check (row (Scale::Major, ChordGroup::Sevenths) == "I ii iii IV V vi vii*", "sevenths: the triad decides");
 }
 
-// The Active Chord menu's types (ChordTypes.h): on every degree of every scale, each type that
-// is offered gives a chord ChordNamer names with that type, on the slot's own root.
-static void testChordTypes()
-{
-    std::cout << "== chord types (Active Chord) ==\n";
-    int applied = 0, skipped = 0, bad = 0;
-    std::string first;
-    for (int s = 0; s < numScales; ++s)
-        for (int d = 0; d < 7; ++d)
-            for (auto g : { ChordGroup::Triads, ChordGroup::Thirteenths, ChordGroup::Sus4 })
-                for (int t = 0; t < numChordTypes; ++t)
-                {
-                    ChordSlot slot;
-                    if (! withChordType (makeGroupSlot (g, (Scale) s, d), (Scale) s, t, slot))
-                    {
-                        ++skipped;
-                        continue;
-                    }
-                    ++applied;
-                    const ChordContext ctx { 0, (Scale) s, 0 };
-                    const auto name = nameSlot (slot, ctx);
-                    if ((name.quality != chordType (t).quality || name.root != slotRootPc (slot, ctx) || name.bass != name.root) && bad++ == 0)
-                        first = std::string (" first: ") + scaleInfo ((Scale) s).name + " degree " + std::to_string (d + 1) + " "
-                              + chordType (t).name + " named " + name.text();
-                }
-    check (bad == 0, std::to_string (applied) + " chords of 27 types on 13 scales × 7 degrees × 3 starting groups named as their type ("
-                         + std::to_string (skipped) + " not offered)" + first);
-
-    bool everyDegree = true;
-    for (int d = 0; d < 7; ++d)
-        for (int t = 0; t < numChordTypes; ++t)
-        {
-            ChordSlot slot;
-            everyDegree &= withChordType (makeGroupSlot (ChordGroup::Triads, Scale::Major, d), Scale::Major, t, slot);
-        }
-    check (everyDegree, "in major, every type is offered on every degree");
-
-    ChordSlot v;
-    withChordType (makeGroupSlot (ChordGroup::Triads, Scale::Major, 4), Scale::Major, 24, v);   // G7#9
-    check (v.steps[4].on && v.steps[4].accidental == 1 && v.steps[3].accidental == 0 && ! v.steps[5].on && ! v.steps[6].on,
-           "7#9 on V: the 9th raised, the 7th natural, 11th and 13th off");
-    withChordType (makeGroupSlot (ChordGroup::Triads, Scale::Major, 0), Scale::Major, 4, v);    // Csus2
-    check (! v.steps[1].on && v.steps[4].on && v.steps[4].octaveMask == octaveBit (-1), "sus2: no 3rd, the 9th an octave down (a 2nd)");
-}
-
 int main()
 {
-    testEditorModel();
+    testProgressionOrders();
     testReferenceSet();
     testNaming();
     testRomanNumerals();
-    testChordTypes();
     return testutil::finish ("test_chords");
 }

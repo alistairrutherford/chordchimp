@@ -60,8 +60,6 @@ namespace chordchimp
           snapshot (state)
     {
         generated.ensureSize (output.capacity * 4);
-        notifiedEditsVersion = chordEditor.getVersion();
-        engine.setSession (&SharedSession::process());
         uiState.addListener (this);
         startTimerHz (20);
     }
@@ -156,9 +154,6 @@ namespace chordchimp
 
         const Transport transport = readTransport();
 
-        // The editor snapshot first: a state restore publishes it after setting the parameters,
-        // so reading the parameters second never pairs restored edits with the old group.
-        const ChordEdits& edits = chordEditor.read();
         EngineSettings settings = snapshot.engineSettings();
         if (bypassed)
         {
@@ -197,8 +192,7 @@ namespace chordchimp
         }
 
         output.clear();
-        engine.process (settings, edits, transport, input.begin(), input.size(), numSamples, output);
-        recorder.record (transport, numSamples, output.begin(), output.size());
+        engine.process (settings, transport, input.begin(), input.size(), numSamples, output);
 
         for (const auto& e : output)
             generated.addEvent (e.data, e.size, e.sample);
@@ -217,8 +211,7 @@ namespace chordchimp
         soundingNotes.store (engine.getVoices().soundingNotes(), std::memory_order_relaxed);
         transportPlaying.store (transport.playing, std::memory_order_relaxed);
 
-        ChordDisplay now { engine.getChords(), engine.getChordContext(), engine.getLastChordSlot(), engine.getActiveShifter(),
-                           engine.getSmartChord(), engine.hasSmartChord(), engine.isSmartChordRemote() };
+        ChordDisplay now { engine.getChords(), engine.getChordContext(), engine.getLastChordSlot() };
         if (! (now == lastDisplay))
         {
             lastDisplay = now;
@@ -260,79 +253,6 @@ namespace chordchimp
         // A program the host chose off the message thread.
         if (const int program = pendingProgram.exchange (-1); program >= 0)
             loadProgram (program);
-
-        // The test rig's takes, for LiveBridge.
-        if (snapshot.engineSettings().testPattern)
-        {
-            const auto info = recorder.info();
-            if (info.take != 0 && ! info.recording && info.take != testTakeWritten && info.completedBars() > 0)
-            {
-                testTakeWritten = info.take;
-                juce::String error;
-                writeTake (testTakeFile(), error);
-            }
-        }
-
-        // Choosing a Chord Group resets the Chord Editor's edits.
-        chordEditor.sync (snapshot.chordGroup(), engine.getEditsDiscarded(), engine.getDiscardedVersion());
-        if (const auto v = chordEditor.getVersion(); v != notifiedEditsVersion.exchange (v))
-            notifyStateChanged();
-
-        syncKeyScale();
-    }
-
-    // Instance Sync (PLAN.md §4.7): Key and Scale are the group's. Joining a group takes its
-    // values (or gives it ours, if it has none); after that a change of ours is published, and a
-    // newer one from another member is adopted.
-    void ChordChimpProcessor::syncKeyScale()
-    {
-        auto& session = SharedSession::process();
-        const int group = snapshot.syncGroup();
-        if (group == 0)
-        {
-            syncedGroup = 0;
-            return;
-        }
-        const int key = snapshot.key(), scale = (int) snapshot.currentScale();
-        const auto shared = session.keyScale (group);
-        if (group != syncedGroup)
-        {
-            syncedGroup = group;
-            if (shared.valid)
-                adoptKeyScale (shared);
-            else
-            {
-                seenKeyScale = session.publishKeyScale (group, key, scale);
-                syncedKey = key;
-                syncedScale = scale;
-            }
-            return;
-        }
-        if (key != syncedKey || scale != syncedScale)
-        {
-            seenKeyScale = session.publishKeyScale (group, key, scale);
-            syncedKey = key;
-            syncedScale = scale;
-        }
-        else if (shared.valid && shared.version != seenKeyScale)
-        {
-            adoptKeyScale (shared);
-        }
-    }
-
-    void ChordChimpProcessor::adoptKeyScale (const SharedSession::KeyScale& shared)
-    {
-        auto set = [this] (const juce::String& id, int value)
-        {
-            if (auto* param = state.getParameter (id))
-                if (const float v = param->convertTo0to1 ((float) value); std::abs (param->getValue() - v) > 1.0e-6f)
-                    param->setValueNotifyingHost (v);
-        };
-        set (params::key, juce::jlimit (0, numKeys - 1, shared.key));
-        set (params::scale, juce::jlimit (0, numScales - 1, shared.scale));
-        syncedKey = snapshot.key();
-        syncedScale = (int) snapshot.currentScale();
-        seenKeyScale = shared.version;
     }
 
     void ChordChimpProcessor::notifyStateChanged()
@@ -386,7 +306,6 @@ namespace chordchimp
             if (std::abs (param->getValue() - value) > 1.0e-6f)
                 param->setValueNotifyingHost (value);
         }
-        chordEditor.restore (tree.getChildWithName (ChordEditorState::treeType), snapshot.chordGroup());
         engine.requestReset();            // all notes off on a preset change (PLAN.md §5)
         setPresetIdentity (category, name);
     }
@@ -397,7 +316,6 @@ namespace chordchimp
         for (const auto& child : state.copyState())
             if (child.hasType ("PARAM") && params::isPresetParameter (child.getProperty ("id").toString()))
                 tree.appendChild (child.createCopy(), nullptr);
-        tree.appendChild (chordEditor.copyTree(), nullptr);
         tree.setProperty ("version", JucePlugin_VersionString, nullptr);
         return tree;
     }
@@ -409,85 +327,6 @@ namespace chordchimp
         notifyStateChanged();
     }
 
-    //==========================================================================
-    // MIDI import and export.
-
-    ChordImport ChordChimpProcessor::importMidiFile (const juce::File& file)
-    {
-        ChordImport result;
-        juce::MemoryBlock data;
-        if (! file.loadFileAsData (data))
-        {
-            result.message = "Couldn't read " + file.getFileName().toStdString();
-            return result;
-        }
-        MidiSong song;
-        std::string error;
-        if (! readMidiFile ((const uint8_t*) data.getData(), data.getSize(), song, error))
-        {
-            result.message = file.getFileName().toStdString() + ": " + error;
-            return result;
-        }
-        result = importMidi (song);
-        if (! result.ok)
-            return result;
-
-        auto set = [this] (const juce::String& id, float plain)
-        {
-            if (auto* param = state.getParameter (id))
-                param->setValueNotifyingHost (param->convertTo0to1 (plain));
-        };
-        set (params::key, (float) result.key);
-        set (params::scale, (float) (int) result.scale);
-        set (params::chordOctave, (float) result.chordOctave);
-        for (int n = 0; n < numChordSlots; ++n)
-            set (params::customDegree (n), (float) result.order[(size_t) n]);
-        set (params::progression, (float) (int) Progression::Custom);
-        chordEditor.setImported (snapshot.chordGroup(), result.degrees);
-        setPresetIdentity ("Imported", file.getFileNameWithoutExtension());
-        return result;
-    }
-
-    juce::File ChordChimpProcessor::testTakeFile()
-    {
-        return juce::File::getSpecialLocation (juce::File::userMusicDirectory).getChildFile ("ChordChimp").getChildFile ("Exports").getChildFile ("Test take.mid");
-    }
-
-    bool ChordChimpProcessor::writeTake (const juce::File& file, juce::String& error) const
-    {
-        TakeInfo info;
-        std::vector<RecordedEvent> events;
-        bool copied = false;
-        for (int attempt = 0; attempt < 4 && ! copied; ++attempt)
-            copied = recorder.snapshot (info, events);
-        if (! copied || info.completedBars() <= 0)
-        {
-            error = "Nothing to export yet: play at least one whole bar.";
-            return false;
-        }
-        const auto song = exportBars (info, events);
-        const auto bytes = writeMidiFile (song);
-        file.getParentDirectory().createDirectory();
-        if (! file.replaceWithData (bytes.data(), bytes.size()))
-        {
-            error = "Couldn't write " + file.getFullPathName();
-            return false;
-        }
-        return true;
-    }
-
-    juce::File ChordChimpProcessor::writeExport (juce::String& error)
-    {
-        const auto info = recorder.info();
-        const int bars = juce::jmin (info.completedBars(), ExportRecorder::maxBars);
-        const auto s = snapshot.engineSettings();
-        const juce::String name = "ChordChimp " + juce::String (keyName (s.key)).upToFirstOccurrenceOf ("/", false, false) + " "
-                                + scaleInfo (s.scale).name + " " + juce::String (bars) + (bars == 1 ? " bar" : " bars");
-        const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("ChordChimp Export")
-                              .getChildFile (juce::File::createLegalFileName (name) + ".mid");
-        return writeTake (file, error) ? file : juce::File();
-    }
-
     juce::AudioProcessorEditor* ChordChimpProcessor::createEditor()
     {
         return new ChordChimpEditor (*this);
@@ -496,7 +335,6 @@ namespace chordchimp
     void ChordChimpProcessor::getStateInformation (juce::MemoryBlock& destData)
     {
         auto tree = state.copyState();
-        tree.appendChild (chordEditor.copyTree(), nullptr);
         tree.appendChild (uiState.createCopy(), nullptr);
         tree.setProperty ("program", currentProgram.load(), nullptr);
         tree.setProperty ("presetName", presetName, nullptr);
@@ -516,8 +354,6 @@ namespace chordchimp
         currentProgram = juce::jlimit (0, getNumPrograms() - 1, (int) tree.getProperty ("program", 0));
         presetName = tree.getProperty ("presetName", presetName).toString();
         presetCategory = tree.getProperty ("presetCategory", presetCategory).toString();
-        const auto edits = tree.getChildWithName (ChordEditorState::treeType);
-        tree.removeChild (edits, nullptr);
         const auto ui = tree.getChildWithName (uiState.getType());
         restoringState = true;
         if (ui.isValid())
@@ -529,7 +365,6 @@ namespace chordchimp
         migrateSeqSteps (tree);
         dropNonFiniteValues (tree);
 
-        // Parameters first, then the edits (made on the restored Chord Group): see run().
         pendingProgram = -1;              // a restore replaces a program change still waiting
         state.replaceState (tree);
 
@@ -542,8 +377,6 @@ namespace chordchimp
                 if (const auto child = tree.getChildWithProperty ("id", param->paramID); child.hasProperty ("value"))
                     if (const float v = param->convertTo0to1 ((float) (double) child.getProperty ("value")); std::abs (param->getValue() - v) > 1.0e-6f)
                         param->setValueNotifyingHost (v);
-        chordEditor.restore (edits, snapshot.chordGroup());
-        notifiedEditsVersion = chordEditor.getVersion();   // a restore isn't a change to report
     }
 }
 

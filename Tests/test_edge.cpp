@@ -61,12 +61,10 @@ namespace
         return why.str();
     }
 
-    // Every chord and Smart Scale effect at once (the heaviest the engine gets).
+    // Every effect at once (the heaviest the engine gets).
     void everythingOn (EngineSettings& s)
     {
         s.testPattern = true;
-        s.testShifter = 1;
-        s.testSmart = TestPattern::smartPattern + 2;   // pattern key 3 held (slot 3: Converge Up ×2)
         s.group = ChordGroup::Thirteenths;
         s.fx.stack = StackMode::PlusOneAndTwo;
         s.fx.arp = ArpPattern::BoomerangUp;
@@ -79,17 +77,6 @@ namespace
         s.fx.velocity = { VelocityCurve::House, 120, 0.8 };
         s.fx.hold = HoldMode::Bar;
         s.fx.voiceLeading = VoiceLeadingMode::Smooth;
-        s.smart.stack = StackMode::PlusOneAndTwo;
-        s.smart.noteRepeat = true;
-        s.smart.patterns[2].rate = numPatternRates - 1;
-        s.smart.patterns[2].range = 3;
-        s.smart.patterns[2].chord = ArpChord::Thirteenths;
-        s.smart.patterns[0].melody = true;
-        s.smart.patterns[0].notes = 16;
-        s.smart.seq.on = true;
-        s.smart.velocity = { VelocityCurve::Breakbeat, 110, 0.5 };
-        s.smart.hold = HoldMode::Latch;
-        s.lookAhead = numLookAheads - 1;
     }
 
     // Ends a run: the transport stops, then the test pattern and the holds go.
@@ -98,7 +85,6 @@ namespace
         h.stop();
         h.settings.testPattern = false;
         h.settings.fx.hold = HoldMode::Off;
-        h.settings.smart.hold = HoldMode::Off;
         h.run (h.pos + 64, 64);
         return h.clean();
     }
@@ -166,8 +152,7 @@ static void testExtremes()
             x.run (std::min (until, x.pos + step), c.block);
             maxSounding = std::max (maxSounding, (int) x.rx.on.size());
             const auto& p = x.engine->getPerformer();
-            const auto& s = x.engine->getSmartPerformer();
-            if (p.queued() > 4 * p.aliveCount() || s.queued() > 4 * s.aliveCount())
+            if (p.queued() > 4 * p.aliveCount())
             {
                 x.rx.doubleOns += 1000000;   // marks the run as failed
                 break;
@@ -305,7 +290,7 @@ static void testHostile (uint32_t seed)
     auto pick = [&] (int lo, int hi) { return std::uniform_int_distribution<int> (lo, hi) (rng); };
     auto real = [&] (double lo, double hi) { return std::uniform_real_distribution<double> (lo, hi) (rng); };
 
-    ChordChimpEngine engine;
+    ChordEngine engine;
     EngineSettings s;
     everythingOn (s);
     Transport t { 44100.0, true, 0.0, 120.0, 4, 4 };
@@ -391,7 +376,6 @@ static void testHostile (uint32_t seed)
     for (const int note : down)
         ups.push_back (MidiEvent::noteOff (0, note, 0));
     s.fx.hold = HoldMode::Off;
-    s.smart.hold = HoldMode::Off;
     s.testPattern = false;
     t.playing = false;
     for (int i = 0; i < 2; ++i)
@@ -416,15 +400,13 @@ static void testFloods()
     // with Hold (as many notes as can sound).
     for (const bool arps : { true, false })
     {
-        ChordChimpEngine engine;
+        ChordEngine engine;
         EngineSettings s;
         everythingOn (s);
         if (! arps)
         {
             s.fx.arp = ArpPattern::Off;
             s.fx.seq.on = false;
-            s.smart.noteRepeat = false;
-            s.testSmart = TestPattern::smartOff;
             s.fx.hold = HoldMode::Latch;
         }
         Transport t { 44100.0, true, 0.0, 120.0, 4, 4 };
@@ -464,8 +446,7 @@ static void testFloods()
         for (int note = 0; note < 128; ++note)
             ups.push_back (MidiEvent::noteOff (0, note, 0));
         s.fx.hold = HoldMode::Off;
-        s.smart.hold = HoldMode::Off;
-        s.testPattern = false;
+            s.testPattern = false;
         t.playing = false;
         out.clear();
         engine.process (s, t, ups.data(), (int) ups.size(), 512, out);

@@ -7,53 +7,14 @@ namespace chordchimp::ui
 {
     namespace
     {
-        const char* shortGroupName (ChordGroup g)
-        {
-            static constexpr const char* names[numChordGroups] = {
-                "Triads", "5", "Sus2", "Sus4", "6ths", "7ths", "Add9", "9ths", "11ths", "13ths",
-                "Inv 1", "Inv 2", "Open", "Drop 2", "Shell", "Neo", "4ths"
-            };
-            const int i = (int) g;
-            return names[i >= 0 && i < numChordGroups ? i : 0];
-        }
-
-        const char* shortScaleName (int s)
-        {
-            static constexpr const char* names[numScales] = {
-                "Major", "Minor", "Harm m", "Mel m", "Dorian", "Phryg", "Lydian", "Mixo", "Locrian",
-                "Harm M", "Phr Dom", "Hung m", "Dbl Hm"
-            };
-            return names[s >= 0 && s < numScales ? s : 0];
-        }
-
-        juce::String shifterLabel (const ShifterTarget& t)
-        {
-            if (t.kind == ShifterKind::ChordGroup)
-                return shortGroupName (t.group);
-            juce::String s;
-            if (t.key >= 0)
-                s << keyName (t.key) << "\n";
-            s << (t.scale >= 0 ? shortScaleName (t.scale) : "Scale");
-            return s;
-        }
-
         void addTicked (juce::PopupMenu& m, int id, const juce::String& text, bool ticked)
         {
             m.addItem (id, text, true, ticked);
         }
     }
 
-    juce::String shortArpName (int pattern)
-    {
-        static constexpr const char* names[numArpPatterns] = {
-            "Off", "Lin ↑", "Lin ↓", "Conv ↑", "Conv ↓", "Div ↑", "Div ↓", "Stut ↑", "Stut ↓",
-            "Zig ↑", "Zig ↓", "Boom ↑", "Boom ↓"
-        };
-        return juce::String::fromUTF8 (names[pattern >= 0 && pattern < numArpPatterns ? pattern : 0]);
-    }
-
     //==========================================================================
-    bool PianoLayout::isBlack (int note) noexcept { return keys::blackIndex (((note % 12) + 12) % 12) >= 0; }
+    bool PianoLayout::isBlack (int note) noexcept { return keys::whiteLetter (note) < 0; }
 
     int PianoLayout::whiteCount() const noexcept
     {
@@ -108,7 +69,7 @@ namespace chordchimp::ui
     //==========================================================================
     namespace
     {
-        constexpr float chordBlackHeight = 0.5f, smartBlackHeight = 0.58f;
+        constexpr float chordBlackHeight = 0.5f;
 
         void drawWhiteKey (juce::Graphics& g, juce::Rectangle<float> r, juce::Colour tint, bool lit)
         {
@@ -117,15 +78,10 @@ namespace chordchimp::ui
             g.fillRoundedRectangle (r, 4.0f);
         }
 
-        void drawBlackKey (juce::Graphics& g, juce::Rectangle<float> r, juce::Colour tint, bool lit, bool outlined)
+        void drawBlackKey (juce::Graphics& g, juce::Rectangle<float> r)
         {
-            g.setColour (lit ? tint.darker (0.15f) : colours::blackKey);
+            g.setColour (colours::blackKey);
             g.fillRoundedRectangle (r, 3.0f);
-            if (outlined)
-            {
-                g.setColour (tint);
-                g.drawRoundedRectangle (r.reduced (1.0f), 3.0f, 2.0f);
-            }
         }
     }
 
@@ -133,40 +89,21 @@ namespace chordchimp::ui
     {
         layout.lo = 0;
         layout.hi = 11;
-        setTooltip ("Chord keys: click to play. Right-click a white key for its degree, chord type or a reset; "
-                    "a black key for its shifter's target.");
-    }
-
-    int ChordKeyboard::keyFor (int pc) const
-    {
-        const int split = model.settings.split;
-        if (split < 12)
-            return -1;
-        return ((split - 12) / 12) * 12 + pc;
+        setTooltip ("Chord keys: click to play. Right-click a white key for its degree.");
     }
 
     void ChordKeyboard::refresh (const UiModel& m)
     {
         std::array<bool, 12> now {};
-        for (int n = 0; n < m.settings.split && n < 128; ++n)
+        for (int n = 0; n < 128; ++n)
             if (processor.isKeyDown (n) || processor.isPerforming (n))
                 now[(size_t) (n % 12)] = true;
 
-        const bool changed = now != active || ! (m.display == model.display) || m.settings.split != model.settings.split
-                          || m.settings.shifters != model.settings.shifters;
+        const bool changed = now != active || ! (m.display == model.display);
         model = m;
         active = now;
-        if (flashCount > 0 && juce::Time::getMillisecondCounterHiRes() - flashStart > flashStepMs * (flashCount - 1) + flashOnMs)
-            flashCount = 0;
-        if (changed || flashCount > 0)
+        if (changed)
             repaint();
-    }
-
-    void ChordKeyboard::flash (int count)
-    {
-        flashCount = juce::jlimit (0, numChordSlots, count);
-        flashStart = juce::Time::getMillisecondCounterHiRes();
-        repaint();
     }
 
     void ChordKeyboard::paint (juce::Graphics& g)
@@ -196,28 +133,12 @@ namespace chordchimp::ui
                 g.setColour (colours::chord);
                 g.fillRoundedRectangle (r.reduced (5.0f, 0.0f).removeFromBottom (5.0f).translated (0.0f, -4.0f), 2.0f);
             }
-            if (slot < flashCount)
-            {
-                const double t = juce::Time::getMillisecondCounterHiRes() - flashStart - flashStepMs * slot;
-                if (t >= 0.0 && t < flashOnMs)
-                {
-                    g.setColour (colours::chord.withAlpha ((float) (0.6 * (1.0 - t / flashOnMs))));
-                    g.fillRoundedRectangle (r.reduced (1.0f), 3.0f);
-                }
-            }
         }
         for (int pc = 0; pc < 12; ++pc)
         {
             if (! PianoLayout::isBlack (pc))
                 continue;
-            const int shifter = keys::blackIndex (pc);
-            const auto r = layout.keyBounds (pc, chordBlackHeight);
-            const bool on = shifter == d.activeShifter;
-            drawBlackKey (g, r, colours::chord, on || active[(size_t) pc], false);
-            g.setColour (on ? colours::background : colours::dim);
-            g.setFont (font (10.5f));
-            g.drawFittedText (shifterLabel (model.settings.shifters[(size_t) shifter]), r.reduced (2.0f, 4.0f).toNearestInt(),
-                              juce::Justification::centredBottom, 2, 0.8f);
+            drawBlackKey (g, layout.keyBounds (pc, chordBlackHeight));
         }
     }
 
@@ -225,17 +146,12 @@ namespace chordchimp::ui
     {
         layout.area = getLocalBounds().toFloat();
         const int pc = layout.noteAt (e.position, chordBlackHeight);
-        if (pc < 0)
+        if (pc < 0 || PianoLayout::isBlack (pc))
             return;
         if (e.mods.isPopupMenu())
-        {
-            if (PianoLayout::isBlack (pc))
-                shifterMenu (keys::blackIndex (pc));
-            else
-                slotMenu (keys::whiteLetter (pc));
-            return;
-        }
-        playing.press (keyFor (pc), 100);
+            slotMenu (keys::whiteLetter (pc));
+        else
+            playing.press (KeyRouter::homeC + pc, 100);
     }
 
     void ChordKeyboard::mouseUp (const juce::MouseEvent&) { playing.release(); }
@@ -246,24 +162,16 @@ namespace chordchimp::ui
         const int degree = model.display.chords[(size_t) slot].degree;
         static const char* numerals[7] = { "I", "II", "III", "IV", "V", "VI", "VII" };
 
-        juce::PopupMenu degrees, types;
+        juce::PopupMenu degrees;
         for (int dgr = 0; dgr < 7; ++dgr)
             addTicked (degrees, 100 + dgr, numerals[dgr], dgr == degree);
-        for (int t = 0; t < numChordTypes; ++t)
-        {
-            ChordSlot preview;
-            const bool ok = withChordType (editor::slotFor (model.edits, s.group, s.scale, degree), s.scale, t, preview);
-            types.addItem (200 + t, chordType (t).name, ok);
-        }
 
         juce::PopupMenu m;
         m.addSectionHeader ("Key " + juce::String (slot + 1) + ": " + juce::String (nameSlot (model.display.chords[(size_t) slot], model.display.context).text()));
         m.addSubMenu ("Degree", degrees);
-        m.addSubMenu ("Chord type", types);
-        m.addItem (300, "Reset chord edits", model.edits.degrees[(size_t) degree].edited);
 
         juce::Component::SafePointer<ChordKeyboard> self (this);
-        m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this), [self, slot, degree, s] (int r)
+        m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this), [self, slot, s] (int r)
         {
             if (self == nullptr || r == 0)
                 return;
@@ -280,218 +188,6 @@ namespace chordchimp::ui
                 }
                 b.set (params::customDegree (slot), (float) (r - 100));
             }
-            else if (r >= 200 && r < 200 + numChordTypes)
-            {
-                self->processor.chordEditor.setChordType (s.group, s.scale, degree, r - 200);
-            }
-            else if (r == 300)
-            {
-                self->processor.chordEditor.resetDegree (degree);
-            }
-        });
-    }
-
-    void ChordKeyboard::shifterMenu (int n)
-    {
-        const auto& t = model.settings.shifters[(size_t) n];
-        juce::PopupMenu kind, group, key, scale;
-        addTicked (kind, 1, "Chord Group", t.kind == ShifterKind::ChordGroup);
-        addTicked (kind, 2, "Key/Scale", t.kind == ShifterKind::KeyScale);
-        for (int g = 0; g < numChordGroups; ++g)
-            addTicked (group, 100 + g, chordGroupInfo ((ChordGroup) g).name, t.group == (ChordGroup) g);
-        addTicked (key, 200, "Same", t.key < 0);
-        for (int k = 0; k < numKeys; ++k)
-            addTicked (key, 201 + k, keyName (k), t.key == k);
-        addTicked (scale, 300, "Same", t.scale < 0);
-        for (int sc = 0; sc < numScales; ++sc)
-            addTicked (scale, 301 + sc, scaleInfo ((Scale) sc).name, t.scale == sc);
-
-        juce::PopupMenu m;
-        m.addSectionHeader ("Shifter " + juce::String (n + 1));
-        m.addSubMenu ("Type", kind);
-        m.addSubMenu ("Chord Group", group, t.kind == ShifterKind::ChordGroup);
-        m.addSubMenu ("Key", key, t.kind == ShifterKind::KeyScale);
-        m.addSubMenu ("Scale", scale, t.kind == ShifterKind::KeyScale);
-
-        juce::Component::SafePointer<ChordKeyboard> self (this);
-        m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this), [self, n] (int r)
-        {
-            if (self == nullptr || r == 0)
-                return;
-            auto& b = self->bindings;
-            if (r == 1 || r == 2)                  b.set (params::shifterKind (n), (float) (r - 1));
-            else if (r >= 100 && r < 200)          b.set (params::shifterGroup (n), (float) (r - 100));
-            else if (r >= 200 && r < 300)          b.set (params::shifterKey (n), (float) (r - 200));
-            else if (r >= 300)                     b.set (params::shifterScale (n), (float) (r - 300));
-        });
-    }
-
-    //==========================================================================
-    SmartKeyboard::SmartKeyboard (ChordChimpProcessor& p, Bindings& b) : processor (p), bindings (b), playing (p)
-    {
-        setTooltip ("Smart Scale keys: click to play. Right-click a white key for Note Repeat, a black key for its pattern slot.");
-    }
-
-    void SmartKeyboard::refresh (const UiModel& m)
-    {
-        std::array<bool, 128> now {};
-        for (int n = 0; n < 128; ++n)
-            now[(size_t) n] = processor.isKeyDown (n) || processor.isPerforming (n);
-
-        const int start = m.settings.split - m.settings.split % 12;
-        const bool changed = now != active || ! (m.display == model.display) || m.settings.split != model.settings.split
-                          || ! (m.settings.smart.map == model.settings.smart.map) || m.settings.smart.patternSlot != model.settings.smart.patternSlot
-                          || m.settings.smart.noteRepeat != model.settings.smart.noteRepeat;
-        bool patternsChanged = false;
-        for (int s = 0; s < numPatternSlots; ++s)
-            patternsChanged |= m.settings.smart.patterns[(size_t) s].pattern != model.settings.smart.patterns[(size_t) s].pattern;
-        model = m;
-        active = now;
-        layout.lo = juce::jlimit (0, 103, start);
-        layout.hi = layout.lo + 24;
-        if (changed || patternsChanged)
-            repaint();
-    }
-
-    void SmartKeyboard::paint (juce::Graphics& g)
-    {
-        layout.area = getLocalBounds().toFloat();
-        const auto& d = model.display;
-        const auto& ss = model.settings.smart;
-        const bool chromatic = ss.map.mapping == Mapping::Chromatic;
-
-        // The chord the Smart Scale follows: the last chord played here, or one from an
-        // instance in the same sync group.
-        const SmartChord chord = d.smart;
-        const ChordContext ctx { chord.key, chord.scale, d.context.outputOctave };
-        ScaleMapper mapper;
-        mapper.update (ss.map, chord);
-        const Spelling spelling = makeSpelling (chord.key, chord.scale);
-
-        // The current chord's pitch classes (its notes as played) and root.
-        std::array<bool, 12> chordPc {};
-        int rootPc = -1;
-        if (d.hasSmart)
-        {
-            for (const auto n : chordNotes (chord.slot, ctx))
-                chordPc[(size_t) (n % 12)] = true;
-            rootPc = slotRootPc (chord.slot, ctx);
-        }
-
-        for (int n = layout.lo; n <= layout.hi; ++n)
-        {
-            if (PianoLayout::isBlack (n))
-                continue;
-            auto r = layout.keyBounds (n, smartBlackHeight);
-            const bool inZone = n >= model.settings.split;
-            drawWhiteKey (g, r, colours::smart, active[(size_t) n] && inZone);
-            if (! inZone)
-            {
-                g.setColour (colours::background.withAlpha (0.55f));
-                g.fillRoundedRectangle (r.reduced (1.0f, 0.0f), 4.0f);
-                continue;
-            }
-            const int t = mapper.tone (n);
-            if (t < 0)
-                continue;
-            const bool isChordTone = chordPc[(size_t) (t % 12)];
-            if (isChordTone)
-            {
-                g.setColour (colours::smart);
-                g.fillRoundedRectangle (r.reduced (3.0f, 0.0f).removeFromBottom (5.0f).translated (0.0f, -3.0f), 2.0f);
-            }
-            auto text = r.reduced (1.0f, 10.0f).withTrimmedTop (r.getHeight() * smartBlackHeight);
-            g.setColour (t % 12 == rootPc ? colours::smart.darker (0.6f) : colours::whiteKeyText);
-            g.setFont (font (13.0f, isChordTone));
-            g.drawFittedText (juce::String (spelling.name (t)), text.removeFromTop (text.getHeight() * 0.6f).toNearestInt(),
-                              juce::Justification::centredBottom, 1, 0.6f);
-            g.setFont (font (9.5f));
-            g.setColour (colours::whiteKeyText.withAlpha (0.5f));
-            g.drawFittedText (juce::String (t / 12 - 2), text.toNearestInt(), juce::Justification::centredTop, 1);
-        }
-
-        for (int n = layout.lo; n <= layout.hi; ++n)
-        {
-            if (! PianoLayout::isBlack (n))
-                continue;
-            const auto r = layout.keyBounds (n, smartBlackHeight);
-            const bool inZone = n >= model.settings.split;
-            const int slot = keys::blackIndex (n % 12);
-            const bool selected = ! chromatic && inZone && slot == ss.patternSlot;
-            drawBlackKey (g, r, colours::smart, inZone && active[(size_t) n], selected);
-            if (! inZone || chromatic)
-                continue;
-            g.setColour (active[(size_t) n] ? colours::background : colours::dim);
-            g.setFont (font (11.0f, true));
-            auto tr = r.reduced (1.0f, 4.0f);
-            g.drawText (juce::String (slot + 1), tr.removeFromBottom (14.0f), juce::Justification::centred);
-            g.setFont (font (8.5f));
-            g.drawFittedText (ss.patterns[(size_t) slot].melody ? juce::String ("Mel") : shortArpName ((int) ss.patterns[(size_t) slot].pattern),
-                              tr.removeFromBottom (12.0f).toNearestInt(),
-                              juce::Justification::centred, 1, 0.5f);
-        }
-    }
-
-    void SmartKeyboard::mouseDown (const juce::MouseEvent& e)
-    {
-        layout.area = getLocalBounds().toFloat();
-        const int n = layout.noteAt (e.position, smartBlackHeight);
-        if (n < 0 || n < model.settings.split)
-            return;
-        const bool chromatic = model.settings.smart.map.mapping == Mapping::Chromatic;
-        if (e.mods.isPopupMenu())
-        {
-            if (PianoLayout::isBlack (n) && ! chromatic)
-            {
-                patternMenu (keys::blackIndex (n % 12));
-                return;
-            }
-            juce::PopupMenu m;
-            m.addItem (1, "Note Repeat (all Smart Scale keys)", true, model.settings.smart.noteRepeat);
-            juce::Component::SafePointer<SmartKeyboard> self (this);
-            const bool on = model.settings.smart.noteRepeat;
-            m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this), [self, on] (int r)
-            {
-                if (self != nullptr && r == 1)
-                    self->bindings.set (params::noteRepeat, on ? 0.0f : 1.0f);
-            });
-            return;
-        }
-        playing.press (n, 100);
-    }
-
-    void SmartKeyboard::mouseUp (const juce::MouseEvent&) { playing.release(); }
-
-    void SmartKeyboard::patternMenu (int slot)
-    {
-        const auto& p = model.settings.smart.patterns[(size_t) slot];
-        juce::PopupMenu arps, rates, chords;
-        for (int a = 1; a < numArpPatterns; ++a)
-            addTicked (arps, 100 + a, arpPatternName ((ArpPattern) a), ! p.melody && p.pattern == (ArpPattern) a);
-        arps.addSeparator();
-        addTicked (arps, 100 + numArpPatterns, "Melody", p.melody);   // the parameter's last choice
-        for (int r = 0; r < numPatternRates; ++r)
-            addTicked (rates, 200 + r, patternRateName (r), p.rate == r);
-        for (int c = 0; c < numArpChords; ++c)
-            addTicked (chords, 300 + c, arpChordName ((ArpChord) c), p.chord == (ArpChord) c);
-
-        juce::PopupMenu m;
-        m.addSectionHeader ("Pattern " + juce::String (slot + 1));
-        m.addItem (1, "Edit this pattern", true, model.settings.smart.patternSlot == slot);
-        m.addSubMenu ("Pattern", arps);
-        m.addSubMenu ("Rate", rates);
-        m.addSubMenu ("Arp chord", chords);
-
-        juce::Component::SafePointer<SmartKeyboard> self (this);
-        m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (this), [self, slot] (int r)
-        {
-            if (self == nullptr || r == 0)
-                return;
-            auto& b = self->bindings;
-            if (r == 1)                    b.set (params::patternSlot, (float) slot);
-            else if (r >= 100 && r < 200)  b.set (params::patternArp (slot), (float) (r - 101));
-            else if (r >= 200 && r < 300)  b.set (params::patternRate (slot), (float) (r - 200));
-            else if (r >= 300)             b.set (params::patternChord (slot), (float) (r - 300));
         });
     }
 
@@ -504,7 +200,7 @@ namespace chordchimp::ui
         setTooltip ("Output: the notes ChordChimp plays (red) and the keys held (outlined). Click to play.");
     }
 
-    void OutputKeyboard::refresh (const UiModel& m)
+    void OutputKeyboard::refresh (const UiModel&)
     {
         std::array<bool, 128> s {}, k {};
         for (int n = 0; n < 128; ++n)
@@ -512,20 +208,12 @@ namespace chordchimp::ui
             s[(size_t) n] = processor.isNoteSounding (n);
             k[(size_t) n] = processor.isKeyDown (n);
         }
-        if (m.settings.split != split)
-        {
-            split = m.settings.split;
-            repaint();
-        }
-        else
-        {
-            // Phase 8: only the keys that changed (while chords play, the whole keyboard every
-            // frame was most of the editor's CPU).
-            layout.area = getLocalBounds().toFloat();
-            for (int n = layout.lo; n <= layout.hi; ++n)
-                if (s[(size_t) n] != sounding[(size_t) n] || k[(size_t) n] != down[(size_t) n])
-                    repaint (layout.keyBounds (n).getSmallestIntegerContainer().expanded (1));
-        }
+        // Phase 8: only the keys that changed (while chords play, the whole keyboard every frame
+        // was most of the editor's CPU).
+        layout.area = getLocalBounds().toFloat();
+        for (int n = layout.lo; n <= layout.hi; ++n)
+            if (s[(size_t) n] != sounding[(size_t) n] || k[(size_t) n] != down[(size_t) n])
+                repaint (layout.keyBounds (n).getSmallestIntegerContainer().expanded (1));
         sounding = s;
         down = k;
     }
@@ -561,17 +249,10 @@ namespace chordchimp::ui
                 }
                 if (down[(size_t) n])
                 {
-                    g.setColour (n < split ? colours::chord : colours::smart);
+                    g.setColour (colours::chord);
                     g.drawRect (layout.keyBounds (n).reduced (1.0f), 2.0f);
                 }
             }
-
-        if (split > layout.lo && split <= layout.hi)
-        {
-            const float x = layout.keyBounds (split).getX() + (PianoLayout::isBlack (split) ? layout.keyBounds (split).getWidth() * 0.5f : 0.0f);
-            g.setColour (colours::text);
-            g.fillRect (x - 1.0f, 0.0f, 2.0f, (float) getHeight());
-        }
     }
 
     void OutputKeyboard::mouseDown (const juce::MouseEvent& e) { mouseDrag (e); }

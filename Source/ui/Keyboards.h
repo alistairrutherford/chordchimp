@@ -1,18 +1,11 @@
 // The editor's keyboards (PLAN.md §6). Each plays through the engine like host MIDI input
 // (ChordChimpProcessor::pushUiNote), so clicking a key is the same as pressing it.
 //
-//   ChordKeyboard   the chord zone, one octave: each white key shows its Roman numeral and
-//                   chord name, with a stripe on the last one played; the black keys show their
-//                   shifter's target and light up while active. Right-click a white key for its
-//                   degree (Custom progression), chord type (the Chord Editor) or a reset; a
-//                   black key for its shifter's target. After a MIDI import the imported
-//                   chords' keys light up in turn.
-//   SmartKeyboard   the Smart Scale zone, two octaves from the split's C: each white key shows
-//                   the tone it plays now, chord tones with a coloured edge; the black keys show
-//                   their pattern slot. Right-click a white key for Note Repeat, a black key to
-//                   select its pattern slot or change its pattern (an arp, or Melody).
-//   OutputKeyboard  88 keys: the notes ChordChimp sends (red) and the keys held (outlined), with
-//                   the split marked. Hideable.
+//   ChordKeyboard   one octave: each white key shows its Roman numeral and chord name, with a
+//                   stripe on the last one played (black keys play nothing). Right-click a white
+//                   key for its degree (Custom progression).
+//   OutputKeyboard  88 keys: the notes ChordChimp sends (red) and the keys held (outlined).
+//                   Hideable.
 #pragma once
 
 #include "../plugin/ChordChimpProcessor.h"
@@ -23,9 +16,8 @@ namespace chordchimp::ui
     // What the editor shows, refreshed on its timer.
     struct UiModel
     {
-        ChordDisplay display;             // the chords, their context, last slot, active shifter
+        ChordDisplay display;             // the chords, their context, last slot
         EngineSettings settings;          // the parameters now
-        ChordEdits edits;                 // the Chord Editor's edits
     };
 
     // Piano geometry for notes lo..hi (both white keys) across a width.
@@ -61,18 +53,12 @@ namespace chordchimp::ui
         ChordKeyboard (ChordChimpProcessor&, Bindings&);
         void refresh (const UiModel&);
 
-        // Lights the first `count` white keys one after another (a MIDI import, PLAN.md §4.6).
-        void flash (int count);
-        bool isFlashing() const noexcept { return flashCount > 0; }
-
         void paint (juce::Graphics&) override;
         void mouseDown (const juce::MouseEvent&) override;
         void mouseUp (const juce::MouseEvent&) override;
 
     private:
-        int keyFor (int pc) const;        // the chord-zone note with pitch class pc
         void slotMenu (int slot);
-        void shifterMenu (int shifter);
 
         ChordChimpProcessor& processor;
         Bindings& bindings;
@@ -80,31 +66,6 @@ namespace chordchimp::ui
         UiModel model;
         PianoLayout layout;
         std::array<bool, 12> active {};
-        int flashCount = 0;
-        double flashStart = 0.0;
-        static constexpr double flashStepMs = 160.0, flashOnMs = 300.0;
-    };
-
-    class SmartKeyboard : public juce::Component,
-                         public juce::SettableTooltipClient
-    {
-    public:
-        SmartKeyboard (ChordChimpProcessor&, Bindings&);
-        void refresh (const UiModel&);
-
-        void paint (juce::Graphics&) override;
-        void mouseDown (const juce::MouseEvent&) override;
-        void mouseUp (const juce::MouseEvent&) override;
-
-    private:
-        void patternMenu (int slot);
-
-        ChordChimpProcessor& processor;
-        Bindings& bindings;
-        PlayingKeys playing;
-        UiModel model;
-        PianoLayout layout;
-        std::array<bool, 128> active {};
     };
 
     class OutputKeyboard : public juce::Component,
@@ -123,11 +84,7 @@ namespace chordchimp::ui
         ChordChimpProcessor& processor;
         PlayingKeys playing;
         PianoLayout layout;
-        int split = 60;
         std::array<bool, 128> sounding {}, down {};
         juce::Font labelFont;             // made once: a new Font on every paint costs a typeface lookup
     };
-
-    // A short name for an arp pattern ("Lin ↑").
-    juce::String shortArpName (int pattern);
 }

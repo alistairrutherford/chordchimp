@@ -1,7 +1,7 @@
-// The chord zone's effect chain and its scheduler (PLAN.md §4.5):
+// The effect chain and its scheduler (PLAN.md §3.3):
 //
 //   trigger → chord slot → voicing (+ voice leading) → Octave → Stack → [Strum | Arp] → Repeat
-//           → StepSeq gate → Velocity Algorithm → Hold → (Mute, in ChordChimpEngine) → out
+//           → StepSeq gate → Velocity Algorithm → Hold → (Mute, in ChordEngine) → out
 //
 // Voice leading (Phase 7, VoiceLeading.h): with Smooth, a chord takes the inversion and octave
 // nearest the chord the zone played last (pressed or retuned), before Stack. The last chord is
@@ -28,14 +28,6 @@
 // moves the note-offs and strum tones with the music (they keep their lengths) and puts each
 // pattern's next step on the grid at the new position.
 //
-// The Smart Scale zone runs a second ChordPerformer (PatternEngine.h) on the same clock: its
-// tones and each key's pattern come from a PerformerVoicing instead of the chord set, its
-// patterns stack each step after the pattern (Smart chain: Pattern → Octave → Stack), its
-// strikes keep sounding through a chord change (the next strike takes the new tones), and its
-// performances own the VoiceTracker sources from `sourceBase` on. A pattern in Melody mode
-// (Melody.h) runs like an arp whose steps are the melody's notes: each bar's notes come from
-// the seed, and each note's pitch from the voicing when it plays.
-//
 // Plain C++, no JUCE, no allocation.
 #pragma once
 
@@ -46,7 +38,6 @@
 #include "Clock.h"
 #include "EventQueue.h"
 #include "Hold.h"
-#include "Melody.h"
 #include "MidiEvents.h"
 #include "Repeat.h"
 #include "Stack.h"
@@ -77,32 +68,13 @@ namespace chordchimp
         VoiceLeadingMode voiceLeading = VoiceLeadingMode::Off;   // Phase 7
     };
 
-    // The arp a performance runs: the chord zone's Arp settings, or a Smart Scale pattern slot's.
+    // The arp a performance runs (the Arp settings).
     struct ArpSettings
     {
         ArpPattern pattern = ArpPattern::Off;
         int rate = 5;                     // index into the pattern rates
         int range = 1;                    // octaves, 1..3
         double gate = 0.5;                // 0..1
-        MelodySettings melody;            // melody.on: a melody instead (pattern stays not Off)
-    };
-
-    // Where a performer's tones come from when it isn't the chord zone's (the Smart Scale zone,
-    // PatternEngine.h). Called on the audio thread: no allocation, no locks.
-    class PerformerVoicing
-    {
-    public:
-        virtual ~PerformerVoicing() = default;
-
-        // The tones key `key` plays (ascending, each pitch once); `slot` is what it was pressed as.
-        virtual VoicedNotes tones (int key, int slot) const noexcept = 0;
-
-        // The pattern it runs: an arp, or pattern Off to strike its tones.
-        virtual ArpSettings arp (int key, int slot) const noexcept = 0;
-
-        // A melody note's pitch now (Melody.h): scale index `index` from the tonic in key `key`'s
-        // octave, moved to a chord tone if `strong`. -1 for none.
-        virtual int melodyTone (int key, int slot, int index, bool strong) const noexcept { return -1; }
     };
 
     class ChordPerformer
@@ -124,21 +96,7 @@ namespace chordchimp
         ChordPerformer (VoiceTracker& v, Clock& c, const ChordSet& chordSet, const ChordContext& ctx) noexcept
             : voices (v), clock (c), chords (chordSet), context (ctx) {}
 
-        // A performer whose tones and patterns come from `voicing` (the Smart Scale zone), with
-        // the sources sourceBase + 2k and sourceBase + 2k + 1 for key k. `chordSet` and `ctx`
-        // aren't used.
-        ChordPerformer (VoiceTracker& v, Clock& c, const ChordSet& chordSet, const ChordContext& ctx,
-                        const PerformerVoicing& voicingIn, int sourceBaseIn) noexcept
-            : voices (v), clock (c), chords (chordSet), context (ctx), voicing (&voicingIn), sourceBase (sourceBaseIn) {}
-
-        // The other zone's performer on the same clock: a stopped clock is only re-anchored on
-        // a key press when neither has anything playing.
-        void setSibling (const ChordPerformer* other) noexcept { sibling = other; }
-
-        VoiceTracker::Source source (int key, int which) const noexcept
-        {
-            return (VoiceTracker::Source) (sourceBase + 2 * key + (which & 1));
-        }
+        VoiceTracker::Source source (int key, int which) const noexcept { return sourceOf (key, which); }
 
         // Forgets every performance without sending anything (the voices were released or
         // cleared already), and reseeds Random strum.
@@ -174,7 +132,7 @@ namespace chordchimp
 
             // Turning a pattern kind on or off restarts a performance; other arp settings
             // (rate, range, gate, pattern) take effect at its next step.
-            const bool restartAll = (voicing == nullptr && (old.arp == ArpPattern::Off) != (s.arp == ArpPattern::Off))
+            const bool restartAll = (old.arp == ArpPattern::Off) != (s.arp == ArpPattern::Off)
                                  || old.repeat.on != s.repeat.on || old.seq.on != s.seq.on;
             std::array<bool, numPerformances> restart {};
             bool anyRestart = false;
@@ -183,18 +141,9 @@ namespace chordchimp
                 Perf& p = perfs[(size_t) k];
                 if (! p.alive)
                     continue;
-                const MelodySettings oldMelody = p.arp.melody;
-                p.arp = arpOf (k, p.slot);
-                restart[(size_t) k] = restartAll || p.arpMode != (p.arp.pattern != ArpPattern::Off)
-                                   || oldMelody.on != p.arp.melody.on;
+                p.arp = arpOf();
+                restart[(size_t) k] = restartAll || p.arpMode != (p.arp.pattern != ArpPattern::Off);
                 anyRestart |= restart[(size_t) k];
-
-                // Other melody settings: the next note is the new melody's next one.
-                if (! restart[(size_t) k] && p.arpMode && p.arp.melody.on && oldMelody != p.arp.melody)
-                {
-                    drop (k, ArpStep);
-                    pushAt (nextMelodyNote (p.arp.melody, ppqAt (sample), false), ArpStep, startOrder, k, p.gen, 0);
-                }
             }
             if (anyRestart)
             {
@@ -204,7 +153,7 @@ namespace chordchimp
                 for (int k = 0; k < numPerformances; ++k)
                     if (restart[(size_t) k])
                     {
-                        perfs[(size_t) k].notes = take (k, perfs[(size_t) k].slot);
+                        perfs[(size_t) k].notes = take (perfs[(size_t) k].slot);
                         startPattern (k, sample, true);
                     }
                 if (restartAll)
@@ -216,7 +165,7 @@ namespace chordchimp
                 slots.fill (true);
             retuneWhere ([&] (int k, const Perf& p) noexcept
             {
-                return ! restart[(size_t) k] && (voicing != nullptr || (p.slot >= 0 && p.slot < numChordSlots && slots[(size_t) p.slot]));
+                return ! restart[(size_t) k] && p.slot >= 0 && p.slot < numChordSlots && slots[(size_t) p.slot];
             }, sample);
         }
 
@@ -256,9 +205,7 @@ namespace chordchimp
                 const Perf& p = perfs[(size_t) k];
                 if (! p.alive)
                     continue;
-                if (p.arpMode && p.arp.melody.on)
-                    pushAt (nextMelodyNote (p.arp.melody, from, true), ArpStep, startOrder, k, p.gen, 0);
-                else if (p.arpMode)
+                if (p.arpMode)
                     pushAt (grid::atOrAfter (from, patternRatePpq (p.arp.rate)), ArpStep, startOrder, k, p.gen, 0);
                 else if (hasRhythm())
                     pushAt (nextStrikeFrom (now, from), NextStrike, startOrder, k, p.gen, 0);
@@ -280,7 +227,7 @@ namespace chordchimp
             if (stopped && wasLatched)
                 return;                             // stopped: pressing a held chord's key ends it
 
-            if (stopped && alive == 0 && (sibling == nullptr || sibling->aliveCount() == 0))
+            if (stopped && alive == 0)
                 clock.anchor (sample);              // patterns start on a bar of their own
 
             Perf& p = perfs[(size_t) key];
@@ -289,7 +236,7 @@ namespace chordchimp
             p.latched = false;
             p.slot = slot;
             p.velocity = (uint8_t) (velocity < 1 ? 1 : (velocity > 127 ? 127 : velocity));
-            p.notes = take (key, slot);
+            p.notes = take (slot);
             ++alive;
             startPattern (key, sample, true);
         }
@@ -331,25 +278,16 @@ namespace chordchimp
             haveLed = false;
         }
 
-        // The chords changed (parameters, edits, a shifter): every performance whose slot is
-        // marked and whose tones changed plays the new tones. A sounding strike is restruck at
-        // `sample` (all releases first, so a shared pitch restrikes); an arp takes the new tones
-        // at its next step. With a voicing (the Smart Scale zone) every performance is checked,
-        // and a sounding strike keeps its notes: the next strike plays the new tones.
+        // The chords changed (parameters): every performance whose slot is marked and whose
+        // tones changed plays the new tones. A sounding strike is restruck at `sample` (all
+        // releases first, so a shared pitch restrikes); an arp takes the new tones at its next step.
         void retune (const std::array<bool, numChordSlots>& changed, int sample, BlockEvents& o) noexcept
         {
             out = &o;
             retuneWhere ([&] (int, const Perf& p) noexcept
             {
-                return voicing != nullptr || (p.slot >= 0 && p.slot < numChordSlots && changed[(size_t) p.slot]);
+                return p.slot >= 0 && p.slot < numChordSlots && changed[(size_t) p.slot];
             }, sample);
-        }
-
-        // Every performance takes its tones again (the Smart Scale zone's chord or mapping changed).
-        void retuneAll (int sample, BlockEvents& o) noexcept
-        {
-            out = &o;
-            retuneWhere ([] (int, const Perf&) noexcept { return true; }, sample);
         }
 
         // The next queued event due in the current segment before block sample `limit` (and at
@@ -447,12 +385,10 @@ namespace chordchimp
         bool hasRhythm() const noexcept { return fx.repeat.on || fx.seq.on; }
         StepGrid stepGrid() const noexcept { return StepGrid (fx.seq, clock.barOrigin(), clock.barLength()); }
 
-        // The tones a performance of `slot` plays; for the chord zone, `base` gets the chord's
-        // voicing before Stack (led from the last chord with Smooth voice leading).
-        VoicedNotes voiced (int key, int slot, ChordNotes* base = nullptr) const noexcept
+        // The tones a performance of `slot` plays; `base` gets the chord's voicing before Stack
+        // (led from the last chord with Smooth voice leading).
+        VoicedNotes voiced (int slot, ChordNotes* base = nullptr) const noexcept
         {
-            if (voicing != nullptr)
-                return voicing->tones (key, slot);
             if (slot < 0 || slot >= numChordSlots)
                 return {};
             ChordNotes notes = chordNotes (chords[(size_t) slot], context);
@@ -464,11 +400,11 @@ namespace chordchimp
         }
 
         // voiced(), for a performance that now plays it: its chord is the one the next is led from.
-        VoicedNotes take (int key, int slot) noexcept
+        VoicedNotes take (int slot) noexcept
         {
             ChordNotes base;
-            const VoicedNotes v = voiced (key, slot, &base);
-            if (voicing == nullptr && slot >= 0 && slot < numChordSlots)
+            const VoicedNotes v = voiced (slot, &base);
+            if (slot >= 0 && slot < numChordSlots)
             {
                 led = base;
                 haveLed = true;
@@ -476,12 +412,7 @@ namespace chordchimp
             return v;
         }
 
-        ArpSettings arpOf (int key, int slot) const noexcept
-        {
-            if (voicing != nullptr)
-                return voicing->arp (key, slot);
-            return { fx.arp, fx.arpRate, fx.arpRange, fx.arpGate, {} };
-        }
+        ArpSettings arpOf() const noexcept { return { fx.arp, fx.arpRate, fx.arpRange, fx.arpGate }; }
 
         template <class Pred>
         void retuneWhere (Pred marked, int sample) noexcept
@@ -495,16 +426,13 @@ namespace chordchimp
                 if (! p.alive || ! marked (k, (const Perf&) p))
                     continue;
                 ChordNotes base;
-                const VoicedNotes next = voiced (k, p.slot, &base);
+                const VoicedNotes next = voiced (p.slot, &base);
                 if (next == p.notes)
                     continue;
                 p.notes = next;
-                if (voicing == nullptr)
-                {
-                    led = base;
-                    haveLed = true;
-                }
-                if (voicing == nullptr && ! p.arpMode && p.strikeOpen)
+                led = base;
+                haveLed = true;
+                if (! p.arpMode && p.strikeOpen)
                 {
                     voices.release (source (k, p.src), sample, *out);
                     restrike[(size_t) k] = true;
@@ -545,7 +473,7 @@ namespace chordchimp
         void startPattern (int key, int sample, bool press) noexcept
         {
             Perf& p = perfs[(size_t) key];
-            p.arp = arpOf (key, p.slot);
+            p.arp = arpOf();
             p.arpMode = p.arp.pattern != ArpPattern::Off;
             if (p.arpMode)
             {
@@ -731,12 +659,6 @@ namespace chordchimp
         {
             Perf& p = perfs[(size_t) key];
             closeArpNote (key, sample);
-            if (p.arp.melody.on)
-            {
-                melodyStep (key, sample, T, press);
-                return;
-            }
-
             const double step = patternRatePpq (p.arp.rate);
             const double next = press ? grid::afterPress (T, step) : grid::after (T, step);
             double endPpq = T + grid::clampGate (p.arp.gate) * (next - T);
@@ -755,94 +677,16 @@ namespace chordchimp
             pushAt (next, ArpStep, startOrder, key, p.gen, 0);
         }
 
-        // One arp or melody note, until `endPpq`. The Smart Scale zone stacks after the pattern:
-        // each step sounds with its octaves.
+        // One arp note, until `endPpq`.
         void startStepNote (int key, int sample, int pitch, double endPpq) noexcept
         {
             Perf& p = perfs[(size_t) key];
             p.src ^= 1;
             ++p.arpNoteSeq;
-            const int vel = velocityAt (p, sample);
-            voices.start (source (key, p.src), outChannel, pitch, vel, sample, *out);
-            if (voicing != nullptr)
-            {
-                const bool one = fx.stack == StackMode::PlusOne || fx.stack == StackMode::PlusOneAndTwo;
-                const bool two = fx.stack == StackMode::PlusTwo || fx.stack == StackMode::PlusOneAndTwo;
-                if (one && pitch + 12 < 128)
-                    voices.start (source (key, p.src), outChannel, pitch + 12, vel, sample, *out);
-                if (two && pitch + 24 < 128)
-                    voices.start (source (key, p.src), outChannel, pitch + 24, vel, sample, *out);
-            }
+            voices.start (source (key, p.src), outChannel, pitch, velocityAt (p, sample), sample, *out);
             p.arpNoteOpen = true;
             pushAt (endPpq, ArpNoteEnd, endOrder, key, p.gen, p.arpNoteSeq);
         }
-
-        //======================================================================
-        // Melody (Melody.h): the steps are the melody's notes.
-
-        // The melody note at T: on a key press, the one sounding at T (if enough of it is left,
-        // as for the Step Sequencer); otherwise the one starting at T. Then the next note.
-        void melodyStep (int key, int sample, double T, bool press) noexcept
-        {
-            Perf& p = perfs[(size_t) key];
-            const MelodySettings& m = p.arp.melody;
-            const double L = clock.barLength();
-            const double B = clock.barStart (press ? T : T + melodyEpsilon);   // a note on the bar line is the new bar's
-            const MelodyBar bar = melody::generate (m, melody::barNumber (B, L), melody::slotsIn (L));
-
-            int playing = -1;
-            for (int i = 0; i < bar.count; ++i)
-            {
-                const double start = melody::noteStart (m, bar, B, L, i);
-                if (press)
-                {
-                    if (start <= T + melodyEpsilon && T < melody::noteEnd (m, bar, B, L, i) - grid::minFirstStep * seqSlotPpq)
-                        playing = i;
-                }
-                else if (std::abs (start - T) <= melodyEpsilon)
-                {
-                    playing = i;
-                }
-            }
-
-            if (playing >= 0 && voicing != nullptr)
-            {
-                double endPpq = melody::noteEnd (m, bar, B, L, playing);
-                bool sound = true;
-                if (fx.seq.on)
-                {
-                    const SeqWindow w = stepGrid().windowAt (T);
-                    sound = w.valid;
-                    endPpq = w.valid && w.end < endPpq ? w.end : endPpq;
-                }
-                const auto& note = bar.notes[(size_t) playing];
-                const int pitch = voicing->melodyTone (key, p.slot, note.index, note.strong);
-                if (sound && pitch >= 0 && pitch < 128 && endPpq > T)
-                    startStepNote (key, sample, pitch, endPpq);
-            }
-            pushAt (nextMelodyNote (m, T, false), ArpStep, startOrder, key, p.gen, 0);
-        }
-
-        // The start of the first melody note after T (at or after it, if `inclusive`), looking
-        // up to two bars on; else the bar line after next, to look again from there.
-        double nextMelodyNote (const MelodySettings& m, double T, bool inclusive) const noexcept
-        {
-            const double L = clock.barLength();
-            double B = clock.barStart (T);
-            for (int b = 0; b < 3; ++b, B += L)
-            {
-                const MelodyBar bar = melody::generate (m, melody::barNumber (B, L), melody::slotsIn (L));
-                for (int i = 0; i < bar.count; ++i)
-                {
-                    const double start = melody::noteStart (m, bar, B, L, i);
-                    if (inclusive ? start >= T - melodyEpsilon : start > T + melodyEpsilon)
-                        return start;
-                }
-            }
-            return B;
-        }
-
-        static constexpr double melodyEpsilon = 1.0e-6;
 
         void closeArpNote (int key, int sample) noexcept
         {
@@ -858,9 +702,6 @@ namespace chordchimp
         Clock& clock;
         const ChordSet& chords;
         const ChordContext& context;
-        const PerformerVoicing* voicing = nullptr;
-        int sourceBase = firstSource;
-        const ChordPerformer* sibling = nullptr;
 
         ChordFxSettings fx;
         int outChannel = 0;

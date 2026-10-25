@@ -1,17 +1,11 @@
 // The editor's panels (PLAN.md §6):
 //
 //   TopBar         logo (opens Setup) · Enable · Preset browser · Key · Scale · Progression ·
-//                  Chord Group · Mapping · Shifter mode · Sync group · Export handle · keyboard
-//                  show/hide
-//   ChordFxPanel   the chord zone's effects: Stack, Octave, Hold, Mute; Strum; Arp; Repeat,
-//                  Voice leading; Velocity; Step Sequencer and its steps
-//   SmartPanel     the selected pattern slot (1-5) and its settings: an arp's, or in Melody mode
-//                  the melody's (Notes, Rhythm; Swing and Seed for all slots beside the slot
-//                  buttons); the Smart Scale's effects: Stack, Hold, Velocity, Step Sequencer
-//                  and its steps
-//   SetupPanel     everything else, as an overlay: Split (with down/up buttons), the custom
-//                  progression, the five shifters' targets, the test pattern (LiveBridge), and
-//                  the preferences (the QWERTY layout, the look-ahead window)
+//                  Chord Group · keyboard show/hide
+//   ChordFxPanel   the effects: Stack, Octave, Hold; Strum; Arp; Repeat, Voice leading;
+//                  Velocity; Step Sequencer and its steps
+//   SetupPanel     everything else, as an overlay: the custom progression and the test
+//                  pattern (LiveBridge)
 #pragma once
 
 #include "Keyboards.h"
@@ -47,20 +41,18 @@ namespace chordchimp::ui
     class TopBar : public juce::Component
     {
     public:
-        TopBar (ChordChimpProcessor&, Bindings&, std::function<void()> openSetup, std::function<void (bool)> showKeyboard,
-                std::function<void (const juce::File&)> importMidi);
+        TopBar (ChordChimpProcessor&, Bindings&, std::function<void()> openSetup, std::function<void (bool)> showKeyboard);
         void setKeyboardShown (bool shown);
         void refresh();
         void paint (juce::Graphics&) override;
         void resized() override;
 
         PresetBar presets;
-        ExportHandle exportHandle;
 
     private:
         juce::TextButton logo { "ChordChimp" };
         juce::TextButton keyboardButton { "Keys" };
-        ParamControl enable, key, scale, progression, group, mapping, shifterMode, sync;
+        ParamControl enable, key, scale, progression, group;
     };
 
     class ChordFxPanel : public juce::Component
@@ -76,42 +68,16 @@ namespace chordchimp::ui
         juce::Label stepsCaption;
     };
 
-    class SmartPanel : public juce::Component
-    {
-    public:
-        explicit SmartPanel (Bindings&);
-        void refresh (const UiModel&);
-        void paint (juce::Graphics&) override;
-        void resized() override;
-
-    private:
-        void bindSlot (int slot);
-
-        Bindings& bindings;
-        int slotShown = -1;
-        bool melodyShown = false;
-        juce::Label patternCaption;
-        juce::OwnedArray<juce::TextButton> slotButtons;
-        ParamControl arp, rate, range, chord, gate, notes, rhythm, swing, seed;
-        ParamGrid fx;
-        StepSeqView steps;
-        juce::Label stepsCaption;
-    };
-
     class SetupPanel : public juce::Component
     {
     public:
-        SetupPanel (ChordChimpProcessor&, Bindings&, std::function<void()> close);
+        SetupPanel (Bindings&, std::function<void()> close);
         void paint (juce::Graphics&) override;
         void resized() override;
 
     private:
-        ChordChimpProcessor& processor;
         juce::TextButton closeButton { "Done" };
-        juce::Label heading, prefsCaption, qwertyCaption;
-        juce::ComboBox qwerty;            // the QWERTY layout preference (ChordChimpEditor)
-        ParamControl lookAhead;
-        ParamGrid left, shifters, right;
-        ParamStepper splitStepper;        // beside Split: a semitone a click, Shift an octave
+        juce::Label heading;
+        ParamGrid left, right;
     };
 }

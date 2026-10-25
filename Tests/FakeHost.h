@@ -1,14 +1,14 @@
-// A fake host for the engine's timing tests (PLAN.md §8): plays ChordChimpEngine block by block
+// A fake host for the engine's timing tests (PLAN.md §8): plays ChordEngine block by block
 // under a transport that can loop (with or without splitting blocks at the loop end), change
 // tempo and stop, feeds it keys at absolute samples, and records what comes out. `sweep` runs a
 // scenario at 32-2048-sample blocks, 44.1/48/96 kHz and three tempos; `compare` pairs the
-// output with the expected notes within a tolerance in samples. Shared by test_fx.cpp
-// (Phase 3), test_smart.cpp (Phase 4), test_melody.cpp and test_midiio.cpp (Phase 6).
+// output with the expected notes within a tolerance in samples. Shared by test_fx.cpp and
+// test_edge.cpp.
 #pragma once
 
 #include "TestUtil.h"
 #include "Receiver.h"
-#include "core/engine/ChordChimpEngine.h"
+#include "core/engine/ChordEngine.h"
 #include <algorithm>
 #include <cmath>
 #include <functional>
@@ -39,7 +39,7 @@ namespace fakehost
     // at block boundaries and stop; feeds it key events at absolute sample positions.
     struct Host
     {
-        std::unique_ptr<ChordChimpEngine> engine = std::make_unique<ChordChimpEngine>();
+        std::unique_ptr<ChordEngine> engine = std::make_unique<ChordEngine>();
         EngineSettings settings;
         double sampleRate = 48000.0, bpm = 120.0;
         bool playing = true;
@@ -49,8 +49,7 @@ namespace fakehost
         double loopStart = 0.0, loopEnd = 0.0;
         LoopStyle style = LoopStyle::Wrap;
         bool reportBarStart = false;
-        const ChordEdits* edits = nullptr;   // the Chord Editor's snapshot, if any
-        std::function<void (const Transport&, int, const BlockEvents&)> observe;   // after each block (Phase 6: Export)
+        std::function<void (const Transport&, int, const BlockEvents&)> observe;   // after each block
 
         std::vector<std::pair<int64_t, MidiEvent>> input;
         std::vector<std::pair<int64_t, double>> tempo;   // (absolute sample, bpm), from the first block at or after it
@@ -115,10 +114,7 @@ namespace fakehost
 
                 blockStarts.push_back ({ pos, ppq });
                 out.clear();
-                if (edits != nullptr)
-                    engine->process (settings, *edits, t, in.data(), (int) in.size(), n, out);
-                else
-                    engine->process (settings, t, in.data(), (int) in.size(), n, out);
+                engine->process (settings, t, in.data(), (int) in.size(), n, out);
                 if (observe)
                     observe (t, n, out);
                 rx.feed (out, n);

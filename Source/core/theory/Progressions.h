@@ -6,7 +6,7 @@
 // The order is the order of the host parameter's choices (saved by index): only append.
 #pragma once
 
-#include "ChordModel.h"
+#include "ChordGroups.h"
 #include <array>
 
 namespace chordchimp
@@ -65,5 +65,14 @@ namespace chordchimp
         for (size_t i = 0; i < d.size(); ++i)
             d[i] = (int8_t) (custom[i] < 0 ? 0 : (custom[i] > 6 ? 6 : custom[i]));
         return d;
+    }
+
+    // The seven chords: slot n plays degree order[n] in group `g`'s shape.
+    inline ChordSet makeChords (ChordGroup g, Scale s, const DegreeOrder& order) noexcept
+    {
+        ChordSet set;
+        for (size_t n = 0; n < set.size(); ++n)
+            set[n] = makeGroupSlot (g, s, order[n]);
+        return set;
     }
 }

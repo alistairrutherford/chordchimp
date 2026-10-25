@@ -10,12 +10,10 @@
         <FILE id="snF000" name="Main.cpp" compile="1" resource="0" file="Main.cpp"/>
         <FILE id="snF001" name="ChordChimpProcessor.cpp" compile="1" resource="0" file="../../Source/plugin/ChordChimpProcessor.cpp"/>
         <FILE id="snF002" name="Parameters.cpp" compile="1" resource="0" file="../../Source/plugin/Parameters.cpp"/>
-        <FILE id="snF004" name="ChordEditorState.cpp" compile="1" resource="0" file="../../Source/plugin/ChordEditorState.cpp"/>
         <FILE id="snF005" name="ChordChimpEditor.cpp" compile="1" resource="0" file="../../Source/ui/ChordChimpEditor.cpp"/>
         <FILE id="snF006" name="Theme.cpp" compile="1" resource="0" file="../../Source/ui/Theme.cpp"/>
         <FILE id="snF007" name="ParamControl.cpp" compile="1" resource="0" file="../../Source/ui/ParamControl.cpp"/>
         <FILE id="snF008" name="Keyboards.cpp" compile="1" resource="0" file="../../Source/ui/Keyboards.cpp"/>
-        <FILE id="snF009" name="ChordEditorPanel.cpp" compile="1" resource="0" file="../../Source/ui/ChordEditorPanel.cpp"/>
         <FILE id="snF010" name="Panels.cpp" compile="1" resource="0" file="../../Source/ui/Panels.cpp"/>
         <FILE id="snF011" name="PresetManager.cpp" compile="1" resource="0" file="../../Source/plugin/PresetManager.cpp"/>
         <FILE id="snF012" name="FactoryPresets.cpp" compile="1" resource="0" file="../../Source/plugin/FactoryPresets.cpp"/>

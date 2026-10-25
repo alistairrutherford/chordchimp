@@ -1,5 +1,5 @@
-// ChordChimp's own look (PLAN.md §6): a dark panel UI, amber for the Chord Generator, teal for
-// the Smart Scale. Colours, fonts and a LookAndFeel used by every component in Source/ui.
+// ChordChimp's own look (PLAN.md §5): a dark panel UI with an amber accent. Colours, fonts and a
+// LookAndFeel used by every component in Source/ui.
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
@@ -16,7 +16,6 @@ namespace chordchimp::ui
         const juce::Colour dim          { 0xff9aa1ad };
         const juce::Colour faint        { 0xff5d6472 };
         const juce::Colour chord        { 0xfff2a541 };   // Chord Generator accent
-        const juce::Colour smart        { 0xff3cc9b0 };   // Smart Scale accent
         const juce::Colour sounding     { 0xfff25f5c };   // notes playing
         const juce::Colour whiteKey     { 0xffe9e6df };
         const juce::Colour whiteKeyText { 0xff2b2d33 };

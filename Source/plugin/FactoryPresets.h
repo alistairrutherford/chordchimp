@@ -1,7 +1,8 @@
-// ChordChimp's factory presets (PLAN.md §4.7): about 20, our own, in three categories: Genre,
-// Artist-style (described by style only, never by an artist's name) and Vibe. Each is a list of
-// host parameter values on top of the defaults (plain values: a choice's index, a bool's 0/1,
-// a percentage 0-100), so the list is checked by the compiler against the engine's enums.
+// ChordChimp's factory presets (PLAN.md §3.4): Chordism's, without its Smart Scale settings, in
+// three categories: Genre, Artist-style (described by style only, never by an artist's name) and
+// Vibe. Each is a list of host parameter values on top of the defaults (plain values: a choice's
+// index, a bool's 0/1, a percentage 0-100), so the list is checked by the compiler against the
+// engine's enums.
 // Program 0 of the plug-in is "Init" (every default), so a new instance is its program 0.
 #pragma once
 

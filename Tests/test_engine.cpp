@@ -1,9 +1,8 @@
-// Engine tests: InputRouter zones, VoiceTracker ownership, chord output, Chord Editor edits,
-// Progressions, Shifters, the test pattern under a fake transport, the snapshot exchange, and
-// stuck-note fuzzing (PLAN.md §8).
+// Engine tests: KeyRouter, VoiceTracker ownership, chord output, Progressions, the test
+// pattern under a fake transport, the snapshot exchange, and stuck-note fuzzing (PLAN.md §8).
 #include "TestUtil.h"
 #include "Receiver.h"
-#include "core/engine/ChordChimpEngine.h"
+#include "core/engine/ChordEngine.h"
 #include "core/engine/SnapshotExchange.h"
 #include <algorithm>
 #include <cmath>
@@ -41,21 +40,17 @@ namespace
     // Runs one block with the given input events.
     struct Rig
     {
-        ChordChimpEngine engine;
+        ChordEngine engine;
         EngineSettings settings;
-        ChordEdits edits;
         Transport transport;
         BlockEvents out;
         Receiver rx;
-
-        // A new editor snapshot, as the plug-in publishes after every edit.
-        void publish() { ++edits.version; }
 
         BlockEvents& run (std::vector<MidiEvent> in, int numSamples = 512)
         {
             std::stable_sort (in.begin(), in.end(), [] (const MidiEvent& a, const MidiEvent& b) { return a.sample < b.sample; });
             out.clear();
-            engine.process (settings, edits, transport, in.data(), (int) in.size(), numSamples, out);
+            engine.process (settings, transport, in.data(), (int) in.size(), numSamples, out);
             rx.feed (out, numSamples);
             if (transport.playing)
             {
@@ -73,46 +68,20 @@ namespace
 //==============================================================================
 static void testRouter()
 {
-    std::cout << "== input router ==\n";
-    InputRouter r;
-
-    bool chordWhites = true, shifters = true;
-    for (int oct = 0; oct < 5; ++oct)
+    std::cout << "== key router ==\n";
+    bool whites = true, blacks = true;
+    for (int note = 0; note < 128; ++note)
     {
-        for (int w = 0; w < 7; ++w)
-            chordWhites &= r.route (oct * 12 + keys::whiteOffsets[w]) == RoutedKey { Zone::Chord, KeyRole::ChordSlot, w };
-        const int blacks[5] = { 1, 3, 6, 8, 10 };
-        for (int b = 0; b < 5; ++b)
-            shifters &= r.route (oct * 12 + blacks[b]) == RoutedKey { Zone::Chord, KeyRole::Shifter, b };
+        const int w = keys::whiteLetter (note % 12);
+        if (w >= 0)
+            whites &= KeyRouter::slotOf (note) == w;
+        else
+            blacks &= KeyRouter::slotOf (note) == -1;
     }
-    check (chordWhites, "below the split: C..B are chord slots 0-6 in every octave");
-    check (shifters, "below the split: C# D# F# G# A# are shifters 0-4");
-
-    // The 25-key controller at its default octave: 48-59 chord zone, 60-72 Smart Scale.
-    check (r.route (59) == RoutedKey { Zone::Chord, KeyRole::ChordSlot, 6 }, "59 (B) is the last chord key");
-    check (r.route (60) == RoutedKey { Zone::Scale, KeyRole::ScaleTone, 0 }, "60 (split) is scale tone 0");
-    check (r.route (72) == RoutedKey { Zone::Scale, KeyRole::ScaleTone, 7 }, "72 is scale tone 7 (next octave)");
-    check (r.route (71) == RoutedKey { Zone::Scale, KeyRole::ScaleTone, 6 }, "71 (B) is scale tone 6");
-    check (r.route (61) == RoutedKey { Zone::Scale, KeyRole::PatternSlot, 0 }
-               && r.route (70) == RoutedKey { Zone::Scale, KeyRole::PatternSlot, 4 }
-               && r.route (73) == RoutedKey { Zone::Scale, KeyRole::PatternSlot, 0 },
-           "above the split: black keys are pattern slots 0-4, repeating each octave");
-
-    r.split = 62;
-    check (r.route (61) == RoutedKey { Zone::Chord, KeyRole::Shifter, 0 } && r.route (62) == RoutedKey { Zone::Scale, KeyRole::ScaleTone, 1 },
-           "split at D: scale tones keep their letter (D = 1)");
-
-    r.split = 60;
-    r.chromatic = true;
-    check (r.route (61) == RoutedKey { Zone::Scale, KeyRole::PassThrough, 61 } && r.route (48).role == KeyRole::ChordSlot,
-           "Chromatic: the Smart Scale zone passes through and has no pattern keys");
-
-    r.chromatic = false;
-    check (r.chordKeyForSlot (0) == 48 && r.chordKeyForSlot (6) == 59, "test pattern keys at split 60: 48..59");
-    r.split = 55;
-    check (r.chordKeyForSlot (0) == 36 && r.chordKeyForSlot (6) == 47, "split 55: a whole octave below it, 36..47");
-    r.split = 5;
-    check (r.chordKeyForSlot (0) == -1, "no complete chord octave: no test pattern key");
+    check (whites, "no split: C..B are chord slots 0-6 in every octave, 0-127");
+    check (blacks, "black keys play nothing, in every octave");
+    check (KeyRouter::keyForSlot (0) == 48 && KeyRouter::keyForSlot (6) == 59 && KeyRouter::keyForSlot (7) == -1,
+           "test pattern keys: the home octave, 48..59");
 }
 
 //==============================================================================
@@ -184,7 +153,7 @@ static void testChords()
     }
     check (allSlots, "C major: the seven white keys play I ii iii IV V vi vii°");
 
-    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 36, 90, 0) })) == expected[0], "the chord-zone octave doesn't matter");
+    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 36, 90, 0) })) == expected[0], "the octave doesn't matter");
     rig.run ({ MidiEvent::noteOff (0, 36, 0) });
 
     // Shared tones: I (C E G) and iii (E G B).
@@ -215,33 +184,12 @@ static void testChords()
     rig.run ({ MidiEvent::noteOff (0, 55, 0) });
     rig.settings = EngineSettings {};
 
-    // Split moves while a key is held: the key-up still releases what it started. (Chromatic
-    // mapping: the Smart Scale zone passes its keys through, as it did before Phase 4.)
-    rig.settings.smart.map.mapping = Mapping::Chromatic;
-    rig.run ({ MidiEvent::noteOn (0, 62, 90, 0) });
-    check (rig.engine.getVoices().ownerCount (0, 62) == 1, "Chromatic: 62 above the split passes through");
-    rig.settings.split = 64;
-    rig.run ({});
-    auto& splitOff = rig.run ({ MidiEvent::noteOff (0, 62, 0) });
-    check (notesOff (splitOff) == std::vector<int> { 62 } && rig.engine.getVoices().isEmpty(),
-           "split moved over a held key: its key-up releases the pass-through note, not a chord");
-    rig.settings.split = 60;
-
-    // Mutes (still Chromatic).
-    rig.run ({ MidiEvent::noteOn (0, 48, 90, 0), MidiEvent::noteOn (0, 64, 90, 0) });
-    rig.settings.muteChords = true;
-    auto& muted = rig.run ({});
-    check (notesOff (muted) == std::vector<int> { 48, 52, 55 }, "Mute CG releases the held chord, keeps the Smart Scale note");
-    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 50, 90, 0) })).empty(), "Mute CG: chord keys play nothing");
-    rig.settings.muteScale = true;
-    check (notesOff (rig.run ({})) == std::vector<int> { 64 }, "Mute SS releases the Smart Scale note");
-    rig.run ({ MidiEvent::noteOff (0, 48, 0), MidiEvent::noteOff (0, 64, 0), MidiEvent::noteOff (0, 50, 0) });
-    rig.settings = EngineSettings {};
-    check (rig.engine.getVoices().isEmpty(), "nothing left after the mutes");
-
-    // Black keys in the chord zone are shifters: no notes of their own.
-    check (rig.run ({ MidiEvent::noteOn (0, 49, 90, 0) }).size() == 0, "a chord-zone black key plays nothing itself");
-    rig.run ({ MidiEvent::noteOff (0, 49, 0) });
+    // No split: a white key plays its chord in any octave; black keys play nothing.
+    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 86, 90, 0) })) == expected[1], "D at 86 (above the old split) plays ii");
+    rig.run ({ MidiEvent::noteOff (0, 86, 0) });
+    check (rig.run ({ MidiEvent::noteOn (0, 49, 90, 0), MidiEvent::noteOn (0, 73, 90, 1) }).size() == 0, "black keys play nothing");
+    check (rig.run ({ MidiEvent::noteOff (0, 49, 0), MidiEvent::noteOff (0, 73, 0) }).size() == 0 && rig.engine.getVoices().isEmpty(),
+           "and their key-ups send nothing");
 
     // Enable off: input passes through unchanged, on its own channel.
     rig.run ({ MidiEvent::noteOn (0, 48, 90, 0) });
@@ -373,80 +321,6 @@ static void testPatternLoop()
 }
 
 //==============================================================================
-// Chord Editor edits in the engine: applied, followed while held, reset by a group change.
-static void testEdits()
-{
-    std::cout << "== Chord Editor edits ==\n";
-    Rig rig;
-    editor::reset (rig.edits, ChordGroup::Triads);
-    editor::setOn (rig.edits, ChordGroup::Triads, Scale::Major, 0, 3, true);   // I gets its 7th
-    rig.publish();
-
-    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 48, 90, 0) })) == std::vector<int> { 48, 52, 55, 59 },
-           "an edit applies: the C key plays Cmaj7");
-
-    // Edit while held: the held chord follows.
-    editor::setAccidental (rig.edits, ChordGroup::Triads, Scale::Major, 0, 3, -1);
-    rig.publish();
-    auto& edited = rig.run ({});
-    check (notesOff (edited) == std::vector<int> { 48, 52, 55, 59 } && notesOn (edited) == std::vector<int> { 48, 52, 55, 58 },
-           "an edit while held retriggers the chord: Cmaj7 -> C7");
-    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 50, 90, 0) })) == std::vector<int> { 50, 53, 57 },
-           "an unedited degree plays the group's shape");
-    auto& unchanged = rig.run ({});
-    check (unchanged.size() == 0, "nothing restrikes when nothing changed");
-
-    // Choosing a group resets the edits.
-    const uint32_t discards = rig.engine.getEditsDiscarded();
-    rig.settings.group = ChordGroup::Sevenths;
-    auto& regroup = rig.run ({});
-    check (notesOn (regroup) == std::vector<int> { 48, 50, 52, 53, 55, 57, 59, 60 },
-           "group change while held: both keys replay as Sevenths (Cmaj7, Dm7), the C7 edit gone");
-    check (rig.engine.getEditsDiscarded() == discards + 1 && rig.engine.getDiscardedVersion() == rig.edits.version,
-           "the engine reports the snapshot it dropped");
-    rig.settings.group = ChordGroup::Triads;
-    rig.run ({});
-    check (! rig.engine.editsApply()
-               && chordNotes (rig.engine.getChords()[0], rig.engine.getChordContext()).size == 3,
-           "back to the old group: the edits stay dropped until a newer snapshot");
-    rig.run ({ MidiEvent::noteOff (0, 48, 0), MidiEvent::noteOff (0, 50, 0) });
-
-    // A new snapshot made on the current group applies again.
-    editor::reset (rig.edits, ChordGroup::Triads);
-    editor::setOn (rig.edits, ChordGroup::Triads, Scale::Major, 4, 3, true);
-    rig.publish();
-    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 55, 90, 0) })) == std::vector<int> { 55, 59, 62, 65 },
-           "a newer snapshot on the current group applies (G7)");
-    rig.run ({ MidiEvent::noteOff (0, 55, 0) });
-
-    // A snapshot made for another group doesn't apply.
-    editor::reset (rig.edits, ChordGroup::Sus4);
-    editor::setOn (rig.edits, ChordGroup::Sus4, Scale::Major, 0, 3, true);
-    rig.publish();
-    rig.run ({});
-    check (! rig.engine.editsApply(), "a snapshot for another group doesn't apply");
-
-    // State restore: the group parameter and a snapshot for that group arrive in one block.
-    rig.settings.group = ChordGroup::Sus4;
-    rig.publish();
-    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 48, 90, 0) })) == std::vector<int> { 48, 53, 55, 59 },
-           "restore: edits arriving with their group apply (Csus4 + maj7)");
-    rig.run ({ MidiEvent::noteOff (0, 48, 0) });
-
-    // Edits follow the degree through a progression.
-    rig.settings.group = ChordGroup::Triads;
-    editor::reset (rig.edits, ChordGroup::Triads);
-    editor::setOn (rig.edits, ChordGroup::Triads, Scale::Major, 4, 3, true);
-    rig.publish();
-    rig.settings.progression = Progression::Pop;
-    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 50, 90, 0) })) == std::vector<int> { 55, 59, 62, 65 },
-           "Pop progression: the D key plays V with its edit (G7)");
-    rig.run ({ MidiEvent::noteOff (0, 50, 0) });
-
-    check (rig.engine.getVoices().isEmpty() && rig.rx.clean() && rig.rx.on.empty(), "edits: clean, " + rig.rx.describe());
-}
-
-//==============================================================================
 static void testProgressions()
 {
     std::cout << "== progressions ==\n";
@@ -478,134 +352,6 @@ static void testProgressions()
     check (notesOff (rig.run ({ MidiEvent::noteOff (0, 50, 0) })) == std::vector<int> { 59, 62, 65 }
                && rig.engine.getVoices().isEmpty() && rig.rx.clean(),
            "and its key-up releases exactly what it plays");
-}
-
-//==============================================================================
-static void testShifters()
-{
-    std::cout << "== shifters ==\n";
-    Rig rig;   // defaults: C# Sevenths, D# Sus4, F# Ninths, G# parallel minor, A# parallel major
-
-    rig.run ({ MidiEvent::noteOn (0, 48, 90, 0) });
-    auto& shifted = rig.run ({ MidiEvent::noteOn (0, 49, 90, 100) });
-    check (notesOff (shifted) == std::vector<int> { 48, 52, 55 } && notesOn (shifted) == std::vector<int> { 48, 52, 55, 59 }
-               && shifted[0].sample == 100 && rig.engine.getActiveShifter() == 0,
-           "Standard: C# while C is held retriggers it as Cmaj7, at the shifter's sample");
-    auto& released = rig.run ({ MidiEvent::noteOff (0, 49, 7) });
-    check (notesOn (released) == std::vector<int> { 48, 52, 55 } && notesOff (released).size() == 4
-               && rig.engine.getActiveShifter() == -1,
-           "Standard: letting go of C# returns to the triad");
-
-    // Last pressed wins; letting it go hands back to the one before.
-    rig.run ({ MidiEvent::noteOn (0, 49, 90, 0) });
-    auto& sus = rig.run ({ MidiEvent::noteOn (0, 51, 90, 0) });
-    check (notesOn (sus) == std::vector<int> { 48, 53, 55 }, "two held: the last (D#, Sus4) wins");
-    auto& back = rig.run ({ MidiEvent::noteOff (0, 51, 0) });
-    check (notesOn (back) == std::vector<int> { 48, 52, 55, 59 } && rig.engine.getActiveShifter() == 0,
-           "letting D# go hands back to C# (Sevenths)");
-    rig.run ({ MidiEvent::noteOff (0, 49, 0) });
-
-    // Key/Scale target: G# = same key, Natural Minor.
-    auto& minor = rig.run ({ MidiEvent::noteOn (0, 56, 90, 0) });
-    check (notesOn (minor) == std::vector<int> { 48, 51, 55 }, "G# (Key/Scale: parallel minor): C becomes Cm");
-    rig.settings.shifters[3].key = 2;   // D natural minor
-    auto& retarget = rig.run ({});
-    check (notesOn (retarget) == std::vector<int> { 50, 53, 57 }, "changing the active shifter's target retriggers (D minor: Dm)");
-    rig.run ({ MidiEvent::noteOff (0, 56, 0) });
-    rig.settings.shifters = defaultShifterTargets();
-
-    // The key-up after a shift releases exactly the shifted notes.
-    rig.run ({ MidiEvent::noteOn (0, 54, 90, 0) });   // F#: Ninths
-    auto& up = rig.run ({ MidiEvent::noteOff (0, 48, 0) });
-    check (notesOff (up) == std::vector<int> { 48, 52, 55, 59, 62 }, "C released while shifted: Cmaj9 off");
-    rig.run ({ MidiEvent::noteOff (0, 54, 0) });
-    check (rig.engine.getVoices().isEmpty(), "nothing left after the Standard tests");
-
-    // Toggle.
-    rig.settings.shifterMode = ShifterMode::Toggle;
-    rig.run ({ MidiEvent::noteOn (0, 49, 90, 0) });
-    rig.run ({ MidiEvent::noteOff (0, 49, 0) });
-    check (rig.engine.getActiveShifter() == 0, "Toggle: C# stays on after it's let go");
-    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 50, 90, 0) })) == std::vector<int> { 50, 53, 57, 60 }, "Toggle: D plays Dm7");
-    auto& other = rig.run ({ MidiEvent::noteOn (0, 51, 90, 0), MidiEvent::noteOff (0, 51, 1) });
-    check (rig.engine.getActiveShifter() == 1 && notesOn (other) == std::vector<int> { 50, 55, 57 },
-           "Toggle: D# replaces C# (Dsus4), retriggering the held chord");
-    auto& offAgain = rig.run ({ MidiEvent::noteOn (0, 51, 90, 0), MidiEvent::noteOff (0, 51, 1) });
-    check (rig.engine.getActiveShifter() == -1 && notesOn (offAgain) == std::vector<int> { 50, 53, 57 },
-           "Toggle: pressing D# again turns it off");
-    rig.run ({ MidiEvent::noteOn (0, 49, 90, 0), MidiEvent::noteOff (0, 49, 1) });
-    rig.transport.playing = true;
-    rig.run ({});
-    rig.transport.playing = false;
-    rig.run ({});
-    check (rig.engine.getActiveShifter() == 0 && rig.engine.getVoices().isEmpty(),
-           "transport stop ends the notes but a toggled shifter stays on");
-
-    // Mode change: nothing stays active.
-    rig.settings.shifterMode = ShifterMode::Standard;
-    rig.run ({});
-    check (rig.engine.getActiveShifter() == -1, "changing the mode turns the shifter off");
-
-    // Group shifter vs edits: edits belong to the group parameter's group.
-    editor::reset (rig.edits, ChordGroup::Triads);
-    editor::setOn (rig.edits, ChordGroup::Triads, Scale::Major, 0, 4, true);   // Cadd9
-    rig.publish();
-    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 48, 90, 0) })) == std::vector<int> { 48, 52, 55, 62 }, "edited: Cadd9");
-    auto& groupShift = rig.run ({ MidiEvent::noteOn (0, 49, 90, 0) });
-    check (notesOn (groupShift) == std::vector<int> { 48, 52, 55, 59 }, "a group shifter plays that group's own shape (Cmaj7)");
-    rig.run ({ MidiEvent::noteOff (0, 49, 0) });
-    auto& keyShift = rig.run ({ MidiEvent::noteOn (0, 56, 90, 0) });
-    check (notesOn (keyShift) == std::vector<int> { 48, 51, 55, 62 }, "a Key/Scale shifter keeps the edits (Cm add9)");
-    rig.run ({ MidiEvent::noteOff (0, 56, 0), MidiEvent::noteOff (0, 48, 0) });
-
-    // Enable off: shifter keys pass through like any key.
-    rig.settings.enabled = false;
-    auto& through = rig.run ({ MidiEvent::noteOn (0, 49, 90, 0) });
-    check (notesOn (through) == std::vector<int> { 49 } && rig.engine.getActiveShifter() == -1, "Enable off: C# passes through");
-    rig.run ({ MidiEvent::noteOff (0, 49, 0) });
-    rig.settings.enabled = true;
-    rig.run ({});
-
-    check (rig.engine.getVoices().isEmpty() && rig.rx.clean() && rig.rx.on.empty(), "shifters: clean, " + rig.rx.describe());
-}
-
-//==============================================================================
-// The test pattern's shifter: odd bars hold it, so they play the shifted chords.
-static void testPatternShifter (int numerator, int blockSize)
-{
-    Rig rig;
-    rig.settings.testPattern = true;
-    rig.settings.testShifter = 0;   // Sevenths
-    rig.transport = { 48000.0, true, 0.0, 120.0, numerator, 4 };
-    const double spb = rig.transport.samplesPerBeat();
-    const int beats = 4 * numerator;
-
-    std::map<int, std::vector<int>> onsByBeat;
-    int64_t pos = 0;
-    while (pos < (int64_t) std::ceil (beats * spb))
-    {
-        for (const auto& e : rig.run ({}, blockSize))
-            if (e.isNoteOn())
-                onsByBeat[(int) std::llround ((double) (pos + e.sample) / spb * 2.0) / 2].push_back (e.note());
-        pos += blockSize;
-    }
-
-    int wrong = 0;
-    for (int b = 0; b < beats; ++b)
-    {
-        const bool shifted = (b / numerator) % 2 == 1;
-        const auto chords = makeGroupChords (shifted ? ChordGroup::Sevenths : ChordGroup::Triads, Scale::Major);
-        const auto want = chordNotes (chords[(size_t) TestPattern::slotForBeat (b)], {});
-        std::vector<int> w (want.begin(), want.end()), got = onsByBeat[b];
-        std::sort (w.begin(), w.end());
-        std::sort (got.begin(), got.end());
-        wrong += got == w ? 0 : 1;
-    }
-    rig.transport.playing = false;
-    rig.run ({}, blockSize);
-    check (wrong == 0 && rig.engine.getVoices().isEmpty() && rig.rx.clean() && rig.engine.getActiveShifter() == -1,
-           "test shifter in " + std::to_string (numerator) + "/4, block " + std::to_string (blockSize) + ": odd bars shifted, "
-               + std::to_string (wrong) + " wrong beats, " + rig.rx.describe());
 }
 
 //==============================================================================
@@ -655,9 +401,6 @@ static void testSnapshotExchange()
 // Phase 3: also every chord effect (Stack, Strum, Arp, Repeat, Step Sequencer, Velocity, Hold),
 // loops that wrap inside blocks, and time-signature changes; the scheduler's queue must stay
 // within its bound (4 events per performance).
-// Phase 4: also the Smart Scale zone: mappings, Inversions, Smart Octave, pattern keys and their
-// slot settings, Note Repeat, the zone's Stack, Step Sequencer, Velocity and Hold, and the
-// test pattern's Test smart (tones and held pattern keys), in both queue bounds.
 // `fx`: a run that keeps a timed effect on and the transport looping most of the time.
 static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
 {
@@ -667,13 +410,9 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
 
     Rig rig;
     rig.transport = { 44100.0, false, 0.0, 120.0, 4, 4 };
-    SharedSession session;
-    rig.engine.setSession (&session);
-    const uint32_t otherMember = session.join();
     std::set<std::pair<int, int>> keysDown;   // (channel, note) the "player" holds
     int maxSounding = 0;
     int fxBlocks = 0, wrapBlocks = 0;         // blocks with a timed effect playing, with a loop wrap inside
-    int smartBlocks = 0;                      // blocks with a Smart Scale performance
 
     for (int b = 0; b < blocks; ++b)
     {
@@ -691,8 +430,7 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
             if (r < 0.45)
             {
                 const int ch = chance (0.9) ? 0 : pick (1, 15);
-                const int note = chance (0.15) ? 48 + keys::blackOffsets[pick (0, 4)]   // shifters
-                               : chance (0.8) ? pick (36, 84) : pick (0, 127);
+                const int note = chance (0.8) ? pick (36, 84) : pick (0, 127);
                 in.push_back (MidiEvent::noteOn (ch, note, pick (1, 127), sample));
                 keysDown.insert ({ ch, note });
             }
@@ -721,10 +459,7 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
         if (chance (0.05)) rig.settings.key = pick (0, 11);
         if (chance (0.03)) rig.settings.scale = (Scale) pick (0, numScales - 1);
         if (chance (0.03)) rig.settings.group = (ChordGroup) pick (0, numChordGroups - 1);
-        if (chance (0.03)) rig.settings.split = chance (0.7) ? 60 : pick (0, 127);
         if (chance (0.03)) rig.settings.chordOctave = pick (-3, 3);
-        if (chance (0.02)) rig.settings.muteChords = ! rig.settings.muteChords;
-        if (chance (0.02)) rig.settings.muteScale = ! rig.settings.muteScale;
         if (chance (0.02)) rig.settings.enabled = ! rig.settings.enabled;
         if (chance (0.03)) rig.settings.testPattern = ! rig.settings.testPattern;
         if (chance (0.02)) rig.transport.playing = ! rig.transport.playing;
@@ -733,34 +468,9 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
         if (chance (0.005)) rig.transport.sampleRate = chance (0.5) ? 48000.0 : 96000.0;
         if (chance (0.003)) rig.engine.requestReset();
 
-        // Phase 2: Chord Editor edits, progressions and shifters while notes are held.
-        if (chance (0.04))
-        {
-            const int d = pick (0, 6), k = pick (0, 6);
-            const auto g = chance (0.9) ? rig.settings.group : (ChordGroup) pick (0, numChordGroups - 1);
-            switch (pick (0, 4))
-            {
-                case 0: editor::setOn (rig.edits, g, rig.settings.scale, d, k, chance (0.6)); break;
-                case 1: editor::setAccidental (rig.edits, g, rig.settings.scale, d, k, pick (-2, 2)); break;
-                case 2: editor::setOctave (rig.edits, g, rig.settings.scale, d, k, pick (-2, 2), chance (0.5)); break;
-                case 3: editor::resetDegree (rig.edits, d); break;
-                default: editor::reset (rig.edits, rig.settings.group); break;
-            }
-            rig.publish();
-        }
+        // Progressions while notes are held.
         if (chance (0.02)) rig.settings.progression = (Progression) pick (0, numProgressions - 1);
         if (chance (0.02)) rig.settings.customOrder[(size_t) pick (0, 6)] = (int8_t) pick (0, 6);
-        if (chance (0.01)) rig.settings.shifterMode = chance (0.5) ? ShifterMode::Toggle : ShifterMode::Standard;
-        if (chance (0.02))
-        {
-            auto& t = rig.settings.shifters[(size_t) pick (0, numShifters - 1)];
-            t.kind = chance (0.5) ? ShifterKind::KeyScale : ShifterKind::ChordGroup;
-            t.group = (ChordGroup) pick (0, numChordGroups - 1);
-            t.key = pick (-1, 11);
-            t.scale = pick (-1, numScales - 1);
-        }
-        if (chance (0.02)) rig.settings.testShifter = pick (-1, numShifters - 1);
-
         // Phase 3: chord effects, holds, loops and time signatures while notes are held.
         auto& fx = rig.settings.fx;
         auto unit = [&] { return std::uniform_real_distribution<double> (0.0, 1.0) (rng); };
@@ -795,62 +505,9 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
                 rig.transport.playing = true;
             if (fx.hold == HoldMode::Off && chance (0.1))
                 fx.hold = chance (0.5) ? HoldMode::Latch : HoldMode::Bar;   // keeps chords playing
-            if (! rig.settings.smart.noteRepeat && chance (0.05))
-                rig.settings.smart.noteRepeat = true;
-            if (rig.settings.smart.hold == HoldMode::Off && chance (0.1))
-                rig.settings.smart.hold = chance (0.5) ? HoldMode::Latch : HoldMode::Bar;   // keeps patterns playing
         }
-        // Phase 4: the Smart Scale zone while its keys and patterns are held.
-        auto& ss = rig.settings.smart;
-        if (chance (0.03)) ss.map.mapping = (Mapping) pick (0, numMappings - 1);
-        if (chance (0.02)) ss.map.inversions = ! ss.map.inversions;
-        if (chance (0.02)) ss.map.octave = pick (-3, 3);
-        if (chance (0.03)) ss.noteRepeat = ! ss.noteRepeat;
-        if (chance (0.02)) ss.patternSlot = pick (0, numPatternSlots - 1);
-        if (chance (0.04))
-        {
-            auto& slot = ss.patterns[(size_t) pick (0, numPatternSlots - 1)];
-            slot.pattern = (ArpPattern) pick (1, numArpPatterns - 1);
-            slot.rate = pick (0, numPatternRates - 1);
-            slot.range = pick (1, 3);
-            slot.chord = (ArpChord) pick (0, numArpChords - 1);
-            slot.gate = unit();
-            // Phase 6: Melody mode.
-            slot.melody = chance (0.4);
-            slot.notes = pick (minMelodyNotes, maxMelodyNotes);
-            slot.rhythm = (MelodyRhythm) pick (0, numMelodyRhythms - 1);
-        }
-        if (chance (0.02)) { ss.melodySwing = unit(); ss.melodySeed = (uint32_t) pick (minMelodySeed, maxMelodySeed); }
-        if (chance (0.03)) ss.stack = (StackMode) pick (0, numStackModes - 1);
-        if (chance (0.02)) ss.seq.on = ! ss.seq.on;
-        if (chance (0.03))
-        {
-            ss.seq.pattern = pick (0, numSeqPatterns - 1);
-            ss.seq.patterns[(size_t) pick (0, numSeqPatterns - 1)] = (uint16_t) pick (0, 0xffff);
-            ss.seq.swing = unit();
-            ss.seq.gate = unit();
-            ss.seq.sustain = chance (0.5);
-        }
-        if (chance (0.02)) ss.velocity = { (VelocityCurve) pick (0, numVelocityCurves - 1), pick (1, 127), unit() };
-        if (chance (0.02)) ss.hold = (HoldMode) pick (0, numHoldModes - 1);
-        if (chance (0.02)) rig.settings.testSmart = pick (0, TestPattern::numSmartTests - 1);
-
-        // Phase 7: voice leading, look-ahead, and chords from another member of a sync group
-        // (a fake one publishing into this engine's session) while notes are held.
+        // Phase 7: voice leading while notes are held.
         if (chance (0.02)) fx.voiceLeading = chance (0.6) ? VoiceLeadingMode::Smooth : VoiceLeadingMode::Off;
-        if (chance (0.02)) rig.settings.lookAhead = pick (0, numLookAheads - 1);
-        if (chance (0.01)) rig.settings.syncGroup = chance (0.3) ? 0 : pick (1, numSyncGroups);
-        if (chance (0.05) && SharedSession::validGroup (rig.settings.syncGroup))
-        {
-            SyncChord c;
-            c.chord.key = pick (0, 11);
-            c.chord.scale = (Scale) pick (0, numScales - 1);
-            c.chord.slot = makeGroupSlot ((ChordGroup) pick (0, numChordGroups - 1), c.chord.scale, pick (0, 6));
-            c.ppq = rig.transport.ppq + std::uniform_real_distribution<double> (-1.0, 1.5) (rng);
-            c.playing = chance (0.8);
-            c.sender = otherMember;
-            session.publish (rig.settings.syncGroup, c);
-        }
 
         if (chance (0.005))
         {
@@ -863,13 +520,10 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
         const auto& perf = rig.engine.getPerformer();
         fxBlocks += perf.aliveCount() > 0 && (fx.arp != ArpPattern::Off || fx.strum != StrumMode::Off || fx.repeat.on || fx.seq.on) ? 1 : 0;
         wrapBlocks += rig.engine.getClock().numSegments() > 1 ? 1 : 0;
-        const auto& smartPerf = rig.engine.getSmartPerformer();
-        smartBlocks += smartPerf.aliveCount() > 0 ? 1 : 0;
-        if (perf.queued() > 4 * perf.aliveCount() || smartPerf.queued() > 4 * smartPerf.aliveCount())
+        if (perf.queued() > 4 * perf.aliveCount())
         {
             check (false, "fuzz seed " + std::to_string (seed) + ", block " + std::to_string (b) + ": " + std::to_string (perf.queued())
-                              + " events queued for " + std::to_string (perf.aliveCount()) + " chord performances, "
-                              + std::to_string (smartPerf.queued()) + " for " + std::to_string (smartPerf.aliveCount()) + " Smart Scale");
+                              + " events queued for " + std::to_string (perf.aliveCount()) + " chord performances");
             return;
         }
         maxSounding = std::max (maxSounding, (int) rig.rx.on.size());
@@ -889,7 +543,6 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
         ups.push_back (MidiEvent::noteOff (ch, note, 0));
     rig.run (ups, 64);
     rig.settings.fx.hold = HoldMode::Off;   // a hold made while stopped survives a stopped transport
-    rig.settings.smart.hold = HoldMode::Off;
     rig.run ({}, 64);
     rig.transport.playing = false;
     rig.run ({}, 64);
@@ -898,7 +551,7 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
 
     check (rig.rx.clean() && rig.rx.on.empty() && rig.engine.getVoices().isEmpty() && rig.rx.noteOns == rig.rx.noteOffs,
            "fuzz seed " + std::to_string (seed) + ", " + std::to_string (blocks) + " blocks (" + std::to_string (fxBlocks)
-               + " with timed effects, " + std::to_string (smartBlocks) + " with Smart Scale performances, "
+               + " with timed effects, "
                + std::to_string (wrapBlocks) + " loop wraps; peak " + std::to_string (maxSounding)
                + " notes): " + rig.rx.describe());
 }
@@ -918,13 +571,7 @@ int main()
     testPatternTiming (44100.0, 120.0, 32, 2.75);
     testPatternLoop();
 
-    testEdits();
     testProgressions();
-    testShifters();
-    std::cout << "== test pattern shifter ==\n";
-    testPatternShifter (4, 512);
-    testPatternShifter (3, 333);
-    testPatternShifter (4, 2048);
 
     testSnapshotExchange();
 

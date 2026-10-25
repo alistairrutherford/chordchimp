@@ -1,29 +1,27 @@
 // Editor snapshot test (PLAN.md §7 row 5, §8). Runs the real processor and editor without a
 // host and checks:
 //
-//   1. snapshots  the editor in a fixed state (C major, the Pop progression, edits, effects, keys
-//                 held), its Chord Editor page and its Setup overlay at 1100×640, and the editor
-//                 at its smallest size (960×600, keyboard hidden), each
-//                 compared with Tests/fixtures/snapshot/*.png (at most 0.5% of pixels may differ
-//                 by more than 24 levels: font rendering moves a little between macOS versions)
+//   1. snapshots  the editor in a fixed state (C major, the Pop progression, effects, keys held)
+//                 and its Setup overlay at 1100×640, and the editor at its smallest size
+//                 (960×600, keyboard hidden), each compared with Tests/fixtures/snapshot/*.png
+//                 (at most 0.5% of pixels may differ by more than 24 levels: font rendering moves
+//                 a little between macOS versions)
 //   2. reachable  every host parameter is bound to a control of the editor (going through the
-//                 five pattern slots and the four sequencer patterns, as a user would)
-//   3. state      a saved state restores every parameter, the Chord Editor's edits and the UI's
-//                 preferences into a new instance; a state from before Phase 4 (64 step bools)
-//                 restores the same sequencer patterns
-//   4. Phase 6    presets (every factory program loads its values over the defaults, Init is
-//                 the defaults, a preset's state round-trips into a new instance without touching
-//                 Enable, Split or the test rig, a load ends every note); MIDI import from a file
-//                 (the parameters, edits and chords it gives); Export under a playing transport (the
-//                 handle's bar count and the file); QWERTY (both layouts, and a key press through
-//                 the editor plays its chord)
+//                 four sequencer patterns, as a user would)
+//   3. state      a saved state restores every parameter and the UI's preferences into a new
+//                 instance; a state from before Chordism's Phase 4 (64 step bools) restores the
+//                 same sequencer patterns
+//   4. presets    every factory program loads its values over the defaults, Init is the
+//                 defaults, a preset's state round-trips into a new instance without touching
+//                 Enable or the test rig, a load ends every note, and a Chordism preset file loads
+//                 (its Smart Scale settings and Chord Editor edits ignored)
 //   5. Phase 8    hardening: no allocation in processBlock (a malloc hook counts every one on
-//                 the audio thread) with everything on, two synced instances, bypass, transport
-//                 and loop changes and on-screen keys; damaged saved states (garbage bytes, NaN
-//                 and out-of-range values, nonsense Chord Editor edits) restore to sane
-//                 parameters; zero-length and oversized blocks, mono output, bypass, a reset and
-//                 a sample-rate change while notes sound, all-notes-off and SysEx from the host,
-//                 an input flood (key-ups get through), and 64 instances made and destroyed
+//                 the audio thread) with everything on, two instances, bypass, transport and loop
+//                 changes and on-screen keys; damaged saved states (garbage bytes, NaN and
+//                 out-of-range values, unknown children) restore to sane parameters; zero-length
+//                 and oversized blocks, mono output, bypass, a reset and a sample-rate change
+//                 while notes sound, all-notes-off and SysEx from the host, an input flood
+//                 (key-ups get through), and 64 instances made and destroyed
 //
 //   ChordChimpSnapshot <fixtures dir> <output dir> [--update | --no-pixels]
 //   ChordChimpSnapshot --bench [seconds]
@@ -37,8 +35,6 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../../Source/plugin/ChordChimpProcessor.h"
 #include "../../Source/ui/ChordChimpEditor.h"
-#include "../../Source/ui/ChordEditorPanel.h"
-#include "../../Source/core/midiio/MidiFile.h"
 #include <chrono>
 #include <iostream>
 #include <pthread.h>
@@ -144,23 +140,6 @@ namespace
         return n;
     }
 
-    // A host transport for the processor (Export records only while it plays).
-    struct PlayHead : juce::AudioPlayHead
-    {
-        bool playing = false;
-        double ppq = 0.0;
-        juce::Optional<PositionInfo> getPosition() const override
-        {
-            PositionInfo info;
-            info.setIsPlaying (playing);
-            info.setPpqPosition (ppq);
-            info.setBpm (120.0);
-            info.setTimeSignature (juce::AudioPlayHead::TimeSignature { 4, 4 });
-            info.setPpqPositionOfLastBarStart (std::floor (ppq / 4.0) * 4.0);
-            return info;
-        }
-    };
-
     // Fraction of pixels that differ by more than `tolerance` in any channel (1 if sizes differ).
     double difference (const juce::Image& a, const juce::Image& b, int tolerance)
     {
@@ -216,19 +195,10 @@ namespace
         set (p, params::velocity, (float) (int) VelocityCurve::House);
         set (p, params::seq, 1.0f);
         set (p, params::seqPattern, 2.0f);
-        set (p, params::mapping, (float) (int) Mapping::Dynamic);
-        set (p, params::patternSlot, 2.0f);
-        set (p, params::smartSeqPattern, 1.0f);
-        set (p, params::patternArp (2), (float) (numArpPatterns - 1));   // slot 3 in Melody mode (Phase 6)
-        set (p, params::patternRhythm (2), (float) (int) MelodyRhythm::Clave);
-        // Edits on degree 5 (V): a flat 9th, the 7th an octave up as well.
-        p.chordEditor.setOn (ChordGroup::Sevenths, Scale::Major, 4, 4, true);
-        p.chordEditor.setAccidental (ChordGroup::Sevenths, Scale::Major, 4, 4, -1);
-        p.chordEditor.setOctave (ChordGroup::Sevenths, Scale::Major, 4, 3, 1, true);
         p.prepareToPlay (48000.0, 512);
         block (p, {});
-        // Hold the E key (Pop: vi), a Smart Scale key and pattern key 2.
-        block (p, { juce::MidiMessage::noteOn (1, 52, (juce::uint8) 100), juce::MidiMessage::noteOn (1, 64, (juce::uint8) 100),
+        // Hold the E key (Pop: vi) and, two octaves up, the D key (Pop: V); a black key plays nothing.
+        block (p, { juce::MidiMessage::noteOn (1, 52, (juce::uint8) 100), juce::MidiMessage::noteOn (1, 74, (juce::uint8) 100),
                     juce::MidiMessage::noteOn (1, 63, (juce::uint8) 100) });
         block (p, {});
     }
@@ -245,7 +215,7 @@ namespace
         return differ.isEmpty();
     }
 
-    void testPhase6()
+    void testPresets()
     {
         std::cout << "== presets ==\n";
         {
@@ -290,19 +260,17 @@ namespace
             set (*p, params::key, 5.0f);
             set (*p, params::scale, (float) (int) Scale::Dorian);
             set (*p, params::chordGroup, (float) (int) ChordGroup::Ninths);
-            set (*p, params::patternArp (1), (float) (numArpPatterns - 1));
-            set (*p, params::melodySeed, 321.0f);
+            set (*p, params::stack, (float) (int) StackMode::PlusOne);
             set (*p, params::seqSteps (2), (float) 0x1234);
-            p->chordEditor.setAccidental (ChordGroup::Ninths, Scale::Dorian, 3, 2, 1);
             const auto tree = p->presetState();
             auto other = std::make_unique<ChordChimpProcessor>();
             set (*other, params::enable, 0.0f);
             set (*other, params::testPattern, 1.0f);
             other->applyPreset (tree, "User", "Mine");
             differ.clear();
-            check (equalParams (*p, *other, differ, true) && other->chordEditor.getEdits().sameEdits (p->chordEditor.getEdits())
+            check (equalParams (*p, *other, differ, true)
                        && get (*other, params::enable) == 0.0f && get (*other, params::testPattern) == 1.0f && other->getPresetName() == "Mine",
-                   "a preset's state loads every preset parameter and the edits, and leaves Enable and the test pattern ("
+                   "a preset's state loads every preset parameter, and leaves Enable and the test pattern ("
                        + differ.joinIntoString (", ") + ")");
             check (! tree.getChildWithProperty ("id", params::enable).isValid() && ! tree.getChildWithProperty ("id", params::testPattern).isValid()
                        && ! tree.getChildWithName ("UI").isValid(),
@@ -324,182 +292,26 @@ namespace
                    "the current program and preset name restore with the plug-in's state");
         }
 
-        std::cout << "== MIDI import ==\n";
+        std::cout << "== Chordism presets ==\n";
         {
-            auto p = std::make_unique<ChordChimpProcessor>();
-            p->prepareToPlay (48000.0, 512);
-            set (*p, params::chordGroup, (float) (int) ChordGroup::Sevenths);
-            MidiSong song;
-            const std::vector<std::vector<int>> chords = { { 45, 48, 52, 55 }, { 50, 53, 57, 60 }, { 43, 47, 50, 53, 57 }, { 48, 52, 55, 59 } };
-            int64_t t = 0;
-            for (const auto& c : chords)
-            {
-                for (int n : c)
-                    song.notes.push_back ({ t, t + 900, (uint8_t) n, 100, 0 });
-                t += 960;
-            }
-            const auto bytes = writeMidiFile (song);
-            const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("chordchimp-snapshot-import.mid");
-            file.replaceWithData (bytes.data(), bytes.size());
-            const auto result = p->importMidiFile (file);
+            // A Chordism user preset: its own root tag, Smart Scale and shifter settings, edits.
+            const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("chordchimp-snapshot-chordism.xml");
+            file.replaceWithText ("<Chordism name=\"Old\" category=\"User\"><PARAM id=\"key\" value=\"4\"/><PARAM id=\"chordGroup\" value=\"5\"/>"
+                                  "<PARAM id=\"chordOctave\" value=\"1\"/><PARAM id=\"mapping\" value=\"2\"/><PARAM id=\"split\" value=\"72\"/>"
+                                  "<PARAM id=\"shifter1Kind\" value=\"1\"/><PARAM id=\"pattern2Arp\" value=\"12\"/>"
+                                  "<ChordEditor group=\"5\"><Degree index=\"4\"><Step index=\"4\" on=\"1\"/></Degree></ChordEditor></Chordism>");
+            const auto tree = PresetManager::readFile (file);
             file.deleteFile();
-            std::vector<std::vector<int>> played;
-            for (int n = 0; n < 4; ++n)
-            {
-                const int key = 48 + std::array<int, 4> { 0, 2, 4, 5 }[(size_t) n];
-                played.push_back (noteOns (block (*p, { juce::MidiMessage::noteOn (1, key, (juce::uint8) 100) })));
-                block (*p, { juce::MidiMessage::noteOff (1, key) });
-            }
-            check (result.ok && (int) get (*p, params::progression) == (int) Progression::Custom && played == chords
-                       && p->chordEditor.getEdits().group == ChordGroup::Sevenths,
-                   "a dropped .mid sets Key, Scale, Custom progression and edits; keys C D E F play its chords (" + juce::String (result.message) + ")");
-            juce::MemoryBlock garbage ("not midi", 8);
-            const auto bad = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("chordchimp-snapshot-bad.mid");
-            bad.replaceWithData (garbage.getData(), garbage.getSize());
-            const auto refused = p->importMidiFile (bad);
-            bad.deleteFile();
-            check (! refused.ok && (int) get (*p, params::progression) == (int) Progression::Custom, "a file that isn't MIDI is refused, nothing changes ("
-                                                                                                      + juce::String (refused.message) + ")");
-        }
-
-        std::cout << "== Export ==\n";
-        {
-            auto p = std::make_unique<ChordChimpProcessor>();
-            PlayHead head;
-            p->setPlayHead (&head);
-            p->prepareToPlay (48000.0, 512);
-            set (*p, params::testPattern, 1.0f);
-            std::unique_ptr<juce::AudioProcessorEditor> base (p->createEditorIfNeeded());
-            auto* editor = dynamic_cast<ChordChimpEditor*> (base.get());
-            juce::String error;
-            const bool emptyAtFirst = ! p->writeExport (error).existsAsFile();
-            head.playing = true;
-            while (head.ppq < 9.0)
-            {
-                block (*p, {});
-                head.ppq += 512.0 / 24000.0;
-            }
-            editor->refreshNow();
-            const auto file = p->writeExport (error);
-            MidiSong song;
-            std::string readError;
-            juce::MemoryBlock data;
-            file.loadFileAsData (data);
-            const bool read = readMidiFile ((const uint8_t*) data.getData(), data.getSize(), song, readError);
-            check (emptyAtFirst && file.existsAsFile() && read && song.notes.size() == 24 && song.ppq == 960 && song.notes.front().start == 0
-                       && song.notes.back().start == 7 * 960 && file.getFileName() == "ChordChimp C Major 2 bars.mid",
-                   "after 2.25 bars playing, the handle exports 2 bars (8 chords) as " + file.getFileName());
-            head.playing = false;
-            block (*p, {});
-            editor = nullptr;
-            base.reset();
-            p->setPlayHead (nullptr);
-        }
-
-        std::cout << "== QWERTY ==\n";
-        {
-            using Q = ChordChimpEditor::Qwerty;
-            check (ChordChimpEditor::qwertyNote (Q::Piano, 'a', 60, 0) == 48 && ChordChimpEditor::qwertyNote (Q::Piano, 'w', 60, 0) == 49
-                       && ChordChimpEditor::qwertyNote (Q::Piano, 'j', 60, 0) == 59 && ChordChimpEditor::qwertyNote (Q::Piano, 'k', 60, 0) == 60
-                       && ChordChimpEditor::qwertyNote (Q::Piano, '\'', 60, 0) == 65 && ChordChimpEditor::qwertyNote (Q::Piano, 'A', 60, 1) == 60
-                       && ChordChimpEditor::qwertyNote (Q::Piano, 'q', 60, 0) == -1 && ChordChimpEditor::qwertyNote (Q::Off, 'a', 60, 0) == -1,
-                   "Piano layout: A-J the chord zone from the C below the split, K the split's C, W the first shifter; an octave up moves it");
-            check (ChordChimpEditor::qwertyNote (Q::TwoRows, 'z', 60, 0) == 48 && ChordChimpEditor::qwertyNote (Q::TwoRows, 'q', 60, 0) == 60
-                       && ChordChimpEditor::qwertyNote (Q::TwoRows, '2', 60, 0) == 61 && ChordChimpEditor::qwertyNote (Q::TwoRows, 'm', 60, 0) == 59
-                       && ChordChimpEditor::qwertyNote (Q::TwoRows, 'p', 64, 0) == 76,
-                   "Two rows: Z-M the octave below the split, Q-P the split's (from its C)");
-
             auto p = std::make_unique<ChordChimpProcessor>();
             p->prepareToPlay (48000.0, 512);
-            std::unique_ptr<juce::AudioProcessorEditor> base (p->createEditorIfNeeded());
-            auto* editor = dynamic_cast<ChordChimpEditor*> (base.get());
-            editor->keyPressed (juce::KeyPress ('d', 0, 'd'));
-            const auto chord = noteOns (block (*p, {}));
-            editor->keyStateChanged (false);   // the key isn't down: its note-off
-            const auto release = block (*p, {});
-            check (chord == std::vector<int> { 52, 55, 59 } && noteOffs (release) == 3, "pressing D on the computer keyboard plays chord 3 (Em) and releasing it ends it");
-
-            // Setup's buttons beside Split: a semitone a click, an octave with Shift, within 0..127.
-            auto* stepper = findChild<ui::ParamStepper> (*editor);
-            check (stepper != nullptr, "Setup has down/up buttons beside Split");
-            if (stepper != nullptr)
-            {
-                stepper->up.triggerClick();
-                juce::MessageManager::getInstance()->runDispatchLoopUntil (20);
-                const int afterUp = (int) get (*p, params::split);
-                stepper->down.triggerClick();
-                stepper->down.triggerClick();
-                juce::MessageManager::getInstance()->runDispatchLoopUntil (20);
-                const int afterDown = (int) get (*p, params::split);
-                stepper->nudge (1, true);
-                const int afterOctave = (int) get (*p, params::split);
-                set (*p, params::split, 125.0f);
-                stepper->nudge (1, true);
-                const int top = (int) get (*p, params::split);
-                set (*p, params::split, 0.0f);
-                stepper->nudge (-1, false);
-                const int bottom = (int) get (*p, params::split);
-                check (afterUp == 61 && afterDown == 59 && afterOctave == 71 && top == 127 && bottom == 0,
-                       "Split up 61, down twice 59, Shift-up 71; it stops at 127 and 0 (" + juce::String (afterUp) + ", "
-                           + juce::String (afterDown) + ", " + juce::String (afterOctave) + ", " + juce::String (top) + ", "
-                           + juce::String (bottom) + ")");
-            }
+            if (tree.isValid())
+                p->applyPreset (tree, "User", "Old");
+            const auto chord = noteOns (block (*p, { juce::MidiMessage::noteOn (1, 48, (juce::uint8) 100) }));
+            block (*p, { juce::MidiMessage::noteOff (1, 48) });
+            check (tree.isValid() && (int) get (*p, params::key) == 4 && (int) get (*p, params::chordGroup) == 5
+                       && (int) get (*p, params::chordOctave) == 1 && chord == std::vector<int> { 64, 68, 71, 75 },
+                   "a Chordism preset file loads its kept settings (E, Sevenths, octave +1); the rest are ignored and C plays Emaj7");
         }
-    }
-
-    // Phase 7: two processors in one sync group (the process-wide SharedSession).
-    void testPhase7()
-    {
-        std::cout << "== Phase 7: Instance Sync ==\n";
-        auto pump = [] { for (int i = 0; i < 6; ++i) juce::MessageManager::getInstance()->runDispatchLoopUntil (20); };
-        auto a = std::make_unique<ChordChimpProcessor>();
-        auto b = std::make_unique<ChordChimpProcessor>();
-        for (auto* p : { a.get(), b.get() })
-            p->prepareToPlay (44100.0, 512);
-        set (*a, params::key, 2.0f);
-        set (*a, params::scale, (float) (int) Scale::Dorian);
-        set (*a, params::syncGroup, 3.0f);      // C (A and B may be in use by other tests' processes)
-        pump();
-        set (*b, params::syncGroup, 3.0f);
-        pump();
-        check ((int) get (*b, params::key) == 2 && (int) get (*b, params::scale) == (int) Scale::Dorian,
-               "joining a group takes its Key and Scale (D Dorian)");
-        set (*b, params::key, 7.0f);
-        pump();
-        check ((int) get (*a, params::key) == 7 && (int) get (*a, params::scale) == (int) Scale::Dorian,
-               "a Key change in one instance reaches the other (G)");
-
-        // A plays chord key D (slot 2: iii in G Dorian, B minor's degree); B's Smart Scale follows.
-        block (*a, { juce::MidiMessage::noteOn (1, 50, (juce::uint8) 100) });
-        block (*b, {});
-        const auto& shown = b->readDisplay();
-        check (shown.smartRemote && shown.hasSmart && shown.smart.slot.degree == 1 && shown.smart.key == 7,
-               "B's Smart Scale (and its keyboard) follows A's chord");
-        set (*b, params::muteChords, 1.0f);
-        const auto out = noteOns (block (*b, { juce::MidiMessage::noteOn (1, 60, (juce::uint8) 100) }));
-        check (out.size() == 1 && out[0] == 60 + 7 + scaleOffset (Scale::Dorian, 1),
-               "B's Smart key C plays A's chord root (" + juce::String (out.empty() ? -1 : out[0]) + ")");
-        block (*a, { juce::MidiMessage::noteOff (1, 50) });
-        block (*b, { juce::MidiMessage::noteOff (1, 60) });
-
-        // A preset leaves the Sync group alone.
-        const auto tree = a->presetState();
-        check (! tree.getChildWithProperty ("id", params::syncGroup).isValid(), "a preset doesn't hold the Sync group");
-        set (*b, params::syncGroup, 0.0f);
-        b->applyPreset (tree, "User", "Synced");
-        check ((int) get (*b, params::syncGroup) == 0, "loading a preset keeps the instance's Sync group");
-        set (*a, params::syncGroup, 0.0f);
-
-        // ... and the Split, from a user preset or a factory program.
-        check (! tree.getChildWithProperty ("id", params::split).isValid(), "a preset doesn't hold the Split");
-        set (*b, params::split, 84.0f);
-        b->applyPreset (tree, "User", "Synced");
-        check ((int) get (*b, params::split) == 84, "loading a preset keeps the Split");
-        b->setCurrentProgram (3);
-        pump();
-        check ((int) get (*b, params::split) == 84, "loading a factory program keeps the Split");
-        set (*b, params::split, (float) InputRouter::defaultSplit);
-        pump();
     }
 }
 
@@ -532,7 +344,7 @@ namespace
         }
     };
 
-    // Every chord and Smart Scale effect at once, the test rig playing both zones.
+    // Every effect at once, the test rig playing.
     void everythingOn (ChordChimpProcessor& p)
     {
         set (p, params::chordGroup, (float) (int) ChordGroup::Thirteenths);
@@ -546,16 +358,7 @@ namespace
         set (p, params::velocity, (float) (int) VelocityCurve::House);
         set (p, params::hold, (float) (int) HoldMode::Bar);
         set (p, params::voiceLeading, 1.0f);
-        set (p, params::noteRepeat, 1.0f);
-        set (p, params::smartStack, (float) (int) StackMode::PlusOneAndTwo);
-        set (p, params::smartSeq, 1.0f);
-        set (p, params::smartHold, (float) (int) HoldMode::Latch);
-        set (p, params::patternArp (0), (float) (numArpPatterns - 1));   // slot 1: Melody
-        set (p, params::patternNotes (0), 16.0f);
-        set (p, params::lookAhead, (float) (numLookAheads - 1));
         set (p, params::testPattern, 1.0f);
-        set (p, params::testShifter, 2.0f);
-        set (p, params::testSmart, (float) (TestPattern::smartPattern + 2));
     }
 
     // A parameter is a sane value: finite, in 0..1.
@@ -574,7 +377,6 @@ namespace
     bool playsAChord (ChordChimpProcessor& p)
     {
         set (p, params::enable, 1.0f);
-        set (p, params::muteChords, 0.0f);
         set (p, params::testPattern, 0.0f);
         set (p, params::hold, 0.0f);
         set (p, params::arp, 0.0f);
@@ -602,7 +404,7 @@ namespace
             check (allocCount.load() - before >= 2, "the malloc hook sees allocations (" + juce::String (allocCount.load() - before) + " counted)");
         }
         {
-            // Two synced instances with everything on, under a looping transport; between blocks
+            // Two instances with everything on, under a looping transport; between blocks
             // (as the host and the message thread would) parameters change, the transport stops,
             // starts and moves its loop, on-screen keys go down, bypass toggles.
             auto a = std::make_unique<ChordChimpProcessor>();
@@ -613,7 +415,6 @@ namespace
                 p->setPlayHead (&head);
                 p->prepareToPlay (48000.0, 256);
                 everythingOn (*p);
-                set (*p, params::syncGroup, 4.0f);
             }
             juce::AudioBuffer<float> audio (2, 256);
             juce::MidiBuffer midi;
@@ -651,7 +452,7 @@ namespace
                 }
                 head.advance (256, 48000.0);
             }
-            check (allocations == 0, juce::String (blocks) + " blocks of two synced instances with everything on (" + juce::String (bypassed)
+            check (allocations == 0, juce::String (blocks) + " blocks of two instances with everything on (" + juce::String (bypassed)
                                          + " bypassed, up to " + juce::String (peak) + " events out): " + juce::String (allocations)
                                          + " allocations in processBlock");
 
@@ -661,7 +462,6 @@ namespace
             set (*a, params::arp, 0.0f);
             set (*a, params::seq, 0.0f);
             set (*a, params::testPattern, 0.0f);
-            set (*a, params::syncGroup, 0.0f);
             juce::MidiBuffer small;
             small.ensureSize (2048);
             int growth = 0, late = 0, most = 0;
@@ -685,10 +485,7 @@ namespace
             check (late == 0, "with JUCE's VST3 host buffer (2048 bytes) and up to " + juce::String (most)
                                   + " events a block: the host's buffer grew " + juce::String (growth) + " time(s) in the first 100 blocks, never after");
             for (auto* p : { a.get(), b.get() })
-            {
-                set (*p, params::syncGroup, 0.0f);
                 p->setPlayHead (nullptr);
-            }
         }
 
         std::cout << "== Phase 8: damaged saved states ==\n";
@@ -722,22 +519,18 @@ namespace
                 xml << "<PARAM id=\"noSuchParameter\" value=\"1\"/><PARAM id=\"key\" value=\"3\"/>"
                        "<ChordEditor group=\"999\"><Degree index=\"99\"/><Degree index=\"2\"><Step index=\"-1\" on=\"1\"/>"
                        "<Step index=\"3\" on=\"1\" acc=\"50\" oct=\"99999\"/></Degree></ChordEditor>"
-                       "<UI page=\"nowhere\" keyboard=\"maybe\" width=\"-1\" height=\"1e9\"/></ChordChimp>";
+                       "<UI keyboard=\"maybe\" width=\"-1\" height=\"1e9\"/></ChordChimp>";
                 juce::MemoryBlock state;
                 juce::AudioProcessor::copyXmlToBinary (*juce::parseXML (xml), state);
                 p->setStateInformation (state.getData(), (int) state.getSize());
                 worst = std::max (worst, insaneParameters (*p));
                 std::unique_ptr<juce::AudioProcessorEditor> editor (p->createEditorIfNeeded());   // opens with the UI's garbage
                 editor.reset();
-                const auto& edits = p->chordEditor.getEdits();
-                for (const auto& d : edits.degrees)
-                    for (const auto& st : d.steps)
-                        worst += st.accidental < -2 || st.accidental > 2 || (st.octaveMask & ~editor::allOctaves) != 0 ? 1 : 0;
                 worst += p->getCurrentProgram() < 0 || p->getCurrentProgram() >= p->getNumPrograms() ? 1 : 0;
             }
             check (worst == 0 && playsAChord (*p), "states whose every value is nan, inf, -inf, +/-1e300, text or empty, with unknown IDs, "
-                                                   "a nonsense Chord Editor and UI: every parameter stays finite and in range, the edits "
-                                                   "in range, the editor opens, the instance plays");
+                                                   "an unknown child (Chordism's Chord Editor) and a nonsense UI: every parameter stays "
+                                                   "finite and in range, the editor opens, the instance plays");
 
             // A preset with a NaN gives that parameter its default.
             auto tree = p->presetState();
@@ -821,7 +614,6 @@ namespace
             {
                 all.push_back (std::make_unique<ChordChimpProcessor>());
                 all.back()->prepareToPlay (44100.0, 256);
-                set (*all.back(), params::syncGroup, (float) (i % 5));
             }
             int played = 0;
             for (auto& p : all)
@@ -829,17 +621,13 @@ namespace
             std::shuffle (all.begin(), all.end(), std::mt19937 (64));
             while (all.size() > 2)
                 all.pop_back();
+            int ended = 0;
             for (auto& p : all)
             {
-                set (*p, params::syncGroup, 3.0f);
                 block (*p, { juce::MidiMessage::noteOff (1, 48) });
+                ended += p->soundingNotes.load() == 0 ? 1 : 0;
             }
-            block (*all[0], { juce::MidiMessage::noteOn (1, 50, (juce::uint8) 100) });
-            block (*all[1], {});
-            check (played == 64 && all[1]->readDisplay().smartRemote,
-                   "64 instances in all five sync groups play; destroyed in random order, the last two still sync");
-            for (auto& p : all)
-                set (*p, params::syncGroup, 0.0f);
+            check (played == 64 && ended == 2, "64 instances play; destroyed in random order, the last two still work");
         }
     }
 
@@ -867,10 +655,7 @@ namespace
                     if (scenario == 1)
                         set (p, params::testPattern, 1.0f);
                     if (scenario == 2)
-                    {
                         everythingOn (p);
-                        set (p, params::syncGroup, (float) (1 + i % 4));
-                    }
                 }
                 juce::AudioBuffer<float> audio (2, blockSize);
                 juce::MidiBuffer midi;
@@ -901,10 +686,7 @@ namespace
                 worstMean = std::max (worstMean, mean);
                 std::printf ("   %-15s %6d   %10.4f%%            %8.3f%% / %.3f%%\n", names[scenario], blockSize, mean, p999, peak);
                 for (auto& p : procs)
-                {
-                    set (*p, params::syncGroup, 0.0f);
                     p->setPlayHead (nullptr);
-                }
             }
         check (worstMean < 1.0, "every scenario and block size: under 1% of one core per instance (worst mean "
                                     + juce::String (worstMean, 4) + "%)");
@@ -935,10 +717,7 @@ namespace
         p->setPlayHead (&head);
         p->prepareToPlay (44100.0, 512);
         if (! idle)
-        {
             everythingOn (*p);
-            set (*p, params::testSmart, (float) TestPattern::smartTones);   // the Smart keys change on every beat too
-        }
         std::unique_ptr<juce::AudioProcessorEditor> editor (p->createEditorIfNeeded());
         editor->setTopLeftPosition (20, 60);
         editor->addToDesktop (juce::ComponentPeer::windowHasTitleBar);
@@ -1011,11 +790,7 @@ int main (int argc, char** argv)
             return 1;
         editor->setSize (ChordChimpEditor::defaultWidth, ChordChimpEditor::defaultHeight);
         editor->showKeyboard (true);
-        editor->showEditorPage (false);
         snapshot (*editor, "editor", fixtures, out, update);
-        editor->showEditorPage (true);
-        snapshot (*editor, "editor-chord-editor", fixtures, out, update);
-        editor->showEditorPage (false);
         editor->showSetup (true);
         snapshot (*editor, "editor-setup", fixtures, out, update);
         editor->showSetup (false);
@@ -1025,61 +800,22 @@ int main (int argc, char** argv)
         editor->showKeyboard (true);
         editor->setSize (ChordChimpEditor::defaultWidth, ChordChimpEditor::defaultHeight);
 
-        std::cout << "== Chord Editor clicks ==\n";
+        std::cout << "== preferences ==\n";
         {
-            editor->setSize (960, 600);   // the size it opened at in Live
-            editor->showEditorPage (true);
-            editor->refreshNow();
-            ui::ChordEditorPanel* panel = nullptr;
-            for (auto* c : editor->getChildren())
-                if (auto* p = dynamic_cast<ui::ChordEditorPanel*> (c))
-                    panel = p;
-            check (panel != nullptr && panel->isVisible(), "the Chord Editor page is shown");
-            if (panel != nullptr)
-            {
-                // Click the middle of key 1's 9th (its degree under Pop is I): it turns on.
-                const auto before = processor->chordEditor.getEdits();
-                StateWatch watch;
-                processor->addListener (&watch);
-                const auto at = panel->stepBounds (0, 4).getCentre();
-                auto source = juce::Desktop::getInstance().getMainMouseSource();
-                const auto now = juce::Time::getCurrentTime();
-                const juce::MouseEvent e (source, at, {}, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, panel, panel, now, at, now, 1, false);
-                panel->mouseDown (e);
-                // The host keeps processing and the processor's timer runs (it clears edits after a
-                // Chord Group change): the edit must survive both.
-                for (int i = 0; i < 20; ++i)
-                {
-                    block (*processor, {});
-                    juce::MessageManager::getInstance()->runDispatchLoopUntil (20);
-                }
-                processor->removeListener (&watch);
-                check (watch.changed, "the host is told the plug-in's state changed (so Live saves the edit)");
-                const auto after = processor->chordEditor.getEdits();
-                check (! before.degrees[0].edited && after.degrees[0].edited && after.degrees[0].steps[4].on && after.group == ChordGroup::Sevenths,
-                       "clicking a step turns it on in the Chord Editor's state");
-                juce::MemoryBlock withEdit;
-                processor->getStateInformation (withEdit);
-                const auto xml = juce::AudioProcessor::getXmlFromBinary (withEdit.getData(), (int) withEdit.getSize());
-                check (xml != nullptr && xml->getChildByName ("ChordEditor") != nullptr
-                           && xml->getChildByName ("ChordEditor")->getNumChildElements() == 2,
-                       "and the saved state has the edited degrees");
-                processor->chordEditor.resetDegree (0);
-            }
-            editor->showEditorPage (false);
-            editor->setSize (ChordChimpEditor::defaultWidth, ChordChimpEditor::defaultHeight);
+            // The editor's preferences aren't parameters: hiding the keyboard tells the host the
+            // plug-in's state changed (so Live saves it).
+            StateWatch watch;
+            processor->addListener (&watch);
+            editor->showKeyboard (false);
+            processor->removeListener (&watch);
+            check (watch.changed, "hiding the keyboard tells the host the plug-in's state changed");
+            editor->showKeyboard (true);
         }
 
         std::cout << "== every parameter reachable ==\n";
-        for (int slot = 0; slot < numPatternSlots; ++slot)
-        {
-            set (*processor, params::patternSlot, (float) slot);
-            editor->refreshNow();
-        }
         for (int pattern = 0; pattern < numSeqPatterns; ++pattern)
         {
             set (*processor, params::seqPattern, (float) pattern);
-            set (*processor, params::smartSeqPattern, (float) pattern);
             editor->refreshNow();
         }
         juce::StringArray missing;
@@ -1096,7 +832,7 @@ int main (int argc, char** argv)
     }
 
     std::cout << "== state ==\n";
-    processor->uiState.setProperty ("page", "editor", nullptr);
+    processor->uiState.setProperty ("keyboard", false, nullptr);
     juce::MemoryBlock saved;
     processor->getStateInformation (saved);
     auto restored = std::make_unique<ChordChimpProcessor>();
@@ -1112,11 +848,9 @@ int main (int argc, char** argv)
         if (auto* withId = dynamic_cast<juce::AudioProcessorParameterWithID*> (param))
             differing += get (*processor, withId->paramID) != get (*restored, withId->paramID) ? 1 : 0;
     check (differing == 0, "every parameter restores (" + juce::String (differing) + " differ)");
-    check (restored->chordEditor.getEdits().sameEdits (processor->chordEditor.getEdits()) && restored->chordEditor.getEdits().any(),
-           "the Chord Editor's edits restore");
-    check (restored->uiState.getProperty ("page").toString() == "editor", "the editor's preferences restore");
+    check (! (bool) restored->uiState.getProperty ("keyboard", true), "the editor's preferences restore");
 
-    // A state saved before Phase 4: the sequencer steps as 64 bools.
+    // A state saved before Chordism's Phase 4: the sequencer steps as 64 bools.
     auto xml = juce::parseXML ("<ChordChimp><PARAM id=\"seq\" value=\"1.0\"/><PARAM id=\"seq2Step1\" value=\"1.0\"/>"
                                "<PARAM id=\"seq2Step2\" value=\"1.0\"/><PARAM id=\"seq2Step5\" value=\"0.0\"/>"
                                "<PARAM id=\"seq3Step16\" value=\"1.0\"/></ChordChimp>");
@@ -1128,8 +862,7 @@ int main (int argc, char** argv)
                && (int) get (*migrated, params::seqSteps (0)) == (int) defaultSeqPatterns()[0],
            "a pre-Phase 4 state's step bools become the packed patterns (missing patterns keep their defaults)");
 
-    testPhase6();
-    testPhase7();
+    testPresets();
     testPhase8();
 
     std::cout << (failures == 0 ? "\nsnapshot: all passed\n" : "\n*** snapshot: " + std::to_string (failures) + " failure(s)\n");

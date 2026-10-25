@@ -1,45 +1,34 @@
-// The plug-in: a thin JUCE adapter around ChordChimpEngine (Source/core/engine).
+// The plug-in: a thin JUCE adapter around ChordEngine (Source/core/engine).
 //
 // Two builds from ChordChimp.jucer (PLAN.md §3): the VST3 instrument and the Standalone app.
 // Generated MIDI goes to the host's MIDI output (in Live: another track's "MIDI From"). The AU
 // builds and the CoreMIDI virtual port were removed on 2026-10-20.
 //
-// Phase 6: an ExportRecorder keeps what ChordChimp sends while the host plays (Export drag-out);
-// MIDI files import as chords (ChordImporter); presets (PresetManager) load on the message
-// thread, and the factory presets are also the plug-in's programs (program 0 = Init), which a
-// host may change from another thread: that load waits for the timer.
-//
-// Phase 7: the engine syncs chords through the process-wide SharedSession; the timer shares the
-// Key and Scale parameters with the instance's sync group (the last change wins).
+// Presets (PresetManager) load on the message thread, and the factory presets are also the
+// plug-in's programs (program 0 = Init), which a host may change from another thread: that load
+// waits for the timer.
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
-#include "../core/engine/ChordChimpEngine.h"
+#include "../core/engine/ChordEngine.h"
 #include "../core/engine/SnapshotExchange.h"
-#include "../core/midiio/ChordImporter.h"
-#include "../core/midiio/ExportRecorder.h"
-#include "ChordEditorState.h"
 #include "Parameters.h"
 #include "PresetManager.h"
 #include <atomic>
 
 namespace chordchimp
 {
-    // What the chord zone plays now, for the editor (published by the audio thread).
+    // What the chord keys play now, for the editor (published by the audio thread).
     struct ChordDisplay
     {
         ChordSet chords {};
         ChordContext context;
         int lastSlot = -1;
-        int activeShifter = -1;
-        SmartChord smart;                 // the chord the Smart Scale follows (ours or a synced one)
-        bool hasSmart = false, smartRemote = false;
 
         bool operator== (const ChordDisplay& o) const noexcept
         {
             return chords == o.chords && context.key == o.context.key && context.scale == o.context.scale
-                && context.outputOctave == o.context.outputOctave && lastSlot == o.lastSlot && activeShifter == o.activeShifter
-                && smart == o.smart && hasSmart == o.hasSmart && smartRemote == o.smartRemote;
+                && context.outputOctave == o.context.outputOctave && lastSlot == o.lastSlot;
         }
     };
 
@@ -80,7 +69,6 @@ namespace chordchimp
         void setStateInformation (const void* data, int sizeInBytes) override;
 
         juce::AudioProcessorValueTreeState state;
-        ChordEditorState chordEditor;     // the Chord Editor's edits (not host parameters)
 
         // Message thread, one reader (the editor).
         const ChordDisplay& readDisplay() noexcept { return display.read(); }
@@ -103,24 +91,13 @@ namespace chordchimp
 
         //==========================================================================
         // Presets (message thread). applyPreset sets every preset parameter (the preset's value,
-        // or the default if it has none) and the Chord Editor's edits, and ends every note.
+        // or the default if it has none), and ends every note.
         PresetManager presets { *this };
         void applyPreset (const juce::ValueTree& preset, const juce::String& category, const juce::String& name);
         juce::ValueTree presetState();
         const juce::String& getPresetName() const noexcept { return presetName; }
         const juce::String& getPresetCategory() const noexcept { return presetCategory; }
         void setPresetIdentity (const juce::String& category, const juce::String& name);
-
-        // MIDI import (message thread): a .mid's chords become the chord zone's (ChordImporter.h).
-        ChordImport importMidiFile (const juce::File& file);
-
-        // Export (message thread): the last ≤ 32 completed bars, written to a temporary .mid
-        // for a drag. An invalid File (and `error`) if there's nothing to export yet.
-        TakeInfo exportInfo() const noexcept { return recorder.info(); }
-        juce::File writeExport (juce::String& error);
-
-        // While the Test pattern is on, each finished take is also written here (LiveBridge reads it).
-        static juce::File testTakeFile();
 
         // Status for the editor and tests (written by the audio thread).
         std::atomic<int> lastChordSlot { -1 };
@@ -135,11 +112,10 @@ namespace chordchimp
         }
         void publishNoteStates() noexcept;
 
-        // The Chord Editor's edits and the UI's preferences aren't parameters: Live only saves
-        // them in a set if the plug-in says its state changed (and not for a restore).
+        // The UI's preferences and the preset's name aren't parameters: Live only saves them in
+        // a set if the plug-in says its state changed (and not for a restore).
         void notifyStateChanged();
         void valueTreePropertyChanged (juce::ValueTree&, const juce::Identifier&) override { notifyStateChanged(); }
-        std::atomic<uint32_t> notifiedEditsVersion { 0 };
         std::atomic<bool> restoringState { false };
 
         static BusesProperties makeBuses();
@@ -148,7 +124,7 @@ namespace chordchimp
         Transport readTransport();
 
         params::Snapshot snapshot;
-        ChordChimpEngine engine;
+        ChordEngine engine;
 
         // Preallocated in the constructor / prepareToPlay; never resized in processBlock.
         EventBuffer<2048> input;
@@ -164,19 +140,9 @@ namespace chordchimp
         SnapshotExchange<ChordDisplay> display;
         ChordDisplay lastDisplay;
 
-        ExportRecorder recorder;
-        uint32_t testTakeWritten = 0;
         juce::String presetName { "Init" }, presetCategory { "Init" };
         std::atomic<int> currentProgram { 0 }, pendingProgram { -1 };
         void loadProgram (int index);
-        bool writeTake (const juce::File& file, juce::String& error) const;
-
-        // Instance Sync of Key and Scale (message thread): the group last synced with, the values
-        // last published or adopted, and the group's version seen.
-        void syncKeyScale();
-        void adoptKeyScale (const SharedSession::KeyScale&);
-        int syncedGroup = 0, syncedKey = -1, syncedScale = -1;
-        uint32_t seenKeyScale = 0;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ChordChimpProcessor)
     };

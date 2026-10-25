@@ -1,7 +1,6 @@
-// Controls bound to host parameters (PLAN.md §6). A ParamControl builds itself from the
+// Controls bound to host parameters (PLAN.md §5). A ParamControl builds itself from the
 // parameter's type: a choice is a menu, a bool a toggle button, a number a bar slider showing
-// the parameter's own text (Split shows "C3"). It can be re-bound to another parameter (the
-// pattern panel shows the selected slot's settings).
+// the parameter's own text. It can be re-bound to another parameter.
 //
 // Bindings records every parameter some control has been bound to, so a test can check that
 // every feature is reachable from the editor (Tests/Snapshot). StepSeqView edits a sequencer
@@ -65,27 +64,7 @@ namespace chordchimp::ui
         std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sliderAttachment;
     };
 
-    // Down and up buttons beside a number parameter's slider: each click steps it by `step` (with
-    // Shift by `bigStep`) within its range, as one host gesture (Setup: the Split, a semitone or
-    // an octave).
-    class ParamStepper : public juce::Component
-    {
-    public:
-        ParamStepper (Bindings&, const juce::String& paramId, const juce::String& label, float step, float bigStep);
-
-        void nudge (int direction, bool big);   // -1 down, +1 up
-        void resized() override;
-
-        juce::TextButton down { juce::CharPointer_UTF8 ("\xe2\x96\xbc") }, up { juce::CharPointer_UTF8 ("\xe2\x96\xb2") };
-
-    private:
-        Bindings& bindings;
-        juce::String paramId;
-        float step, bigStep;
-        juce::Label caption;
-    };
-
-    // The 16 steps of a sequencer pattern: one packed parameter (seqNSteps / smartSeqNSteps).
+    // The 16 steps of a sequencer pattern: one packed parameter (seqNSteps).
     class StepSeqView : public juce::Component,
                         public juce::SettableTooltipClient,
                         private juce::AudioProcessorParameter::Listener,

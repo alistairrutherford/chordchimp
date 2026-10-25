@@ -8,7 +8,7 @@
 
 namespace chordchimp
 {
-    // Arp Rate and Repeat Rate (the same nine values as the Smart Scale patterns).
+    // Arp Rate and Repeat Rate (the same nine values).
     constexpr int numPatternRates = 9;
 
     inline const char* patternRateName (int i) noexcept

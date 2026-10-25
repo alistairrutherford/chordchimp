@@ -29,7 +29,6 @@
 		670370A3719F6456800CCEB5 /* include_juce_gui_basics.mm */ = {isa = PBXBuildFile; fileRef = 25E3AEE480C3F9841C10879E; };
 		6CE8F7333A8320132E116099 /* Theme.cpp */ = {isa = PBXBuildFile; fileRef = 41981BF3F9F09BC44506CD58; };
 		726E3F13DFAD910EDB677317 /* include_juce_audio_processors_headless_ara.cpp */ = {isa = PBXBuildFile; fileRef = 5DAAB705BED268526871AF46; };
-		72F75949AF64C5DF16997425 /* ChordEditorState.cpp */ = {isa = PBXBuildFile; fileRef = F5EDFD0B4B082788DF1D8D83; };
 		743C19DFE07B7DB9F9F7A16B /* ChordChimpEditor.cpp */ = {isa = PBXBuildFile; fileRef = ABCA9DD9610B7989E1EBCED7; };
 		79C0331F0178551D877B1F79 /* IOKit.framework */ = {isa = PBXBuildFile; fileRef = F9EBB2B8DC7B8B8D935FF73D; };
 		7CD885BF336405FD10949DA8 /* CoreAudioKit.framework */ = {isa = PBXBuildFile; fileRef = 94A7BFA2FB3FD2FF5F360F11; };
@@ -45,7 +44,6 @@
 		A685F8ED8B4460F1D137392B /* Parameters.cpp */ = {isa = PBXBuildFile; fileRef = E2B49BCAD4FBBD7E9B5180AC; };
 		A8C761C14CA7F183C1FD63D9 /* WebKit.framework */ = {isa = PBXBuildFile; fileRef = DAB73AC4247E3EC9A7679EDD; };
 		AFB1394CA3C68A133AA387A1 /* CoreAudio.framework */ = {isa = PBXBuildFile; fileRef = A33F6FE78749449646CFC9B9; };
-		AFDD097CBE63D78A54A9BA66 /* ChordEditorPanel.cpp */ = {isa = PBXBuildFile; fileRef = B31BB74372C2FF56F729AE2D; };
 		B0FDC5A9F9901440167EBF3A /* Metal.framework */ = {isa = PBXBuildFile; fileRef = F962D5BB0CABD3FE66A9E249; settings = { ATTRIBUTES = (Weak, ); }; };
 		B69AA84004466E50828FE30B /* include_juce_core_CompilationTime.cpp */ = {isa = PBXBuildFile; fileRef = B1D87DA0AB6628FAE435FC91; };
 		B6BBC11F5D732C54986CDEBE /* ParamControl.cpp */ = {isa = PBXBuildFile; fileRef = 8117F170B0FF8CA34F0DE94F; };
@@ -100,7 +98,6 @@
 		A9EF4B8862DE734E7B1527A8 /* include_juce_gui_basics_4.cpp */ /* include_juce_gui_basics_4.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_gui_basics_4.cpp; path = ../../JuceLibraryCode/include_juce_gui_basics_4.cpp; sourceTree = SOURCE_ROOT; };
 		ABCA9DD9610B7989E1EBCED7 /* ChordChimpEditor.cpp */ /* ChordChimpEditor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ChordChimpEditor.cpp; path = ../../../../Source/ui/ChordChimpEditor.cpp; sourceTree = SOURCE_ROOT; };
 		B1D87DA0AB6628FAE435FC91 /* include_juce_core_CompilationTime.cpp */ /* include_juce_core_CompilationTime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_core_CompilationTime.cpp; path = ../../JuceLibraryCode/include_juce_core_CompilationTime.cpp; sourceTree = SOURCE_ROOT; };
-		B31BB74372C2FF56F729AE2D /* ChordEditorPanel.cpp */ /* ChordEditorPanel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ChordEditorPanel.cpp; path = ../../../../Source/ui/ChordEditorPanel.cpp; sourceTree = SOURCE_ROOT; };
 		B4081D0AFF4AC58FAB224B46 /* ConsoleApp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ChordChimpSnapshot; sourceTree = BUILT_PRODUCTS_DIR; };
 		B76ABE2A8C61B9A500E11472 /* juce_events */ /* juce_events */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_events; path = /Users/alistairrutherford/Development/JUCE/modules/juce_events; sourceTree = "<absolute>"; };
 		BB213CC38C80EC40C3A7A5C3 /* juce_audio_processors */ /* juce_audio_processors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_processors; path = /Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors; sourceTree = "<absolute>"; };
@@ -119,7 +116,6 @@
 		E43ABE044EA1D0BC3A915F2D /* include_juce_audio_processors_headless.mm */ /* include_juce_audio_processors_headless.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_processors_headless.mm; path = ../../JuceLibraryCode/include_juce_audio_processors_headless.mm; sourceTree = SOURCE_ROOT; };
 		EE74C461AD49517078770A6E /* Cocoa.framework */ /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		F58A4861D12B8C9EDC2BFF99 /* include_juce_graphics_Sheenbidi.c */ /* include_juce_graphics_Sheenbidi.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = include_juce_graphics_Sheenbidi.c; path = ../../JuceLibraryCode/include_juce_graphics_Sheenbidi.c; sourceTree = SOURCE_ROOT; };
-		F5EDFD0B4B082788DF1D8D83 /* ChordEditorState.cpp */ /* ChordEditorState.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ChordEditorState.cpp; path = ../../../../Source/plugin/ChordEditorState.cpp; sourceTree = SOURCE_ROOT; };
 		F7F40A194707308B7DC51B7C /* include_juce_audio_processors_headless_lv2_libs.cpp */ /* include_juce_audio_processors_headless_lv2_libs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_processors_headless_lv2_libs.cpp; path = ../../JuceLibraryCode/include_juce_audio_processors_headless_lv2_libs.cpp; sourceTree = SOURCE_ROOT; };
 		F962D5BB0CABD3FE66A9E249 /* Metal.framework */ /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		F9EBB2B8DC7B8B8D935FF73D /* IOKit.framework */ /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
@@ -225,12 +221,10 @@
 				97517487A25C8630A5DAE9CB,
 				CC13475165AC0E9CCE07C391,
 				E2B49BCAD4FBBD7E9B5180AC,
-				F5EDFD0B4B082788DF1D8D83,
 				ABCA9DD9610B7989E1EBCED7,
 				41981BF3F9F09BC44506CD58,
 				8117F170B0FF8CA34F0DE94F,
 				0649B677CE6DF31F63923DE7,
-				B31BB74372C2FF56F729AE2D,
 				3CA3712D801F9D40DC13BAFE,
 				506733DE6721CE8EF078EAF9,
 				64DB6FF879924ED40ACF21A9,
@@ -344,12 +338,10 @@
 				414317705946B348928B924A,
 				8EB04716A49D304315FCBA87,
 				A685F8ED8B4460F1D137392B,
-				72F75949AF64C5DF16997425,
 				743C19DFE07B7DB9F9F7A16B,
 				6CE8F7333A8320132E116099,
 				B6BBC11F5D732C54986CDEBE,
 				EF0465B5E468D18D645A282F,
-				AFDD097CBE63D78A54A9BA66,
 				234EFF28A95454B9354065E1,
 				A64471DBE4C6ABB2C36435F8,
 				C11786F038A13DA9C41AA1EF,
