@@ -52,6 +52,7 @@ namespace chordchimp
         ui::ChordPads chordPads;
         ui::EffectsPanel effects;
         ui::OutputKeyboard outputKeys;
+        bool sizeRestored = false;      // until then, resized() leaves the saved size alone
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ChordChimpEditor)
     };

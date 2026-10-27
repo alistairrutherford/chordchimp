@@ -927,6 +927,49 @@ int main (int argc, char** argv)
     check (differing == 0, "every parameter restores (" + juce::String (differing) + " differ)");
     check (! (bool) restored->uiState.getProperty ("keyboard", true), "the editor's preferences restore");
 
+    std::cout << "== editor size ==\n";
+    {
+        // A new editor opens at the size the last one was left at, also after a save and restore,
+        // and opening one doesn't tell the host the state changed (PLAN.md §11, Editor in Live).
+        // Closes an editor as a host does: JUCE wants editorBeingDeleted() before the delete.
+        const auto close = [] (juce::AudioProcessor& p, std::unique_ptr<juce::AudioProcessorEditor>& e)
+        {
+            p.editorBeingDeleted (e.get());
+            e.reset();
+        };
+
+        auto sized = std::make_unique<ChordChimpProcessor>();
+        StateWatch watch;
+        sized->addListener (&watch);
+        std::unique_ptr<juce::AudioProcessorEditor> first (sized->createEditorIfNeeded());
+        sized->removeListener (&watch);
+        check (first->getWidth() == ChordChimpEditor::defaultWidth && first->getHeight() == ChordChimpEditor::defaultHeight && ! watch.changed,
+               "a new instance's editor opens at the default size (780 x 560) and doesn't report a change");
+        first->setSize (919, 689);
+        close (*sized, first);
+
+        std::unique_ptr<juce::AudioProcessorEditor> second (sized->createEditorIfNeeded());
+        check (second->getWidth() == 919 && second->getHeight() == 689, "a reopened editor has the size the last one was left at (919 x 689)");
+        close (*sized, second);
+
+        juce::MemoryBlock state;
+        sized->getStateInformation (state);
+        auto reopened = std::make_unique<ChordChimpProcessor>();
+        reopened->setStateInformation (state.getData(), (int) state.getSize());
+        StateWatch reopenWatch;
+        reopened->addListener (&reopenWatch);
+        std::unique_ptr<juce::AudioProcessorEditor> third (reopened->createEditorIfNeeded());
+        reopened->removeListener (&reopenWatch);
+        check (third->getWidth() == 919 && third->getHeight() == 689 && ! reopenWatch.changed,
+               "after a save and restore the editor opens at the saved size and doesn't report a change");
+        third->setSize (ChordChimpEditor::minWidth, ChordChimpEditor::minHeight);
+        close (*reopened, third);
+        std::unique_ptr<juce::AudioProcessorEditor> fourth (reopened->createEditorIfNeeded());
+        check (fourth->getWidth() == ChordChimpEditor::minWidth && fourth->getHeight() == ChordChimpEditor::minHeight,
+               "an editor left at the smallest size reopens at it");
+        close (*reopened, fourth);
+    }
+
     testPresets (fixtures);
     testPhase8();
 

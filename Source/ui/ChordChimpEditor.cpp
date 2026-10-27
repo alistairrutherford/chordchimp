@@ -17,13 +17,20 @@ namespace chordchimp
         for (auto* c : std::initializer_list<juce::Component*> { &topBar, &globals, &chordPads, &effects, &outputKeys })
             addAndMakeVisible (c);
 
+        // Read the saved preferences before anything resizes the editor: setResizeLimits and the
+        // first layouts would otherwise store 0×0, then the minimum, over the saved size. Nothing
+        // is stored until the editor is up, so opening it doesn't tell the host the state changed.
         auto& ui = processor.uiState;
-        showKeyboard (ui.getProperty (keyboardId, true));
+        const bool keyboardShown = ui.getProperty (keyboardId, true);
+        const int width = juce::jlimit (minWidth, maxWidth, (int) ui.getProperty (widthId, defaultWidth));
+        const int height = juce::jlimit (minHeight, maxHeight, (int) ui.getProperty (heightId, defaultHeight));
 
+        outputKeys.setVisible (keyboardShown);
+        topBar.setKeyboardShown (keyboardShown);
         setResizable (true, true);
         setResizeLimits (minWidth, minHeight, maxWidth, maxHeight);
-        setSize (juce::jlimit (minWidth, maxWidth, (int) ui.getProperty (widthId, defaultWidth)),
-                 juce::jlimit (minHeight, maxHeight, (int) ui.getProperty (heightId, defaultHeight)));
+        setSize (width, height);
+        sizeRestored = true;
         timerCallback();
         startTimerHz (30);
     }
@@ -63,8 +70,11 @@ namespace chordchimp
         // shared above and below them.
         chordPads.setBounds (r.withSizeKeepingCentre (r.getWidth(), juce::jmin (r.getHeight(), maxPadHeight)));
 
-        processor.uiState.setProperty (widthId, getWidth(), nullptr);
-        processor.uiState.setProperty (heightId, getHeight(), nullptr);
+        if (sizeRestored)
+        {
+            processor.uiState.setProperty (widthId, getWidth(), nullptr);
+            processor.uiState.setProperty (heightId, getHeight(), nullptr);
+        }
     }
 
     void ChordChimpEditor::timerCallback()
