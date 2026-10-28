@@ -61,7 +61,7 @@ namespace chordchimp::ui
     //==========================================================================
     ChordPads::ChordPads (ChordChimpProcessor& p) : processor (p), playing (p)
     {
-        setTooltip ("The seven chords, one per white key (in any octave): click or drag across to play");
+        setTooltip ("The chords: one per white key and, above them, the black keys' borrowed chords (in any octave). Click or drag across to play");
     }
 
     void ChordPads::refresh (const UiModel& m)
@@ -80,9 +80,19 @@ namespace chordchimp::ui
 
     juce::Rectangle<float> ChordPads::padBounds (int slot) const
     {
+        // The black keys' row on top, its pads centred over the gaps between the white ones,
+        // as on a piano: C# over C|D, D# over D|E, F# over F|G, G# over G|A, A# over A|B.
         constexpr float gap = 6.0f;
-        const float w = ((float) getWidth() - gap * (numChordSlots - 1)) / (float) numChordSlots;
-        return { (w + gap) * (float) slot, 0.0f, w, (float) getHeight() };
+        constexpr int whiteBefore[numBlackSlots] = { 0, 1, 3, 4, 5 };
+        const float w = ((float) getWidth() - gap * (numWhiteSlots - 1)) / (float) numWhiteSlots;
+        const float blackHeight = std::round ((float) getHeight() * 0.36f);
+        if (slot >= numWhiteSlots && slot < numChordSlots)
+        {
+            const float centre = (w + gap) * (float) (whiteBefore[slot - numWhiteSlots] + 1) - gap * 0.5f;
+            const float bw = w * 0.7f;
+            return { centre - bw * 0.5f, 0.0f, bw, blackHeight };
+        }
+        return { (w + gap) * (float) slot, blackHeight + gap, w, (float) getHeight() - blackHeight - gap };
     }
 
     int ChordPads::slotAt (juce::Point<float> p) const
@@ -100,33 +110,37 @@ namespace chordchimp::ui
         {
             const auto r = padBounds (slot);
             const bool lit = active[(size_t) slot];
-            g.setColour (lit ? colours::chord : colours::raised);
+            const bool black = slot >= numWhiteSlots;
+            g.setColour (lit ? colours::chord : (black ? colours::panel : colours::raised));
             g.fillRoundedRectangle (r, 8.0f);
             g.setColour (lit ? colours::chord.brighter (0.3f) : colours::outline);
             g.drawRoundedRectangle (r.reduced (0.5f), 8.0f, 1.0f);
 
+            static constexpr const char* letters[numChordSlots] = { "C", "D", "E", "F", "G", "A", "B", "C#", "D#", "F#", "G#", "A#" };
             const auto ink = lit ? colours::background : colours::text;
             g.setColour (lit ? colours::background.withAlpha (0.6f) : colours::faint);
-            g.setFont (font (11.0f, true));
-            g.drawText (juce::String::charToString ("CDEFGAB"[slot]), r.reduced (9.0f, 7.0f).removeFromTop (14.0f),
+            g.setFont (font (black ? 10.0f : 11.0f, true));
+            g.drawText (letters[slot], r.reduced (black ? 7.0f : 9.0f, black ? 5.0f : 7.0f).removeFromTop (14.0f),
                         juce::Justification::topLeft);
 
+            // Black pads are shorter: their numeral and name sit lower, under the key letter, and
+            // above the last-played stripe.
             const auto& chord = d.chords[(size_t) slot];
-            auto text = r.reduced (6.0f, 10.0f);
+            auto text = black ? r.reduced (4.0f, 6.0f).withTrimmedTop (r.getHeight() * 0.14f).withTrimmedBottom (5.0f) : r.reduced (6.0f, 10.0f);
             const float h = text.getHeight();
             g.setColour (ink);
-            g.setFont (font (juce::jlimit (16.0f, 28.0f, h * 0.24f), true));
+            g.setFont (font (black ? juce::jlimit (13.0f, 22.0f, h * 0.34f) : juce::jlimit (16.0f, 28.0f, h * 0.24f), true));
             g.drawFittedText (juce::String (romanNumeral (chord, d.context.scale)),
                               text.removeFromTop (h * 0.55f).toNearestInt(), juce::Justification::centredBottom, 1);
             g.setColour (lit ? ink : colours::dim);
-            g.setFont (font (juce::jlimit (12.0f, 16.0f, h * 0.14f)));
-            g.drawFittedText (juce::String (nameSlot (chord, d.context).text()), text.withTrimmedTop (4.0f).toNearestInt(),
+            g.setFont (font (black ? juce::jlimit (10.5f, 14.0f, h * 0.2f) : juce::jlimit (12.0f, 16.0f, h * 0.14f)));
+            g.drawFittedText (juce::String (nameSlot (chord, d.context).text()), text.withTrimmedTop (black ? 2.0f : 4.0f).toNearestInt(),
                               juce::Justification::centredTop, 1, 0.7f);
 
             if (slot == d.lastSlot)
             {
                 g.setColour (lit ? colours::background : colours::chord);
-                g.fillRoundedRectangle (r.reduced (r.getWidth() * 0.25f, 0.0f).removeFromBottom (4.0f).translated (0.0f, -6.0f), 2.0f);
+                g.fillRoundedRectangle (r.reduced (r.getWidth() * 0.25f, 0.0f).removeFromBottom (black ? 3.0f : 4.0f).translated (0.0f, black ? -3.0f : -6.0f), 2.0f);
             }
         }
     }

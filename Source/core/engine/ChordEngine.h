@@ -7,7 +7,7 @@
 //
 //   white key     → the slot's chord: degree from the Progression, shape from the Chord Group,
 //                   Key, Scale, Chord Octave, then the effect chain (one performance per key)
-//   black key     → nothing
+//   black key     → its borrowed chord (ChordGroups.h), the same way
 //   Enable off    → input passes through unchanged
 //
 // Whenever the chords change while chord keys are held (a parameter), each held key whose chord
@@ -147,7 +147,7 @@ namespace chordchimp
             bool down = false;
             uint8_t velocity = 0;
             uint8_t channel = 0;
-            int8_t slot = -1;             // the chord slot, or -1 (a black key)
+            int8_t slot = -1;             // the chord slot (0..11)
             bool passThrough = false;     // pressed while Enable was off
         };
 

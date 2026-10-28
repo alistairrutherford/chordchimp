@@ -76,12 +76,13 @@ static void testRouter()
         if (w >= 0)
             whites &= KeyRouter::slotOf (note) == w;
         else
-            blacks &= KeyRouter::slotOf (note) == -1;
+            blacks &= KeyRouter::slotOf (note) == numWhiteSlots + keys::blackIndex (note % 12);
     }
     check (whites, "no split: C..B are chord slots 0-6 in every octave, 0-127");
-    check (blacks, "black keys play nothing, in every octave");
-    check (KeyRouter::keyForSlot (0) == 48 && KeyRouter::keyForSlot (6) == 59 && KeyRouter::keyForSlot (7) == -1,
-           "test pattern keys: the home octave, 48..59");
+    check (blacks, "C# D# F# G# A# are slots 7-11 (the borrowed chords), in every octave");
+    check (KeyRouter::keyForSlot (0) == 48 && KeyRouter::keyForSlot (6) == 59 && KeyRouter::keyForSlot (7) == 49
+               && KeyRouter::keyForSlot (11) == 58 && KeyRouter::keyForSlot (12) == -1,
+           "the editor's and test pattern's keys: the home octave, 48..59");
 }
 
 //==============================================================================
@@ -184,12 +185,23 @@ static void testChords()
     rig.run ({ MidiEvent::noteOff (0, 55, 0) });
     rig.settings = EngineSettings {};
 
-    // No split: a white key plays its chord in any octave; black keys play nothing.
+    // No split: a white key plays its chord in any octave; a black key plays its borrowed chord.
     check (notesOn (rig.run ({ MidiEvent::noteOn (0, 86, 90, 0) })) == expected[1], "D at 86 (above the old split) plays ii");
     rig.run ({ MidiEvent::noteOff (0, 86, 0) });
-    check (rig.run ({ MidiEvent::noteOn (0, 49, 90, 0), MidiEvent::noteOn (0, 73, 90, 1) }).size() == 0, "black keys play nothing");
-    check (rig.run ({ MidiEvent::noteOff (0, 49, 0), MidiEvent::noteOff (0, 73, 0) }).size() == 0 && rig.engine.getVoices().isEmpty(),
-           "and their key-ups send nothing");
+    check (notesOn (rig.run ({ MidiEvent::noteOn (0, 73, 90, 0) })) == std::vector<int> { 49, 53, 56 },
+           "C# at 73 plays bII (Db F Ab), in any octave");
+    check (notesOff (rig.run ({ MidiEvent::noteOff (0, 73, 0) })) == std::vector<int> { 49, 53, 56 } && rig.engine.getVoices().isEmpty(),
+           "and its key-up ends it");
+    rig.settings.progression = Progression::Pop;
+    rig.run ({ MidiEvent::noteOn (0, 58, 90, 0) });
+    rig.settings.key = 2;
+    auto& movedBlack = rig.run ({});
+    check (notesOff (movedBlack) == std::vector<int> { 58, 62, 65 } && notesOn (movedBlack) == std::vector<int> { 60, 64, 67 },
+           "A# under Pop plays bVII (Bb D F) as without it; Key C→D while held: it becomes C E G");
+    rig.run ({ MidiEvent::noteOff (0, 58, 0) });
+    check (rig.engine.getVoices().isEmpty(), "and its key-up releases it");
+    rig.settings.key = 0;
+    rig.settings.progression = Progression::Diatonic;
 
     // Enable off: input passes through unchanged, on its own channel.
     rig.run ({ MidiEvent::noteOn (0, 48, 90, 0) });

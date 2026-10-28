@@ -5,8 +5,8 @@
 // the slot directly) and must give exactly the expected MIDI notes, name and Roman numeral.
 // The expected notes are written out by hand (MIDI 48 = C2, the chords' default C).
 //
-// Also: names of pitch-class sets (root choice, slash bass), spelling in every key, and Roman
-// numerals in ChordPrism's style.
+// Also: names of pitch-class sets (root choice, slash bass), spelling in every key, Roman
+// numerals in ChordPrism's style, and the black keys' borrowed chords (Phase 7).
 #include "TestUtil.h"
 #include "core/theory/Progressions.h"
 #include "core/theory/ChordNamer.h"
@@ -321,11 +321,71 @@ static void testRomanNumerals()
     check (row (Scale::Major, ChordGroup::Sevenths) == "I ii iii IV V vi vii*", "sevenths: the triad decides");
 }
 
+//==============================================================================
+// Phase 7: the black keys' borrowed chords (ChordGroups.h, PLAN.md §3.1).
+static void testBorrowed()
+{
+    std::cout << "== borrowed chords (black keys) ==\n";
+    auto sorted = [] (const ChordSlot& slot, const ChordContext& ctx) {
+        const auto n = chordNotes (slot, ctx);
+        std::vector<int> v (n.begin(), n.end());
+        std::sort (v.begin(), v.end());
+        return v;
+    };
+    // "numeral name, …" for the five black keys.
+    auto row = [] (ChordGroup g, int key, Scale s) {
+        const ChordSet set = makeGroupChords (g, s);
+        std::string out;
+        for (int b = 0; b < numBlackSlots; ++b)
+        {
+            const auto& slot = set[(size_t) (numWhiteSlots + b)];
+            out += (b ? ", " : "") + romanNumeral (slot, s) + " " + nameSlot (slot, { key, s, 0 }).text();
+        }
+        return out;
+    };
+
+    const ChordSet c = makeGroupChords (ChordGroup::Triads, Scale::Major);
+    const std::vector<std::vector<int>> want = { { 49, 53, 56 }, { 51, 55, 58 }, { 54, 57, 60 }, { 56, 60, 63 }, { 58, 62, 65 } };
+    bool notesRight = true;
+    for (int b = 0; b < numBlackSlots; ++b)
+        notesRight &= sorted (c[(size_t) (numWhiteSlots + b)], {}) == want[(size_t) b];
+    check (notesRight, "C major triads: C# D# F# G# A# play Db F Ab, Eb G Bb, F# A C, Ab C Eb, Bb D F");
+    check (row (ChordGroup::Triads, 0, Scale::Major) == "bII Db, bIII Eb, #iv* F#dim, bVI Ab, bVII Bb",
+           "C major triads: " + row (ChordGroup::Triads, 0, Scale::Major));
+    check (row (ChordGroup::Sevenths, 0, Scale::Major) == "bII Dbmaj7, bIII Ebmaj7, #iv* F#m7b5, bVI Abmaj7, bVII Bb7",
+           "C major sevenths: " + row (ChordGroup::Sevenths, 0, Scale::Major));
+    check (row (ChordGroup::Triads, 9, Scale::NaturalMinor) == "bII Bb, III C, #iv* D#dim, VI F, VII G",
+           "A natural minor (bIII, bVI, bVII are the key's own): " + row (ChordGroup::Triads, 9, Scale::NaturalMinor));
+
+    // In every key, scale and group, a black key plays its mode's chord, in the group's shape.
+    int wrong = 0, total = 0;
+    for (int key = 0; key < numKeys; ++key)
+        for (int sc = 0; sc < numScales; ++sc)
+            for (int g = 0; g < numChordGroups; ++g)
+            {
+                const ChordSet set = makeChords ((ChordGroup) g, (Scale) sc, progressionDegrees (Progression::Pop));
+                for (int b = 0; b < numBlackSlots; ++b)
+                {
+                    const auto& info = borrowedChord (b);
+                    const auto own = sorted (makeGroupSlot ((ChordGroup) g, info.mode, info.degree), { key, info.mode, 0 });
+                    const auto& slot = set[(size_t) (numWhiteSlots + b)];
+                    bool small = true;
+                    for (const auto& st : slot.steps)
+                        small &= st.accidental >= -2 && st.accidental <= 2;
+                    wrong += sorted (slot, { key, (Scale) sc, 0 }) == own && small ? 0 : 1;
+                    ++total;
+                }
+            }
+    check (wrong == 0, std::to_string (total - wrong) + "/" + std::to_string (total)
+                           + " black-key chords (12 keys x 13 scales x 17 groups x 5, Pop progression) are their mode's chord, accidentals within 2");
+}
+
 int main()
 {
     testProgressionOrders();
     testReferenceSet();
     testNaming();
     testRomanNumerals();
+    testBorrowed();
     return testutil::finish ("test_chords");
 }

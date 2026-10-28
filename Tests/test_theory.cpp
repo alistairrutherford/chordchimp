@@ -144,7 +144,7 @@ static void testAgainstReference()
         covered.insert (std::to_string (key) + "/" + std::to_string (scale) + "/" + std::to_string (group));
 
         const ChordSet chords = makeGroupChords ((ChordGroup) group, (Scale) scale);
-        for (int d = 0; d < numChordSlots; ++d)
+        for (int d = 0; d < numWhiteSlots; ++d)
         {
             const auto notes = chordNotes (chords[(size_t) d], { key, (Scale) scale, 0 });
             std::vector<int> got (notes.begin(), notes.end());
@@ -166,7 +166,7 @@ static void testAgainstReference()
     check ((int) covered.size() == expected,
            "fixture covers all 12 keys x " + std::to_string (numScales) + " scales x " + std::to_string (numChordGroups)
                + " groups (" + std::to_string (covered.size()) + " of " + std::to_string (expected) + ")");
-    check (mismatches == 0 && compared == expected * numChordSlots,
+    check (mismatches == 0 && compared == expected * numWhiteSlots,
            std::to_string (compared) + " chords compared with music21, " + std::to_string (mismatches) + " differ");
 }
 

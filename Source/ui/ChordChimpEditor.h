@@ -2,7 +2,8 @@
 //
 //   top bar      the name · On · presets · Export · Keys
 //   globals      Key · Scale · Chord Group · Progression · Octave
-//   chord pads   the seven chords (they take the space the rest leaves)
+//   chord pads   the seven white-key chords and the five black-key ones above them (they take
+//                the space the rest leaves)
 //   effects      Strum, Velocity; Arp, Voicing; Repeat, Step seq
 //   bottom       the output keyboard (can be hidden), which also plays
 //
@@ -38,7 +39,7 @@ namespace chordchimp
 
         static constexpr int defaultWidth = 780, defaultHeight = 560;
         static constexpr int minWidth = 720, minHeight = 520, maxWidth = 1400, maxHeight = 960;
-        static constexpr int maxPadHeight = 200;
+        static constexpr int maxPadHeight = 300;   // both rows
 
     private:
         void timerCallback() override;

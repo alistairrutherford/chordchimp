@@ -198,7 +198,7 @@ namespace
         set (p, params::seqPattern, 2.0f);
         p.prepareToPlay (48000.0, 512);
         block (p, {});
-        // Hold the E key (Pop: vi) and, two octaves up, the D key (Pop: V); a black key plays nothing.
+        // Hold the E key (Pop: vi), two octaves up the D key (Pop: V), and D# (bIII, Phase 7).
         block (p, { juce::MidiMessage::noteOn (1, 52, (juce::uint8) 100), juce::MidiMessage::noteOn (1, 74, (juce::uint8) 100),
                     juce::MidiMessage::noteOn (1, 63, (juce::uint8) 100) });
         block (p, {});
@@ -873,6 +873,19 @@ int main (int argc, char** argv)
             const auto off = block (*processor, {});
             check (pads.slotAt (at) == 4 && on == std::vector<int> { 50, 53, 57, 60 } && noteOffs (off) == 4,
                    "clicking pad G plays its chord (Pop: ii, Dm7) and letting go ends it");
+
+            // The black keys' row (Phase 7): pad D# plays bIII, Ebmaj7, whatever the Progression.
+            const auto black = pads.padBounds (numWhiteSlots + 1);
+            const auto atBlack = black.getCentre();
+            const juce::MouseEvent eb (source, atBlack, {}, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, &pads, &pads, now, atBlack, now, 1, false);
+            pads.mouseDown (eb);
+            const auto onBlack = noteOns (block (*processor, {}));
+            pads.mouseUp (eb);
+            const auto offBlack = block (*processor, {});
+            check (pads.slotAt (atBlack) == numWhiteSlots + 1 && black.getBottom() < pads.padBounds (1).getY()
+                       && black.getX() < pads.padBounds (1).getRight() && black.getRight() > pads.padBounds (2).getX()
+                       && onBlack == std::vector<int> { 51, 55, 58, 62 } && noteOffs (offBlack) == 4,
+                   "pad D#, above the gap between D and E, plays bIII (Ebmaj7) and letting go ends it");
             set (*processor, params::arp, (float) (int) ArpPattern::ConvergeUp);
             set (*processor, params::seq, 1.0f);
         }

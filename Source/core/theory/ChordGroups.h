@@ -96,15 +96,59 @@ namespace chordchimp
         return slot;
     }
 
-    // The seven slots of the chord zone. In Phase 1 the progression is the identity:
-    // white key n (C = 0) plays degree n.
+    // The black keys' chords (PLAN.md §3.1, Phase 7): each plays the chord on its semitone above
+    // the tonic, borrowed from the parallel mode that has that chord (modal mixture), in the
+    // group's shape. In C, with Triads (Sevenths):
+    //
+    //   C#  bII   Db (Dbmaj7)      Phrygian, degree 2
+    //   D#  bIII  Eb (Ebmaj7)      natural minor, degree 3
+    //   F#  #iv°  F#dim (F#m7b5)   Lydian, degree 4
+    //   G#  bVI   Ab (Abmaj7)      natural minor, degree 6
+    //   A#  bVII  Bb (Bb7)         natural minor, degree 7
+    //
+    // The slot is the Key's scale's degree, with each step's accidental moving it to the mode's
+    // note, so names and numerals follow the Key's scale: in a natural minor key D# is "III",
+    // the same chord as E's.
+    struct BorrowedChord
+    {
+        Scale mode;
+        int8_t degree;                    // 0..6
+    };
+
+    inline const BorrowedChord& borrowedChord (int black) noexcept
+    {
+        static constexpr BorrowedChord table[numBlackSlots] = {
+            { Scale::Phrygian, 1 }, { Scale::NaturalMinor, 2 }, { Scale::Lydian, 3 },
+            { Scale::NaturalMinor, 5 }, { Scale::NaturalMinor, 6 },
+        };
+        return table[black >= 0 && black < numBlackSlots ? black : 0];
+    }
+
+    // Black key `black` (0 = C# … 4 = A#) in group `g`, as a slot of scale `s`.
+    inline ChordSlot makeBorrowedSlot (ChordGroup g, Scale s, int black) noexcept
+    {
+        const auto& b = borrowedChord (black);
+        ChordSlot slot = makeGroupSlot (g, b.mode, b.degree);
+        for (int k = 0; k < numChordSteps; ++k)
+        {
+            auto& step = slot.steps[(size_t) k];
+            if (step.on)
+                step.accidental = (int8_t) (step.accidental + scaleOffset (b.mode, b.degree + 2 * k) - scaleOffset (s, b.degree + 2 * k));
+        }
+        return slot;
+    }
+
+    // The twelve slots: white key n (C = 0) plays degree n (the Progression reorders them, in
+    // Progressions.h), then the five black keys' borrowed chords.
     using ChordSet = std::array<ChordSlot, numChordSlots>;
 
     inline ChordSet makeGroupChords (ChordGroup g, Scale s) noexcept
     {
         ChordSet set;
-        for (int d = 0; d < numChordSlots; ++d)
+        for (int d = 0; d < numWhiteSlots; ++d)
             set[(size_t) d] = makeGroupSlot (g, s, d);
+        for (int b = 0; b < numBlackSlots; ++b)
+            set[(size_t) (numWhiteSlots + b)] = makeBorrowedSlot (g, s, b);
         return set;
     }
 }

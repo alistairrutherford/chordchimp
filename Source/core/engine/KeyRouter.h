@@ -1,9 +1,11 @@
 // Routes incoming notes (PLAN.md §3.1). There is no split: the whole keyboard plays chords.
 //
-//   white C D E F G A B → chord slots 0–6, in every octave (the octave doesn't matter;
-//                         Chord Octave sets the register)
-//   black C# D# F# G# A# → nothing (swallowed, not passed through)
+//   white C D E F G A B  → chord slots 0–6, in every octave (the octave doesn't matter;
+//                          Chord Octave sets the register)
+//   black C# D# F# G# A# → chord slots 7–11, the borrowed chords (ChordGroups.h; Phase 7)
 #pragma once
+
+#include "../theory/ChordModel.h"
 
 namespace chordchimp
 {
@@ -16,7 +18,15 @@ namespace chordchimp
             return t[((pitchClass % 12) + 12) % 12];
         }
 
+        // Index of a black key (C# = 0 … A# = 4), or -1.
+        constexpr int blackIndex (int pitchClass) noexcept
+        {
+            constexpr int t[12] = { -1, 0, -1, 1, -1, -1, 2, -1, 3, -1, 4, -1 };
+            return t[((pitchClass % 12) + 12) % 12];
+        }
+
         constexpr int whiteOffsets[7] = { 0, 2, 4, 5, 7, 9, 11 };
+        constexpr int blackOffsets[5] = { 1, 3, 6, 8, 10 };
     }
 
     class KeyRouter
@@ -26,13 +36,21 @@ namespace chordchimp
         // C2), the chord zone's octave in Chordism at its default split.
         static constexpr int homeC = 48;
 
-        // The chord slot (0..6) a note plays, or -1 for a black key.
-        static constexpr int slotOf (int note) noexcept { return keys::whiteLetter (note % 12); }
+        // The chord slot a note plays: 0..6 for a white key, 7..11 for a black one.
+        static constexpr int slotOf (int note) noexcept
+        {
+            const int w = keys::whiteLetter (note % 12);
+            return w >= 0 ? w : numWhiteSlots + keys::blackIndex (note % 12);
+        }
 
         // The key in the home octave that plays `slot`, or -1.
         static constexpr int keyForSlot (int slot) noexcept
         {
-            return slot < 0 || slot > 6 ? -1 : homeC + keys::whiteOffsets[slot];
+            if (slot >= 0 && slot < numWhiteSlots)
+                return homeC + keys::whiteOffsets[slot];
+            if (slot >= numWhiteSlots && slot < numChordSlots)
+                return homeC + keys::blackOffsets[slot - numWhiteSlots];
+            return -1;
         }
     };
 }

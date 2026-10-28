@@ -1,9 +1,11 @@
 // The editor's playable surfaces (PLAN.md §5). Each plays through the engine like host MIDI
 // input (ChordChimpProcessor::pushUiNote), so clicking is the same as pressing a key.
 //
-//   ChordPads       seven pads, one per white-key letter (C … B): the chord's Roman numeral and
-//                   name, the key letter in a corner, lit while that chord plays, with a stripe
-//                   on the last one played. Click (or drag across) to play.
+//   ChordPads       seven pads, one per white-key letter (C … B), and above them five smaller
+//                   ones over the gaps, one per black key (C# … A#: the borrowed chords, Phase
+//                   7): the chord's Roman numeral and name, the key letter in a corner, lit
+//                   while that chord plays, with a stripe on the last one played. Click (or drag
+//                   across) to play.
 //   OutputKeyboard  88 keys: the notes ChordChimp sends (red) and the keys held (outlined).
 //                   Hideable.
 #pragma once

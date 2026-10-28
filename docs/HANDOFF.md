@@ -11,9 +11,10 @@ chord, and keeps Chordism's 22 factory presets. JUCE 8.0.14, C++17, Projucer + x
 
 ## State
 
-- **Phases 0-6 of the plan are done** and committed on `main`, one commit per phase, with the
+- **Phases 0-7 of the plan are done** and committed on `main`, one commit per phase, with the
   README screenshot (`5a35ac7`) and the editor-in-Live check and size fix (`1ea392c`) in between.
-  Phase 6 brought Export drag-out back (open question 3).
+  Phase 6 brought Export drag-out back (open question 3); Phase 7 gave the black keys borrowed
+  chords (open question 1). Both were checked in Live together.
 - **Remote:** `origin` is `github.com/alistairrutherford/chordchimp`, and CI
   (`.github/workflows/build.yml`) has passed there.
 - Installed: `ChordChimp.vst3` and `ChordChimp.app` (by `Tools/install.sh`), next to Chordism.
@@ -22,8 +23,10 @@ chord, and keeps Chordism's 22 factory presets. JUCE 8.0.14, C++17, Projucer + x
 
 - **Core** (`Source/core`, header-only, no JUCE):
   - `engine/ChordEngine.h`: one `ChordPerformer` and a `VoiceTracker` with 384 sources.
-  - `engine/KeyRouter.h`: a white key's letter picks slot 0-6 in any octave; black keys return
-    -1 and are swallowed (no output).
+  - `engine/KeyRouter.h`: a white key's letter picks slot 0-6 in any octave, a black key slot
+    7-11 (C# … A#).
+  - `theory/ChordGroups.h`: `makeBorrowedSlot`, the black keys' chords (bII Phrygian, bIII
+    minor, #iv° Lydian, bVI and bVII minor), as the Key's scale's degree with accidentals.
   - `engine/{ChordFx, StepSequencer, TestPattern, VoiceTracker}.h`. The step sequencer's four
     patterns are fixed (`seqPatterns()` = 0x1111, 0x4444, 0x1449, 0x4949). The test pattern
     plays the home octave (C = MIDI 48).
@@ -65,6 +68,8 @@ Tools/install.sh --validate   # build, install, then pluginval
   take from the check after reopening.
 - With Test pattern on, each finished take is also written to
   `~/Music/ChordChimp/Exports/Test take.mid` (Phase 6), for comparing takes without recording.
+- To drag Export into Live by computer use, use a real click-drag; separate mouse moves with the
+  button down don't start the drop. Live sizes the dropped clip to its notes.
 - The editor check (PLAN.md §11 *Editor in Live*; it found and fixed the editor reopening at
   720×520) used a copy, `~/Music/Ableton/Projects/ChordChimp Editor Check Project`. Live's
   plug-in windows hide while Live isn't the front app, so editor checks need Live in front. The
@@ -77,12 +82,12 @@ Tools/install.sh --validate   # build, install, then pluginval
 
 ## Not yet checked
 
-- Playing from a hardware MIDI keyboard.
+- Playing from a hardware MIDI keyboard (now including the black keys).
 
 ## Open questions for the user (PLAN.md §10)
 
-1. **Black keys:** swallowed (current), passed through, or given a job (e.g. a borrowed chord on
-   that semitone)?
+1. **Black keys:** answered 2026-10-28: borrowed chords by modal mixture, with their own pads
+   (Phase 7).
 2. **Key octave:** ignored, with Chord Octave setting the register (current), or should the
    octave played move the chord?
 3. **Dropped features:** answered 2026-10-28: Export drag-out came back (Phase 6); Custom and

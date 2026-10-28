@@ -15,7 +15,9 @@
 namespace chordchimp
 {
     constexpr int numChordSteps = 7;      // 1, 3, 5, 7, 9, 11, 13
-    constexpr int numChordSlots = 7;      // one per white key of the chord zone
+    constexpr int numWhiteSlots = 7;      // slots 0-6: the white keys' chords (C … B)
+    constexpr int numBlackSlots = 5;      // slots 7-11: the black keys' borrowed chords (C# … A#)
+    constexpr int numChordSlots = numWhiteSlots + numBlackSlots;
     constexpr int chordBaseNote = 48;     // MIDI note of C in the chord output's default octave
 
     // Octave mask bit i stands for octave (i - 2), so bit 2 is the chord's own octave.

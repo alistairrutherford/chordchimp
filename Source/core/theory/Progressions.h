@@ -28,7 +28,7 @@ namespace chordchimp
 
     constexpr int numProgressions = (int) Progression::Count;
 
-    using DegreeOrder = std::array<int8_t, numChordSlots>;   // slot → degree 0..6
+    using DegreeOrder = std::array<int8_t, numWhiteSlots>;   // white slot → degree 0..6
 
     struct ProgressionInfo
     {
@@ -73,11 +73,12 @@ namespace chordchimp
         return choice <= 0 || choice >= numProgressionChoices ? Progression::Diatonic : (Progression) (choice + 1);
     }
 
-    // The seven chords: slot n plays degree order[n] in group `g`'s shape.
+    // The chords: white slot n plays degree order[n] in group `g`'s shape; the black keys'
+    // borrowed chords don't depend on the progression.
     inline ChordSet makeChords (ChordGroup g, Scale s, const DegreeOrder& order) noexcept
     {
-        ChordSet set;
-        for (size_t n = 0; n < set.size(); ++n)
+        ChordSet set = makeGroupChords (g, s);
+        for (size_t n = 0; n < order.size(); ++n)
             set[n] = makeGroupSlot (g, s, order[n]);
         return set;
     }

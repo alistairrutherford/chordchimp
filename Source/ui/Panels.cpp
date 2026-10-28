@@ -7,7 +7,7 @@ namespace chordchimp::ui
     TopBar::TopBar (ChordChimpProcessor& p, Bindings& b, std::function<void (bool)> showKeyboard)
         : presets (p), exportHandle (p), enable (b, params::enable, "On")
     {
-        enable.setTooltip ("On: chords from every white key. Off: notes pass through unchanged");
+        enable.setTooltip ("On: chords from every key. Off: notes pass through unchanged");
         addAndMakeVisible (enable);
         addAndMakeVisible (presets);
         addAndMakeVisible (exportHandle);
