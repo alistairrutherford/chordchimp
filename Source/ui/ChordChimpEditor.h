@@ -1,6 +1,6 @@
 // The editor (PLAN.md §5): one page, about 780×560 and resizable.
 //
-//   top bar      the name · On · presets · Keys
+//   top bar      the name · On · presets · Export · Keys
 //   globals      Key · Scale · Chord Group · Progression · Octave
 //   chord pads   the seven chords (they take the space the rest leaves)
 //   effects      Strum, Velocity; Arp, Voicing; Repeat, Step seq
@@ -29,11 +29,12 @@ namespace chordchimp
         void resized() override;
 
         // For tests (Tests/Snapshot): read the processor now, without waiting for the timer;
-        // the parameters some control is (or was) bound to; the keyboard.
+        // the parameters some control is (or was) bound to; the keyboard; the pads; Export.
         void refreshNow() { timerCallback(); }
         const std::set<juce::String>& boundParameters() const noexcept { return bindings.boundIds(); }
         void showKeyboard (bool shown);
         ui::ChordPads& getChordPads() noexcept { return chordPads; }
+        const ui::ExportHandle& getExportHandle() const noexcept { return topBar.exportHandle; }
 
         static constexpr int defaultWidth = 780, defaultHeight = 560;
         static constexpr int minWidth = 720, minHeight = 520, maxWidth = 1400, maxHeight = 960;

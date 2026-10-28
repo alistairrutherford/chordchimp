@@ -1,4 +1,4 @@
-# ChordChimp: session handoff (2026-10-27)
+# ChordChimp: session handoff (2026-10-28)
 
 Where the work stands, for whoever picks it up next. The plan is [PLAN.md](../PLAN.md); its §11
 Status table has the detail of each phase, and its §10 the open questions.
@@ -11,9 +11,9 @@ chord, and keeps Chordism's 22 factory presets. JUCE 8.0.14, C++17, Projucer + x
 
 ## State
 
-- **Phases 0-5 of the plan are done** and committed on `main` (one commit per phase, then
-  `5a35ac7` adding the README screenshot `docs/screenshot.png`). The working tree is clean apart
-  from this file.
+- **Phases 0-6 of the plan are done** and committed on `main`, one commit per phase, with the
+  README screenshot (`5a35ac7`) and the editor-in-Live check and size fix (`1ea392c`) in between.
+  Phase 6 brought Export drag-out back (open question 3).
 - **Remote:** `origin` is `github.com/alistairrutherford/chordchimp`, and CI
   (`.github/workflows/build.yml`) has passed there.
 - Installed: `ChordChimp.vst3` and `ChordChimp.app` (by `Tools/install.sh`), next to Chordism.
@@ -30,6 +30,8 @@ chord, and keeps Chordism's 22 factory presets. JUCE 8.0.14, C++17, Projucer + x
   - `theory/Progressions.h`: the enum keeps Chordism's order (Custom second) so preset values
     still mean the same; the parameter's choices skip Custom (`progressionChoice` /
     `progressionFromChoice`); Custom plays as Diatonic.
+  - `midiio/{ExportRecorder, MidiFile}.h`: Chordism's Export, unchanged but for names (no
+    `ChordImporter`).
 - **Plug-in** (`Source/plugin`): `Parameters.*` (26 parameters, `params::numParameters`, all with
   Chordism's IDs; `params::fromChordism` converts a Chordism preset's Progression value),
   `ChordChimpProcessor.*`, `FactoryPresets.*`, `PresetManager.*` (also reads Chordism preset
@@ -61,6 +63,8 @@ Tools/install.sh --validate   # build, install, then pluginval
   tools. Chordism's `LiveBridge/livebridge/client.py` also works against port 9873.
 - The test set is `~/Music/Ableton/Projects/ChordChimp Phase 5 Project`. It has one extra unsaved
   take from the check after reopening.
+- With Test pattern on, each finished take is also written to
+  `~/Music/ChordChimp/Exports/Test take.mid` (Phase 6), for comparing takes without recording.
 - The editor check (PLAN.md §11 *Editor in Live*; it found and fixed the editor reopening at
   720×520) used a copy, `~/Music/Ableton/Projects/ChordChimp Editor Check Project`. Live's
   plug-in windows hide while Live isn't the front app, so editor checks need Live in front. The
@@ -81,7 +85,8 @@ Tools/install.sh --validate   # build, install, then pluginval
    that semitone)?
 2. **Key octave:** ignored, with Chord Octave setting the register (current), or should the
    octave played move the chord?
-3. **Dropped features:** should Progression *Custom*, Export drag-out or QWERTY playing come back?
+3. **Dropped features:** answered 2026-10-28: Export drag-out came back (Phase 6); Custom and
+   QWERTY stay out.
 4. **Bright Melody:** keep the name (it now has a chord arp in place of the melody), rename it,
    or drop it?
 5. **Name:** *ChordChimp* (fixed in Phase 0).

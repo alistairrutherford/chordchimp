@@ -5,11 +5,12 @@ namespace chordchimp::ui
 {
     //==========================================================================
     TopBar::TopBar (ChordChimpProcessor& p, Bindings& b, std::function<void (bool)> showKeyboard)
-        : presets (p), enable (b, params::enable, "On")
+        : presets (p), exportHandle (p), enable (b, params::enable, "On")
     {
         enable.setTooltip ("On: chords from every white key. Off: notes pass through unchanged");
         addAndMakeVisible (enable);
         addAndMakeVisible (presets);
+        addAndMakeVisible (exportHandle);
         keyboardButton.setClickingTogglesState (true);
         keyboardButton.setTooltip ("Show or hide the keyboard at the bottom");
         keyboardButton.onClick = [this, showKeyboard] { showKeyboard (keyboardButton.getToggleState()); };
@@ -18,7 +19,11 @@ namespace chordchimp::ui
 
     void TopBar::setKeyboardShown (bool shown) { keyboardButton.setToggleState (shown, juce::dontSendNotification); }
 
-    void TopBar::refresh() { presets.refresh(); }
+    void TopBar::refresh()
+    {
+        presets.refresh();
+        exportHandle.refresh();
+    }
 
     void TopBar::paint (juce::Graphics& g)
     {
@@ -38,6 +43,8 @@ namespace chordchimp::ui
         enable.setBounds (r.removeFromLeft (44).withSizeKeepingCentre (44, 28));
         r.removeFromLeft (12);
         keyboardButton.setBounds (r.removeFromRight (52).withSizeKeepingCentre (52, 28));
+        r.removeFromRight (8);
+        exportHandle.setBounds (r.removeFromRight (104).withSizeKeepingCentre (104, 28));
         r.removeFromRight (12);
         presets.setBounds (r.removeFromLeft (juce::jmin (r.getWidth(), 360)).withTrimmedBottom (2));
     }

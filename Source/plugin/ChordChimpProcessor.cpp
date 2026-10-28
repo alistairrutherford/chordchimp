@@ -163,6 +163,7 @@ namespace chordchimp
 
         output.clear();
         engine.process (settings, transport, input.begin(), input.size(), numSamples, output);
+        recorder.record (transport, numSamples, output.begin(), output.size());
 
         for (const auto& e : output)
             generated.addEvent (e.data, e.size, e.sample);
@@ -223,6 +224,18 @@ namespace chordchimp
         // A program the host chose off the message thread.
         if (const int program = pendingProgram.exchange (-1); program >= 0)
             loadProgram (program);
+
+        // The test rig's takes, for checks in Live.
+        if (snapshot.engineSettings().testPattern)
+        {
+            const auto info = recorder.info();
+            if (info.take != 0 && ! info.recording && info.take != testTakeWritten && info.completedBars() > 0)
+            {
+                testTakeWritten = info.take;
+                juce::String error;
+                writeTake (testTakeFile(), error);
+            }
+        }
     }
 
     void ChordChimpProcessor::notifyStateChanged()
@@ -294,6 +307,49 @@ namespace chordchimp
         presetCategory = category;
         presetName = name;
         notifyStateChanged();
+    }
+
+    //==========================================================================
+    // Export.
+
+    juce::File ChordChimpProcessor::testTakeFile()
+    {
+        return juce::File::getSpecialLocation (juce::File::userMusicDirectory).getChildFile ("ChordChimp").getChildFile ("Exports").getChildFile ("Test take.mid");
+    }
+
+    bool ChordChimpProcessor::writeTake (const juce::File& file, juce::String& error) const
+    {
+        TakeInfo info;
+        std::vector<RecordedEvent> events;
+        bool copied = false;
+        for (int attempt = 0; attempt < 4 && ! copied; ++attempt)
+            copied = recorder.snapshot (info, events);
+        if (! copied || info.completedBars() <= 0)
+        {
+            error = "Nothing to export yet: play at least one whole bar.";
+            return false;
+        }
+        const auto song = exportBars (info, events);
+        const auto bytes = writeMidiFile (song);
+        file.getParentDirectory().createDirectory();
+        if (! file.replaceWithData (bytes.data(), bytes.size()))
+        {
+            error = "Couldn't write " + file.getFullPathName();
+            return false;
+        }
+        return true;
+    }
+
+    juce::File ChordChimpProcessor::writeExport (juce::String& error)
+    {
+        const auto info = recorder.info();
+        const int bars = juce::jmin (info.completedBars(), ExportRecorder::maxBars);
+        const auto s = snapshot.engineSettings();
+        const juce::String name = "ChordChimp " + juce::String (keyName (s.key)).upToFirstOccurrenceOf ("/", false, false) + " "
+                                + scaleInfo (s.scale).name + " " + juce::String (bars) + (bars == 1 ? " bar" : " bars");
+        const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("ChordChimp Export")
+                              .getChildFile (juce::File::createLegalFileName (name) + ".mid");
+        return writeTake (file, error) ? file : juce::File();
     }
 
     juce::AudioProcessorEditor* ChordChimpProcessor::createEditor()

@@ -200,4 +200,88 @@ namespace chordchimp::ui
             saveWindow.reset();
         }), false);
     }
+
+    //==========================================================================
+    ExportHandle::ExportHandle (ChordChimpProcessor& p) : processor (p)
+    {
+        setMouseCursor (juce::MouseCursor::DraggingHandCursor);
+        refresh();
+    }
+
+    void ExportHandle::refresh()
+    {
+        const auto info = processor.exportInfo();
+        const int bars = juce::jmin (info.completedBars(), ExportRecorder::maxBars);
+        if (bars != barCount || info.recording != recording)
+        {
+            barCount = bars;
+            recording = info.recording;
+            setTooltip (barCount > 0 ? "Drag into the host: the last " + juce::String (barCount) + (barCount == 1 ? " bar" : " bars")
+                                           + " ChordChimp played (up to 32 completed bars since playback started), as a MIDI clip"
+                                     : "Export: play at least one whole bar with the host's transport running, then drag this into a track");
+            repaint();
+        }
+    }
+
+    void ExportHandle::paint (juce::Graphics& g)
+    {
+        auto r = getLocalBounds().toFloat().reduced (1.0f);
+        const bool enabled = barCount > 0;
+        g.setColour (enabled ? colours::raised : colours::panel);
+        g.fillRoundedRectangle (r, 4.0f);
+        g.setColour (enabled ? colours::chord : colours::outline);
+        g.drawRoundedRectangle (r, 4.0f, dragging ? 2.0f : 1.0f);
+
+        // Grip dots, then "Export" and the bar count.
+        auto grip = r.removeFromLeft (16.0f).reduced (5.0f, 7.0f);
+        g.setColour (enabled ? colours::chord : colours::faint);
+        for (int row = 0; row < 3; ++row)
+            for (int col = 0; col < 2; ++col)
+                g.fillEllipse (grip.getX() + (float) col * 4.0f, grip.getY() + (float) row * grip.getHeight() / 2.5f, 2.5f, 2.5f);
+        g.setFont (font (12.5f, true));
+        g.setColour (enabled ? colours::text : colours::faint);
+        g.drawFittedText (enabled ? "Export " + juce::String (barCount) + (barCount == 1 ? " bar" : " bars") : juce::String ("Export"),
+                          r.toNearestInt().withTrimmedRight (6), juce::Justification::centred, 1);
+        if (recording)
+        {
+            g.setColour (colours::sounding);
+            g.fillEllipse (r.getRight() - 8.0f, r.getY() + 3.0f, 5.0f, 5.0f);
+        }
+    }
+
+    void ExportHandle::mouseDown (const juce::MouseEvent&)
+    {
+        dragging = false;
+        refresh();
+    }
+
+    void ExportHandle::mouseDrag (const juce::MouseEvent& e)
+    {
+        if (dragging || barCount <= 0 || e.getDistanceFromDragStart() < 4)
+            return;
+        juce::String error;
+        const auto file = processor.writeExport (error);
+        if (! file.existsAsFile())
+        {
+            setTooltip (error);
+            return;
+        }
+        dragging = true;
+        repaint();
+        juce::DragAndDropContainer::performExternalDragDropOfFiles ({ file.getFullPathName() }, false, this,
+                                                                    [safe = juce::Component::SafePointer<ExportHandle> (this)]
+        {
+            if (safe != nullptr)
+            {
+                safe->dragging = false;
+                safe->repaint();
+            }
+        });
+    }
+
+    void ExportHandle::mouseUp (const juce::MouseEvent&)
+    {
+        dragging = false;
+        repaint();
+    }
 }

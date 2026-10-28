@@ -1,6 +1,7 @@
 // The editor's panels (PLAN.md §5):
 //
-//   TopBar         the name · On · the preset browser · Keys (show or hide the output keyboard)
+//   TopBar         the name · On · the preset browser · Export (drag out the last bars played) ·
+//                  Keys (show or hide the output keyboard)
 //   GlobalRow      Key · Scale · Chord Group · Progression · Octave
 //   EffectsPanel   six cards: Strum, Velocity; Arp, Voicing (Stack, Hold, Voice leading);
 //                  Repeat and Step seq, each with its on switch in the card's corner, and the
@@ -24,6 +25,7 @@ namespace chordchimp::ui
         void resized() override;
 
         PresetBar presets;
+        ExportHandle exportHandle;
 
     private:
         ParamControl enable;

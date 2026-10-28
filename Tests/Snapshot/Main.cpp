@@ -970,6 +970,52 @@ int main (int argc, char** argv)
         close (*reopened, fourth);
     }
 
+    std::cout << "== Export ==\n";
+    {
+        // Phase 6 (PLAN.md §11): the handle exports the completed bars ChordChimp played.
+        auto p = std::make_unique<ChordChimpProcessor>();
+        LoopPlayHead head;
+        head.playing = false;
+        head.looping = false;
+        head.bpm = 120.0;
+        p->setPlayHead (&head);
+        p->prepareToPlay (48000.0, 512);
+        set (*p, params::testPattern, 1.0f);
+        std::unique_ptr<juce::AudioProcessorEditor> base (p->createEditorIfNeeded());
+        auto* editor = dynamic_cast<ChordChimpEditor*> (base.get());
+        editor->refreshNow();
+        juce::String error;
+        const bool emptyAtFirst = ! p->writeExport (error).existsAsFile() && editor->getExportHandle().bars() == 0;
+        head.playing = true;
+        while (head.ppq < 9.0)
+        {
+            block (*p, {});
+            head.advance (512, 48000.0);
+        }
+        editor->refreshNow();
+        const auto file = p->writeExport (error);
+        MidiSong song;
+        std::string readError;
+        juce::MemoryBlock data;
+        file.loadFileAsData (data);
+        const bool read = readMidiFile ((const uint8_t*) data.getData(), data.getSize(), song, readError);
+        check (emptyAtFirst && editor->getExportHandle().bars() == 2 && file.existsAsFile() && read && song.notes.size() == 24
+                   && song.ppq == 960 && song.notes.front().start == 0 && song.notes.back().start == 7 * 960
+                   && file.getFileName() == "ChordChimp C Major 2 bars.mid",
+               "after 2.25 bars playing, the handle shows 2 bars and exports them (8 chords) as " + file.getFileName());
+
+        // Stopping with the Test pattern on also writes the take for the checks in Live.
+        const auto testTake = ChordChimpProcessor::testTakeFile();
+        const auto before = juce::Time::getCurrentTime() - juce::RelativeTime::seconds (2.0);   // file times are to the second
+        head.playing = false;
+        block (*p, {});
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (200);
+        check (testTake.existsAsFile() && testTake.getLastModificationTime() > before, "stopping with the Test pattern on writes " + testTake.getFullPathName());
+        p->editorBeingDeleted (base.get());
+        base.reset();
+        p->setPlayHead (nullptr);
+    }
+
     testPresets (fixtures);
     testPhase8();
 

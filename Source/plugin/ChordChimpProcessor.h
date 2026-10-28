@@ -7,11 +7,15 @@
 // Presets (PresetManager) load on the message thread, and the factory presets are also the
 // plug-in's programs (program 0 = Init), which a host may change from another thread: that load
 // waits for the timer.
+//
+// An ExportRecorder keeps what ChordChimp sends while the host plays, for the Export drag-out
+// (PLAN.md §11, Phase 6).
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../core/engine/ChordEngine.h"
 #include "../core/engine/SnapshotExchange.h"
+#include "../core/midiio/ExportRecorder.h"
 #include "Parameters.h"
 #include "PresetManager.h"
 #include <atomic>
@@ -99,6 +103,15 @@ namespace chordchimp
         const juce::String& getPresetCategory() const noexcept { return presetCategory; }
         void setPresetIdentity (const juce::String& category, const juce::String& name);
 
+        // Export (message thread): the last ≤ 32 completed bars, written to a temporary .mid
+        // for a drag. An invalid File (and `error`) if there's nothing to export yet.
+        TakeInfo exportInfo() const noexcept { return recorder.info(); }
+        juce::File writeExport (juce::String& error);
+
+        // While the Test pattern is on, each finished take is also written here (for checks in
+        // Live through the bridge).
+        static juce::File testTakeFile();
+
         // Status for the editor and tests (written by the audio thread).
         std::atomic<int> lastChordSlot { -1 };
         std::atomic<int> soundingNotes { 0 };
@@ -140,6 +153,9 @@ namespace chordchimp
         SnapshotExchange<ChordDisplay> display;
         ChordDisplay lastDisplay;
 
+        ExportRecorder recorder;
+        bool writeTake (const juce::File& file, juce::String& error) const;
+        uint32_t testTakeWritten = 0;
         juce::String presetName { "Init" }, presetCategory { "Init" };
         std::atomic<int> currentProgram { 0 }, pendingProgram { -1 };
         void loadProgram (int index);

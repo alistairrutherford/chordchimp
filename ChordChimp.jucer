@@ -40,6 +40,10 @@
         <FILE id="csF036" name="Hold.h" compile="0" resource="0" file="Source/core/engine/Hold.h"/>
         <FILE id="csF037" name="ChordFx.h" compile="0" resource="0" file="Source/core/engine/ChordFx.h"/>
       </GROUP>
+      <GROUP id="csGrp4" name="core/midiio">
+        <FILE id="csF052" name="MidiFile.h" compile="0" resource="0" file="Source/core/midiio/MidiFile.h"/>
+        <FILE id="csF053" name="ExportRecorder.h" compile="0" resource="0" file="Source/core/midiio/ExportRecorder.h"/>
+      </GROUP>
       <GROUP id="csGrp2" name="plugin">
         <FILE id="csF011" name="ChordChimpProcessor.h" compile="0" resource="0" file="Source/plugin/ChordChimpProcessor.h"/>
         <FILE id="csF012" name="ChordChimpProcessor.cpp" compile="1" resource="0" file="Source/plugin/ChordChimpProcessor.cpp"/>
