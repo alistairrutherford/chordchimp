@@ -2,7 +2,7 @@
 //
 //   TopBar         the name · On · the preset browser · Export (drag out the last bars played) ·
 //                  Keys (show or hide the output keyboard)
-//   GlobalRow      Key · Scale · Chord Group · Progression · Octave
+//   GlobalRow      Key · Scale · Chord Group · Progression · Octave · Key octave
 //   EffectsPanel   six cards: Strum, Velocity; Arp, Voicing (Stack, Hold, Voice leading);
 //                  Repeat and Step seq, each with its on switch in the card's corner, and the
 //                  chosen pattern's steps under Step seq
@@ -40,7 +40,7 @@ namespace chordchimp::ui
         void resized() override;
 
     private:
-        ParamControl key, scale, group, progression, octave;
+        ParamControl key, scale, group, progression, octave, keyOctave;
     };
 
     class EffectsPanel : public juce::Component

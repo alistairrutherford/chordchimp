@@ -264,12 +264,20 @@ namespace
                         firstWrong = name + ": " + r->paramID + " = " + juce::String (get (*p, r->paramID)) + ", Chordism's " + juce::String (want);
                 }
             }
-            check (wrong == 0 && compared == (int) factory.size() * (params::numParameters - 2) - 3,
+            int presetParameters = 0;
+            for (auto* param : p->getParameters())
+                if (auto* r = dynamic_cast<juce::RangedAudioParameter*> (param); r != nullptr && params::isPresetParameter (r->paramID))
+                    ++presetParameters;
+            check (wrong == 0 && presetParameters == 24 && compared == (int) factory.size() * presetParameters - 3,
                    juce::String (compared) + " preset values (every preset parameter of every preset) are Chordism's"
                        + (firstWrong.isEmpty() ? juce::String() : " (" + firstWrong + ")"));
             p->setCurrentProgram ((int) factory.size() - 1);
             check ((int) get (*p, params::arp) == (int) ArpPattern::LinearUp && (int) get (*p, params::arpRange) == 2,
                    "Bright Melody plays a chord arp (Linear Up, range 2) in place of its melody");
+            set (*p, params::keyOctave, 1.0f);
+            p->setCurrentProgram (2);
+            check ((int) get (*p, params::keyOctave) == 1, "loading a preset leaves Key octave alone (Phase 8: it isn't a preset parameter)");
+            set (*p, params::keyOctave, 0.0f);
         }
 
         std::cout << "== presets ==\n";

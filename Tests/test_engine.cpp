@@ -363,6 +363,59 @@ static void testProgressions()
 }
 
 //==============================================================================
+//==============================================================================
+// Phase 8: Key octave (PLAN.md §3.1).
+static void testKeyOctave()
+{
+    std::cout << "== key octave ==\n";
+    Rig rig;
+    auto press = [&] (int note) { return notesOn (rig.run ({ MidiEvent::noteOn (0, note, 90, 0) })); };
+    auto lift = [&] (int note) { return notesOff (rig.run ({ MidiEvent::noteOff (0, note, 0) })); };
+
+    check (press (60) == std::vector<int> { 48, 52, 55 } && lift (60) == std::vector<int> { 48, 52, 55 },
+           "Ignore (the default): C at 60 plays C E G at 48, as every C does");
+
+    rig.settings.followKeyOctave = true;
+    const auto c1 = press (36);
+    lift (36);
+    const auto c2 = press (48);
+    lift (48);
+    const auto c3 = press (60);
+    lift (60);
+    check (c1 == std::vector<int> { 36, 40, 43 } && c2 == std::vector<int> { 48, 52, 55 } && c3 == std::vector<int> { 60, 64, 67 },
+           "Follow: C at 36, 48, 60 plays C E G an octave down, as written, an octave up");
+    rig.settings.chordOctave = 1;
+    check (press (73) == std::vector<int> { 85, 89, 92 } && lift (73) == std::vector<int> { 85, 89, 92 },
+           "Follow with Chord Octave +1: C# at 73 (two octaves up) plays Db F Ab three octaves above 49");
+    rig.settings.chordOctave = 0;
+    check (press (127) == std::vector<int> { 127 } && lift (127) == std::vector<int> { 127 } && rig.engine.getVoices().isEmpty(),
+           "Follow at the top: G at 127 keeps only the tone that fits (127) and its key-up ends it");
+
+    // Switching while a chord is held moves it.
+    press (60);
+    rig.settings.followKeyOctave = false;
+    auto& moved = rig.run ({});
+    check (notesOff (moved) == std::vector<int> { 60, 64, 67 } && notesOn (moved) == std::vector<int> { 48, 52, 55 },
+           "Follow → Ignore while C at 60 is held: C E G moves down to 48");
+    lift (60);
+    check (rig.engine.getVoices().isEmpty(), "and its key-up ends it");
+
+    // Smooth voice leading leads from the chord as written, then the octave moves the voicing.
+    auto ledG = [] (bool follow, int gKey) {
+        Rig r;
+        r.settings.fx.voiceLeading = VoiceLeadingMode::Smooth;
+        r.settings.followKeyOctave = follow;
+        r.run ({ MidiEvent::noteOn (0, follow ? 60 : 48, 90, 0) });
+        r.run ({ MidiEvent::noteOff (0, follow ? 60 : 48, 0) });
+        return notesOn (r.run ({ MidiEvent::noteOn (0, gKey, 90, 0) }));
+    };
+    auto plain = ledG (false, 55);
+    for (auto& n : plain)
+        n += 12;
+    check (! plain.empty() && ledG (true, 67) == plain,
+           "Follow with Smooth: C then G an octave up is the led C-to-G voicing, an octave up");
+}
+
 static void testSnapshotExchange()
 {
     std::cout << "== snapshot exchange ==\n";
@@ -468,6 +521,7 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
         if (chance (0.03)) rig.settings.scale = (Scale) pick (0, numScales - 1);
         if (chance (0.03)) rig.settings.group = (ChordGroup) pick (0, numChordGroups - 1);
         if (chance (0.03)) rig.settings.chordOctave = pick (-3, 3);
+        if (chance (0.02)) rig.settings.followKeyOctave = chance (0.5);
         if (chance (0.02)) rig.settings.enabled = ! rig.settings.enabled;
         if (chance (0.03)) rig.settings.testPattern = ! rig.settings.testPattern;
         if (chance (0.02)) rig.transport.playing = ! rig.transport.playing;
@@ -577,6 +631,7 @@ int main()
     testPatternLoop();
 
     testProgressions();
+    testKeyOctave();
 
     testSnapshotExchange();
 

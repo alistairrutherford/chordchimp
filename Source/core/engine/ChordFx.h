@@ -1,7 +1,12 @@
 // The effect chain and its scheduler (PLAN.md §3.3):
 //
-//   trigger → chord slot → voicing (+ voice leading) → Octave → Stack → [Strum | Arp] → Repeat
-//           → StepSeq gate → Velocity Algorithm → Hold → (Mute, in ChordEngine) → out
+//   trigger → chord slot → voicing (+ voice leading) → Octave → Stack → key octave →
+//           [Strum | Arp] → Repeat → StepSeq gate → Velocity Algorithm → Hold → (Mute, in
+//           ChordEngine) → out
+//
+// Key octave (ChordChimp Phase 8): with Follow, a performance's tones move by its key's octave
+// from the home octave (C at MIDI 48), after voice leading and Stack, so Smooth leads from the
+// last chord as written and the whole voicing moves; tones outside 0..127 are dropped.
 //
 // Voice leading (Phase 7, VoiceLeading.h): with Smooth, a chord takes the inversion and octave
 // nearest the chord the zone played last (pressed or retuned), before Stack. The last chord is
@@ -38,6 +43,7 @@
 #include "Clock.h"
 #include "EventQueue.h"
 #include "Hold.h"
+#include "KeyRouter.h"
 #include "MidiEvents.h"
 #include "Repeat.h"
 #include "Stack.h"
@@ -116,6 +122,10 @@ namespace chordchimp
         // Settings for this block, at `sample` (the block start); `changed` marks the chord
         // slots whose chord changed with them. Turning Arp, Repeat or the Step Sequencer on or
         // off restarts every pattern; otherwise changed chords (or a Stack change) restrike.
+        // Key octave (Phase 8): Follow moves each performance by its key's octave. A change takes
+        // effect when the chords are next retuned (ChordEngine marks every slot changed).
+        void setFollowKeyOctave (bool follow) noexcept { followKeyOctave = follow; }
+
         void applySettings (const ChordFxSettings& s, int channel, const std::array<bool, numChordSlots>& changed,
                             int sample, BlockEvents& o) noexcept
         {
@@ -152,7 +162,7 @@ namespace chordchimp
                 for (int k = 0; k < numPerformances; ++k)
                     if (restart[(size_t) k])
                     {
-                        perfs[(size_t) k].notes = take (perfs[(size_t) k].slot);
+                        perfs[(size_t) k].notes = take (k, perfs[(size_t) k].slot);
                         startPattern (k, sample, true);
                     }
                 if (restartAll)
@@ -235,7 +245,7 @@ namespace chordchimp
             p.latched = false;
             p.slot = slot;
             p.velocity = (uint8_t) (velocity < 1 ? 1 : (velocity > 127 ? 127 : velocity));
-            p.notes = take (slot);
+            p.notes = take (key, slot);
             ++alive;
             startPattern (key, sample, true);
         }
@@ -384,9 +394,9 @@ namespace chordchimp
         bool hasRhythm() const noexcept { return fx.repeat.on || fx.seq.on; }
         StepGrid stepGrid() const noexcept { return StepGrid (fx.seq, clock.barOrigin(), clock.barLength()); }
 
-        // The tones a performance of `slot` plays; `base` gets the chord's voicing before Stack
-        // (led from the last chord with Smooth voice leading).
-        VoicedNotes voiced (int slot, ChordNotes* base = nullptr) const noexcept
+        // The tones key `key`'s performance of `slot` plays; `base` gets the chord's voicing
+        // before Stack and the key octave (led from the last chord with Smooth voice leading).
+        VoicedNotes voiced (int key, int slot, ChordNotes* base = nullptr) const noexcept
         {
             if (slot < 0 || slot >= numChordSlots)
                 return {};
@@ -395,14 +405,22 @@ namespace chordchimp
                 notes = leadVoicing (notes, haveLed ? &led : nullptr, context);
             if (base != nullptr)
                 *base = notes;
-            return stackNotes (notes, fx.stack);
+            const VoicedNotes stacked = stackNotes (notes, fx.stack);
+            const int shift = followKeyOctave ? 12 * (key / 12 - KeyRouter::homeC / 12) : 0;
+            if (shift == 0)
+                return stacked;
+            VoicedNotes moved;
+            for (const uint8_t n : stacked)
+                if (n + shift >= 0 && n + shift <= 127)
+                    moved.notes[(size_t) moved.size++] = (uint8_t) (n + shift);
+            return moved;
         }
 
         // voiced(), for a performance that now plays it: its chord is the one the next is led from.
-        VoicedNotes take (int slot) noexcept
+        VoicedNotes take (int key, int slot) noexcept
         {
             ChordNotes base;
-            const VoicedNotes v = voiced (slot, &base);
+            const VoicedNotes v = voiced (key, slot, &base);
             if (slot >= 0 && slot < numChordSlots)
             {
                 led = base;
@@ -425,7 +443,7 @@ namespace chordchimp
                 if (! p.alive || ! marked (k, (const Perf&) p))
                     continue;
                 ChordNotes base;
-                const VoicedNotes next = voiced (p.slot, &base);
+                const VoicedNotes next = voiced (k, p.slot, &base);
                 if (next == p.notes)
                     continue;
                 p.notes = next;
@@ -713,5 +731,6 @@ namespace chordchimp
         int pending = -1, pendingAt = 0;
         ChordNotes led {};                // voice leading: the chord played last, before Stack
         bool haveLed = false;
+        bool followKeyOctave = false;     // Key octave: Follow
     };
 }

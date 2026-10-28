@@ -44,17 +44,21 @@ namespace chordchimp::params
     // Phase 7 (appended): voice leading.
     inline constexpr const char* voiceLeading  = "voiceLeading";
 
+    // ChordChimp Phase 8 (appended): whether the octave played moves the chord (PLAN.md §3.1).
+    // Not in presets: it's how the player plays, like Enable.
+    inline constexpr const char* keyOctave     = "keyOctave";
+
     // ChordChimp Phase 1 (2026-10-25) removed Chordism's Split, Mute CG / SS, the shifters and
     // Test shifter, every Smart Scale and pattern parameter, Test smart, Sync group and
     // Look-ahead; Phase 2 its Custom 1-7, Strum time, Seq sustain and the four step patterns
     // (PLAN.md §3.5). A saved state's or preset's values for them are ignored.
-    constexpr int numParameters = 26;
+    constexpr int numParameters = 27;
 
     // A Chordism preset's tree, made ChordChimp's: the Progression value becomes a choice
     // (Chordism's Custom: Diatonic). The other kept values mean the same.
     void fromChordism (juce::ValueTree& tree);
 
-    // Parameters a preset doesn't touch: Enable and the test rig (PresetManager).
+    // Parameters a preset doesn't touch: Enable, Key octave and the test rig (PresetManager).
     bool isPresetParameter (const juce::String& paramId);
 
     juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
@@ -79,6 +83,7 @@ namespace chordchimp::params
         std::atomic<float>* chordOctave;
         std::atomic<float>* testPattern;
         std::atomic<float>* progression;
+        std::atomic<float>* keyOctaveParam;
 
         std::atomic<float>* fxStack;
         std::atomic<float>* fxStrum;

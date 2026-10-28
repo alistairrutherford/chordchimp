@@ -1,7 +1,7 @@
 // The editor (PLAN.md §5): one page, about 780×560 and resizable.
 //
 //   top bar      the name · On · presets · Export · Keys
-//   globals      Key · Scale · Chord Group · Progression · Octave
+//   globals      Key · Scale · Chord Group · Progression · Octave · Key octave
 //   chord pads   the seven white-key chords and the five black-key ones above them (they take
 //                the space the rest leaves)
 //   effects      Strum, Velocity; Arp, Voicing; Repeat, Step seq

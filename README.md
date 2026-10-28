@@ -6,14 +6,16 @@ plan and status are in [PLAN.md](PLAN.md).
 
 ![ChordChimp's editor: the preset bar and Key, Scale, Chord Group, Progression and Octave along the top; seven chord pads with the black keys' five above them, three of them lit; the effects as six cards (Strum, Velocity, Arp, Voicing, Repeat, Step seq with its steps); the output keyboard along the bottom](docs/screenshot.png)
 
-**Status:** Phases 0-7 done: every white key plays its chord in any octave (no Smart Scale, split,
-shifters, Instance Sync, look-ahead, Chord Editor or MIDI import), with 26 parameters, Chordism's
+**Status:** Phases 0-8 done: every white key plays its chord in any octave (no Smart Scale, split,
+shifters, Instance Sync, look-ahead, Chord Editor or MIDI import), with 27 parameters, Chordism's
 22 factory presets and a single-page editor (Phase 3). Hardening and install are done (Phase 4),
 and it's checked in Live 12.4.7 next to Chordism (Phase 5). In Live the editor opens, resizes,
 and keeps its size and keyboard setting with the set. Export drag-out is back (Phase 6): drag the
 top bar's Export handle into a track for the last bars played, up to 32. The black keys play
 borrowed chords (Phase 7): C# bII, D# bIII, F# #iv°, G# bVI, A# bVII, from the parallel modes,
-with their own row of pads.
+with their own row of pads. Key octave (Phase 8) chooses whether the octave you play moves the
+chord (Follow) or not (Ignore, the default). In a set saved before Phase 8, Live lists Key octave
+among the device's parameters only once ChordChimp is put on the track again.
 
 ## Install
 

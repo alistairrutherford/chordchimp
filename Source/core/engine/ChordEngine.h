@@ -8,6 +8,8 @@
 //   white key     → the slot's chord: degree from the Progression, shape from the Chord Group,
 //                   Key, Scale, Chord Octave, then the effect chain (one performance per key)
 //   black key     → its borrowed chord (ChordGroups.h), the same way
+//   Key octave    → Ignore: any octave plays the same; Follow: the key's octave from C at 48
+//                   moves the chord (ChordFx.h)
 //   Enable off    → input passes through unchanged
 //
 // Whenever the chords change while chord keys are held (a parameter), each held key whose chord
@@ -39,6 +41,7 @@ namespace chordchimp
         ChordGroup group = ChordGroup::Triads;
         Progression progression = Progression::Diatonic;
         int chordOctave = 0;
+        bool followKeyOctave = false;     // Key octave: Follow (Phase 8)
         bool testPattern = false;
         int outputChannel = 0;            // 0..15
         ChordFxSettings fx;
@@ -179,6 +182,7 @@ namespace chordchimp
         {
             const EngineSettings old = current;
             current = s;
+            performer.setFollowKeyOctave (s.followKeyOctave);
 
             if (s.enabled != old.enabled)
             {
@@ -187,9 +191,12 @@ namespace chordchimp
                 return;
             }
 
-            // Held chords follow parameter changes, and the effects follow theirs.
+            // Held chords follow parameter changes, and the effects follow theirs. A Key octave
+            // change moves every held chord.
             std::array<bool, numChordSlots> changed {};
             refreshChords (0, nullptr, &changed);
+            if (s.followKeyOctave != old.followKeyOctave)
+                changed.fill (true);
             performer.applySettings (s.fx, s.outputChannel, changed, 0, out);
         }
 

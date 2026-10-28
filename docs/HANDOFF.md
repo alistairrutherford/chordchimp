@@ -11,10 +11,11 @@ chord, and keeps Chordism's 22 factory presets. JUCE 8.0.14, C++17, Projucer + x
 
 ## State
 
-- **Phases 0-7 of the plan are done** and committed on `main`, one commit per phase, with the
+- **Phases 0-8 of the plan are done** and committed on `main`, one commit per phase, with the
   README screenshot (`5a35ac7`) and the editor-in-Live check and size fix (`1ea392c`) in between.
   Phase 6 brought Export drag-out back (open question 3); Phase 7 gave the black keys borrowed
-  chords (open question 1). Both were checked in Live together.
+  chords (open question 1). Both were checked in Live together. Phase 8 added the Key octave
+  switch (open question 2).
 - **Remote:** `origin` is `github.com/alistairrutherford/chordchimp`, and CI
   (`.github/workflows/build.yml`) has passed there.
 - Installed: `ChordChimp.vst3` and `ChordChimp.app` (by `Tools/install.sh`), next to Chordism.
@@ -35,8 +36,8 @@ chord, and keeps Chordism's 22 factory presets. JUCE 8.0.14, C++17, Projucer + x
     `progressionFromChoice`); Custom plays as Diatonic.
   - `midiio/{ExportRecorder, MidiFile}.h`: Chordism's Export, unchanged but for names (no
     `ChordImporter`).
-- **Plug-in** (`Source/plugin`): `Parameters.*` (26 parameters, `params::numParameters`, all with
-  Chordism's IDs; `params::fromChordism` converts a Chordism preset's Progression value),
+- **Plug-in** (`Source/plugin`): `Parameters.*` (27 parameters, `params::numParameters`, with
+  Chordism's IDs but for `keyOctave`; `params::fromChordism` converts a Chordism preset's Progression value),
   `ChordChimpProcessor.*`, `FactoryPresets.*`, `PresetManager.*` (also reads Chordism preset
   files; user presets in `~/Music/ChordChimp/Presets`).
 - **UI** (`Source/ui`): one page, 780×560, resizable 720×520 to 1400×960. Top bar, a row of
@@ -68,6 +69,8 @@ Tools/install.sh --validate   # build, install, then pluginval
   take from the check after reopening.
 - With Test pattern on, each finished take is also written to
   `~/Music/ChordChimp/Exports/Test take.mid` (Phase 6), for comparing takes without recording.
+- Live keeps a plug-in's parameter list with the device in a set: after a new parameter, a
+  ChordChimp saved earlier doesn't list it until it's put on the track again (Phase 8).
 - To drag Export into Live by computer use, use a real click-drag; separate mouse moves with the
   button down don't start the drop. Live sizes the dropped clip to its notes.
 - The editor check (PLAN.md §11 *Editor in Live*; it found and fixed the editor reopening at
@@ -88,8 +91,7 @@ Tools/install.sh --validate   # build, install, then pluginval
 
 1. **Black keys:** answered 2026-10-28: borrowed chords by modal mixture, with their own pads
    (Phase 7).
-2. **Key octave:** ignored, with Chord Octave setting the register (current), or should the
-   octave played move the chord?
+2. **Key octave:** answered 2026-10-28: a switch, Ignore (default) or Follow (Phase 8).
 3. **Dropped features:** answered 2026-10-28: Export drag-out came back (Phase 6); Custom and
    QWERTY stay out.
 4. **Bright Melody:** keep the name (it now has a chord arp in place of the melody), rename it,

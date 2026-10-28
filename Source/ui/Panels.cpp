@@ -52,18 +52,19 @@ namespace chordchimp::ui
     //==========================================================================
     GlobalRow::GlobalRow (Bindings& b)
         : key (b, params::key), scale (b, params::scale), group (b, params::chordGroup), progression (b, params::progression),
-          octave (b, params::chordOctave, "Octave")
+          octave (b, params::chordOctave, "Octave"), keyOctave (b, params::keyOctave, "Key octave")
     {
         progression.setTooltip ("Which chord each white key plays");
         octave.setTooltip ("Chord Octave: the register the chords play in");
-        for (auto* c : { &key, &scale, &group, &progression, &octave })
+        keyOctave.setTooltip ("Key octave. Ignore: every octave plays the same chord. Follow: the octave you play moves the chord (C2 plays it as written)");
+        for (auto* c : { &key, &scale, &group, &progression, &octave, &keyOctave })
             addAndMakeVisible (c);
     }
 
     void GlobalRow::resized()
     {
         auto r = getLocalBounds();
-        const struct { ParamControl* c; int w; } cols[] = { { &key, 70 }, { &scale, 150 }, { &group, 130 }, { &progression, 180 }, { &octave, 110 } };
+        const struct { ParamControl* c; int w; } cols[] = { { &key, 70 }, { &scale, 150 }, { &group, 130 }, { &progression, 180 }, { &octave, 110 }, { &keyOctave, 96 } };
         int total = 0;
         for (const auto& c : cols)
             total += c.w;

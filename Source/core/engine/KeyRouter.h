@@ -1,7 +1,7 @@
 // Routes incoming notes (PLAN.md §3.1). There is no split: the whole keyboard plays chords.
 //
-//   white C D E F G A B  → chord slots 0–6, in every octave (the octave doesn't matter;
-//                          Chord Octave sets the register)
+//   white C D E F G A B  → chord slots 0–6, in every octave (the octave picks no other
+//                          chord; with Key octave Follow it moves the chord, ChordFx.h)
 //   black C# D# F# G# A# → chord slots 7–11, the borrowed chords (ChordGroups.h; Phase 7)
 #pragma once
 
