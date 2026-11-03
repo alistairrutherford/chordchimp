@@ -16,6 +16,7 @@
         <FILE id="csF002" name="ChordModel.h" compile="0" resource="0" file="Source/core/theory/ChordModel.h"/>
         <FILE id="csF003" name="ChordGroups.h" compile="0" resource="0" file="Source/core/theory/ChordGroups.h"/>
         <FILE id="csF019" name="Progressions.h" compile="0" resource="0" file="Source/core/theory/Progressions.h"/>
+        <FILE id="ccF111" name="KeyProfiles.h" compile="0" resource="0" file="Source/core/theory/KeyProfiles.h"/>
         <FILE id="csF021" name="ChordNamer.h" compile="0" resource="0" file="Source/core/theory/ChordNamer.h"/>
         <FILE id="csF022" name="RomanNumeral.h" compile="0" resource="0" file="Source/core/theory/RomanNumeral.h"/>
         <FILE id="csF062" name="VoiceLeading.h" compile="0" resource="0" file="Source/core/theory/VoiceLeading.h"/>
@@ -23,6 +24,7 @@
       <GROUP id="csGrp1" name="core/engine">
         <FILE id="ccF101" name="ChordEngine.h" compile="0" resource="0" file="Source/core/engine/ChordEngine.h"/>
         <FILE id="ccF102" name="KeyRouter.h" compile="0" resource="0" file="Source/core/engine/KeyRouter.h"/>
+        <FILE id="ccF110" name="KeyListener.h" compile="0" resource="0" file="Source/core/engine/KeyListener.h"/>
         <FILE id="csF004" name="MidiEvents.h" compile="0" resource="0" file="Source/core/engine/MidiEvents.h"/>
         <FILE id="csF005" name="Transport.h" compile="0" resource="0" file="Source/core/engine/Transport.h"/>
         <FILE id="csF007" name="VoiceTracker.h" compile="0" resource="0" file="Source/core/engine/VoiceTracker.h"/>

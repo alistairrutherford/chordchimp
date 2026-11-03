@@ -6,7 +6,7 @@ plan and status are in [PLAN.md](PLAN.md).
 
 ![ChordChimp's editor: the preset bar and Key, Scale, Chord Group, Progression and Octave along the top; seven chord pads with the black keys' five above them, three of them lit; the effects as six cards (Strum, Velocity, Arp, Voicing, Repeat, Step seq with its steps); the output keyboard along the bottom](docs/screenshot.png)
 
-**Status:** Phases 0-8 done: every white key plays its chord in any octave (no Smart Scale, split,
+**Status:** Phases 0-9 done: every white key plays its chord in any octave (no Smart Scale, split,
 shifters, Instance Sync, look-ahead, Chord Editor or MIDI import), with 27 parameters, Chordism's
 22 factory presets and a single-page editor (Phase 3). Hardening and install are done (Phase 4),
 and it's checked in Live 12.4.7 next to Chordism (Phase 5). In Live the editor opens, resizes,
