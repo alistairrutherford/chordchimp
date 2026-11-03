@@ -20,6 +20,8 @@ namespace chordchimp::ui
     {
         ChordDisplay display;             // the chords, their context, last slot
         EngineSettings settings;          // the parameters now
+        params::AnalyseMode analyse = params::AnalyseMode::Off;
+        KeyGuess guess;                   // the key heard in Analyse mode
     };
 
     // Piano geometry for notes lo..hi (both white keys) across a width.

@@ -15,6 +15,18 @@ namespace chordchimp
                 if (child.hasType ("PARAM") && child.hasProperty ("value") && ! std::isfinite ((double) child.getProperty ("value")))
                     child.removeProperty ("value", nullptr);
         }
+
+        // Analyse isn't saved (docs/KEY_DETECTION_PLAN.md K5.4): a set saved mid-analysis opens
+        // playing chords.
+        void dropAnalyse (juce::ValueTree& tree)
+        {
+            tree.removeChild (tree.getChildWithProperty ("id", params::analyse), nullptr);
+        }
+
+        const char* analyseName (params::AnalyseMode m)
+        {
+            return m == params::AnalyseMode::Listen ? "Listen" : (m == params::AnalyseMode::UseGuess ? "Use guess" : "Off");
+        }
     }
 
     juce::AudioProcessor::BusesProperties ChordChimpProcessor::makeBuses()
@@ -179,6 +191,7 @@ namespace chordchimp
 
         publishNoteStates();
         lastChordSlot.store (engine.getLastChordSlot(), std::memory_order_relaxed);
+        keyGuess.store (engine.getKeyGuess().pack(), std::memory_order_relaxed);
         soundingNotes.store (engine.getVoices().soundingNotes(), std::memory_order_relaxed);
         transportPlaying.store (transport.playing, std::memory_order_relaxed);
 
@@ -225,9 +238,14 @@ namespace chordchimp
         if (const int program = pendingProgram.exchange (-1); program >= 0)
             loadProgram (program);
 
-        // The test rig's takes, for checks in Live.
+        // The host (or the bridge) asked for the guess.
+        if (snapshot.analyseMode() == params::AnalyseMode::UseGuess)
+            applyGuess();
+
+        // The test rig's takes and guesses, for checks in Live.
         if (snapshot.engineSettings().testPattern)
         {
+            writeHeardKey();
             const auto info = recorder.info();
             if (info.take != 0 && ! info.recording && info.take != testTakeWritten && info.completedBars() > 0)
             {
@@ -236,6 +254,74 @@ namespace chordchimp
                 writeTake (testTakeFile(), error);
             }
         }
+    }
+
+    //==========================================================================
+    // Key detection.
+
+    void ChordChimpProcessor::applyGuess()
+    {
+        const KeyGuess g = readKeyGuess();
+        const auto s = snapshot.engineSettings();
+
+        // The parameters that change, set together: every gesture begins, then every value,
+        // then every gesture ends, so a host can make it one undo step.
+        std::array<std::pair<juce::RangedAudioParameter*, float>, 3> changes {};
+        size_t n = 0;
+        const auto change = [&] (const char* id, float plain)
+        {
+            if (auto* p = state.getParameter (id))
+                if (const float v = p->convertTo0to1 (plain); std::abs (p->getValue() - v) > 1.0e-6f)
+                    changes[n++] = { p, v };
+        };
+        if (g.has())
+        {
+            change (params::key, (float) g.tonic);
+            change (params::scale, (float) (int) scaleForGuess (s.scale, g.minor));
+            change (params::analyse, (float) params::AnalyseMode::Off);
+        }
+        else
+        {
+            change (params::analyse, (float) params::AnalyseMode::Listen);   // nothing to use yet: keep listening
+        }
+        for (size_t i = 0; i < n; ++i) changes[i].first->beginChangeGesture();
+        for (size_t i = 0; i < n; ++i) changes[i].first->setValueNotifyingHost (changes[i].second);
+        for (size_t i = 0; i < n; ++i) changes[i].first->endChangeGesture();
+    }
+
+    juce::File ChordChimpProcessor::heardKeyFile()
+    {
+        return testTakeFile().getSiblingFile ("Heard key.json");
+    }
+
+    void ChordChimpProcessor::writeHeardKey()
+    {
+        const KeyGuess g = readKeyGuess();
+        const auto mode = snapshot.analyseMode();
+        if (g.pack() == heardKeyWritten && (int) mode == heardModeWritten)
+            return;
+        heardKeyWritten = g.pack();
+        heardModeWritten = (int) mode;
+
+        const auto keyObject = [] (int tonic, bool minor, int fit)
+        {
+            auto* o = new juce::DynamicObject();
+            o->setProperty ("key", guessKeyName (tonic, minor));
+            o->setProperty ("mode", minor ? "minor" : "major");
+            o->setProperty ("fit", fit / 100.0);
+            return o;
+        };
+        auto* root = g.has() ? keyObject (g.tonic, g.minor, g.fit) : new juce::DynamicObject();
+        juce::var json (root);
+        root->setProperty ("analyse", analyseName (mode));
+        root->setProperty ("state", g.state == GuessState::Confident ? "confident" : (g.state == GuessState::Tentative ? "tentative" : "none"));
+        if (g.has() && g.runnerUpTonic >= 0)
+            root->setProperty ("runnerUp", juce::var (keyObject (g.runnerUpTonic, g.runnerUpMinor, g.runnerUpFit)));
+        root->setProperty ("notes", g.notes);
+
+        const auto file = heardKeyFile();
+        file.getParentDirectory().createDirectory();
+        file.replaceWithText (juce::JSON::toString (json));
     }
 
     void ChordChimpProcessor::notifyStateChanged()
@@ -360,6 +446,7 @@ namespace chordchimp
     void ChordChimpProcessor::getStateInformation (juce::MemoryBlock& destData)
     {
         auto tree = state.copyState();
+        dropAnalyse (tree);
         tree.appendChild (uiState.createCopy(), nullptr);
         tree.setProperty ("program", currentProgram.load(), nullptr);
         tree.setProperty ("presetName", presetName, nullptr);
@@ -388,6 +475,7 @@ namespace chordchimp
         }
         restoringState = false;
         dropNonFiniteValues (tree);
+        dropAnalyse (tree);
 
         pendingProgram = -1;              // a restore replaces a program change still waiting
         state.replaceState (tree);

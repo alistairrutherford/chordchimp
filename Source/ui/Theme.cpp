@@ -69,7 +69,10 @@ namespace chordchimp::ui
 
     void LookAndFeel::positionComboBoxText (juce::ComboBox& box, juce::Label& label)
     {
-        label.setBounds (4, 1, box.getWidth() - 20, box.getHeight() - 2);
+        // 3 px each side, not a Label's 5: the globals row fits its longest choices at 720 px
+        // (docs/KEY_DETECTION_PLAN.md K5.1).
+        label.setBounds (4, 1, box.getWidth() - comboArrowWidth, box.getHeight() - 2);
+        label.setBorderSize ({ 1, comboTextInset, 1, comboTextInset });
         label.setFont (getComboBoxFont (box));
     }
 

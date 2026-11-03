@@ -10,6 +10,11 @@
 //
 // An ExportRecorder keeps what ChordChimp sends while the host plays, for the Export drag-out
 // (PLAN.md §11, Phase 6).
+//
+// Key detection (docs/KEY_DETECTION_PLAN.md): in Analyse mode the engine guesses the input's
+// key; the guess is published as one packed atomic (keyGuess). Using it (applyGuess) sets Key
+// and Scale on the message thread: from the editor's click, or from the timer when the host has
+// set Analyse to Use guess. Analyse isn't saved with the state.
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -112,10 +117,22 @@ namespace chordchimp
         // Live through the bridge).
         static juce::File testTakeFile();
 
+        // Key detection. The guess (written by the audio thread each block; any thread reads it).
+        // applyGuess (message thread): with a guess, Key = its tonic, Scale = scaleForGuess and
+        // Analyse = Off, as one set of gestures; without one, Analyse = Listen.
+        KeyGuess readKeyGuess() const noexcept { return KeyGuess::unpack (keyGuess.load (std::memory_order_relaxed)); }
+        params::AnalyseMode analyseMode() const noexcept { return snapshot.analyseMode(); }
+        void applyGuess();
+
+        // While the Test pattern is on, the guess is also written here when it changes (for the
+        // bridge's checks in Live).
+        static juce::File heardKeyFile();
+
         // Status for the editor and tests (written by the audio thread).
         std::atomic<int> lastChordSlot { -1 };
         std::atomic<int> soundingNotes { 0 };
         std::atomic<bool> transportPlaying { false };
+        std::atomic<uint64_t> keyGuess { KeyGuess().pack() };
 
     private:
         using NoteBits = std::array<std::atomic<uint64_t>, 2>;
@@ -156,6 +173,9 @@ namespace chordchimp
         ExportRecorder recorder;
         bool writeTake (const juce::File& file, juce::String& error) const;
         uint32_t testTakeWritten = 0;
+        uint64_t heardKeyWritten = 0;
+        int heardModeWritten = -1;
+        void writeHeardKey();
         juce::String presetName { "Init" }, presetCategory { "Init" };
         std::atomic<int> currentProgram { 0 }, pendingProgram { -1 };
         void loadProgram (int index);

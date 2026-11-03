@@ -36,6 +36,7 @@ namespace chordchimp::ui
         void drawButtonText (juce::Graphics&, juce::TextButton&, bool highlighted, bool down) override;
         void drawComboBox (juce::Graphics&, int width, int height, bool down, int bx, int by, int bw, int bh, juce::ComboBox&) override;
         juce::Font getComboBoxFont (juce::ComboBox&) override { return font (13.0f); }
+        static constexpr int comboArrowWidth = 20, comboTextInset = 3;   // a combo box's text has its width less these
         juce::Font getTextButtonFont (juce::TextButton&, int) override { return font (12.5f, true); }
         juce::Font getLabelFont (juce::Label&) override { return font (12.0f); }
         juce::Font getPopupMenuFont() override { return font (14.0f); }

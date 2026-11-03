@@ -64,7 +64,7 @@ namespace chordchimp::params
 
     bool isPresetParameter (const juce::String& paramId)
     {
-        for (const char* excluded : { enable, testPattern, keyOctave })
+        for (const char* excluded : { enable, testPattern, keyOctave, analyse })
             if (paramId == excluded)
                 return false;
         return true;
@@ -132,6 +132,9 @@ namespace chordchimp::params
 
         // ChordChimp Phase 8: Key octave. Appended, never reordered; Ignore is the old behaviour.
         layout.add (std::make_unique<AudioParameterChoice> (id (keyOctave), "Key octave", StringArray { "Ignore", "Follow" }, 0));
+
+        // Key detection: Analyse. Appended, never reordered.
+        layout.add (std::make_unique<AudioParameterChoice> (id (analyse), "Analyse", StringArray { "Off", "Listen", "Use guess" }, 0));
         return layout;
     }
 
@@ -144,6 +147,7 @@ namespace chordchimp::params
           testPattern (state.getRawParameterValue (params::testPattern)),
           progression (state.getRawParameterValue (params::progression)),
           keyOctaveParam (state.getRawParameterValue (params::keyOctave)),
+          analyseParam (state.getRawParameterValue (params::analyse)),
           fxStack (state.getRawParameterValue (params::stack)),
           fxStrum (state.getRawParameterValue (params::strum)),
           fxStrumRate (state.getRawParameterValue (params::strumRate)),
@@ -164,7 +168,7 @@ namespace chordchimp::params
           fxHold (state.getRawParameterValue (params::hold)),
           fxVoiceLeading (state.getRawParameterValue (params::voiceLeading))
     {
-        jassert (enable && keyParam && scale && group && chordOctave && testPattern && progression && keyOctaveParam);
+        jassert (enable && keyParam && scale && group && chordOctave && testPattern && progression && keyOctaveParam && analyseParam);
         jassert (fxStack && fxStrum && fxStrumRate && fxArp && fxArpRate && fxArpRange && fxArpGate && fxRepeat && fxRepeatRate
                  && fxRepeatGate && fxSeq && fxSeqPattern && fxSeqSwing && fxSeqGate && fxVelocity && fxVelocityPeak
                  && fxVelocityRange && fxHold && fxVoiceLeading);
@@ -205,6 +209,8 @@ namespace chordchimp::params
         return (Scale) juce::jlimit (0, numScales - 1, whole (scale));
     }
 
+    AnalyseMode Snapshot::analyseMode() const noexcept { return (AnalyseMode) choice (analyseParam, 3); }
+
     int Snapshot::key() const noexcept { return juce::jlimit (0, numKeys - 1, whole (keyParam)); }
 
     EngineSettings Snapshot::engineSettings() const noexcept
@@ -219,6 +225,7 @@ namespace chordchimp::params
 
         s.progression = progressionFromChoice (whole (progression));
         s.followKeyOctave = choice (keyOctaveParam, 2) == 1;
+        s.analysing = analyseMode() != AnalyseMode::Off;
         s.fx = chordFx();
         return s;
     }

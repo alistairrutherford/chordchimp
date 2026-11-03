@@ -11,7 +11,7 @@ namespace chordchimp
     ChordChimpEditor::ChordChimpEditor (ChordChimpProcessor& p)
         : AudioProcessorEditor (p), processor (p), bindings (p.state),
           topBar (p, bindings, [this] (bool shown) { showKeyboard (shown); }),
-          globals (bindings), chordPads (p), effects (bindings), outputKeys (p)
+          globals (p, bindings), chordPads (p), effects (bindings), outputKeys (p)
     {
         setLookAndFeel (&lookAndFeel);
         for (auto* c : std::initializer_list<juce::Component*> { &topBar, &globals, &chordPads, &effects, &outputKeys })
@@ -84,7 +84,10 @@ namespace chordchimp
         ui::UiModel m;
         m.display = processor.readDisplay();
         m.settings = processor.currentSettings();
+        m.analyse = processor.analyseMode();
+        m.guess = processor.readKeyGuess();
 
+        globals.refresh (m);
         chordPads.refresh (m);
         outputKeys.refresh (m);
         effects.refresh (m);

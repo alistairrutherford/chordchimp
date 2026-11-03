@@ -48,17 +48,24 @@ namespace chordchimp::params
     // Not in presets: it's how the player plays, like Enable.
     inline constexpr const char* keyOctave     = "keyOctave";
 
+    // Key detection (appended; docs/KEY_DETECTION_PLAN.md K5.4): Off, Listen (no chords; the
+    // input passes through and its key is guessed), Use guess (a command: the processor's timer
+    // sets Key and Scale to the guess and Analyse back to Off). Not in presets, not saved.
+    inline constexpr const char* analyse       = "analyse";
+    enum class AnalyseMode { Off, Listen, UseGuess };
+
     // ChordChimp Phase 1 (2026-10-25) removed Chordism's Split, Mute CG / SS, the shifters and
     // Test shifter, every Smart Scale and pattern parameter, Test smart, Sync group and
     // Look-ahead; Phase 2 its Custom 1-7, Strum time, Seq sustain and the four step patterns
     // (PLAN.md §3.5). A saved state's or preset's values for them are ignored.
-    constexpr int numParameters = 27;
+    constexpr int numParameters = 28;
 
     // A Chordism preset's tree, made ChordChimp's: the Progression value becomes a choice
     // (Chordism's Custom: Diatonic). The other kept values mean the same.
     void fromChordism (juce::ValueTree& tree);
 
-    // Parameters a preset doesn't touch: Enable, Key octave and the test rig (PresetManager).
+    // Parameters a preset doesn't touch: Enable, Key octave, Analyse and the test rig
+    // (PresetManager).
     bool isPresetParameter (const juce::String& paramId);
 
     juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
@@ -74,6 +81,7 @@ namespace chordchimp::params
         int key() const noexcept;
         Scale currentScale() const noexcept;
         ChordFxSettings chordFx() const noexcept;
+        AnalyseMode analyseMode() const noexcept;
 
     private:
         std::atomic<float>* enable;
@@ -84,6 +92,7 @@ namespace chordchimp::params
         std::atomic<float>* testPattern;
         std::atomic<float>* progression;
         std::atomic<float>* keyOctaveParam;
+        std::atomic<float>* analyseParam;
 
         std::atomic<float>* fxStack;
         std::atomic<float>* fxStrum;

@@ -1,7 +1,8 @@
 // The editor (PLAN.md §5): one page, about 780×560 and resizable.
 //
 //   top bar      the name · On · presets · Export · Keys
-//   globals      Key · Scale · Chord Group · Progression · Octave · Key octave
+//   globals      Key · Heard (Analyse, the key heard) · Scale · Chord Group · Progression ·
+//                Octave · Key octave
 //   chord pads   the seven white-key chords and the five black-key ones above them (they take
 //                the space the rest leaves)
 //   effects      Strum, Velocity; Arp, Voicing; Repeat, Step seq
@@ -36,6 +37,7 @@ namespace chordchimp
         void showKeyboard (bool shown);
         ui::ChordPads& getChordPads() noexcept { return chordPads; }
         const ui::ExportHandle& getExportHandle() const noexcept { return topBar.exportHandle; }
+        ui::GlobalRow& getGlobals() noexcept { return globals; }
 
         static constexpr int defaultWidth = 780, defaultHeight = 560;
         static constexpr int minWidth = 720, minHeight = 520, maxWidth = 1400, maxHeight = 960;

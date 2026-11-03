@@ -11,6 +11,8 @@
 //   Key octave    → Ignore: any octave plays the same; Follow: the key's octave from C at 48
 //                   moves the chord (ChordFx.h)
 //   Enable off    → input passes through unchanged
+//   Analyse       → input passes through unchanged and the KeyListener guesses its key
+//                   (docs/KEY_DETECTION_PLAN.md); no chords, no test pattern
 //
 // Whenever the chords change while chord keys are held (a parameter), each held key whose chord
 // changed is released and replayed. An arp takes the new chord at its next step.
@@ -23,6 +25,7 @@
 #include "../theory/Progressions.h"
 #include "ChordFx.h"
 #include "Clock.h"
+#include "KeyListener.h"
 #include "KeyRouter.h"
 #include "MidiEvents.h"
 #include "TestPattern.h"
@@ -30,6 +33,7 @@
 #include "VoiceTracker.h"
 #include <array>
 #include <atomic>
+#include <cmath>
 
 namespace chordchimp
 {
@@ -43,6 +47,7 @@ namespace chordchimp
         int chordOctave = 0;
         bool followKeyOctave = false;     // Key octave: Follow (Phase 8)
         bool testPattern = false;
+        bool analysing = false;           // Analyse is Listen or Use guess (key detection)
         int outputChannel = 0;            // 0..15
         ChordFxSettings fx;
     };
@@ -57,6 +62,7 @@ namespace chordchimp
                       BlockEvents& out) noexcept
         {
             numSamples = numSamples > 0 ? numSamples : 0;
+            secondsPerSample = t.sampleRate > 0.0 && std::isfinite (t.sampleRate) ? 1.0 / t.sampleRate : 0.0;
             clock.beginBlock (t, numSamples);
             performer.setSegment (0);
 
@@ -86,7 +92,7 @@ namespace chordchimp
                 Transport segmentTransport = t;
                 segmentTransport.ppq = g.ppq;
                 injected.clear();
-                pattern.generate (s.enabled && s.testPattern, segmentTransport, g.end - g.start, injected, g.start);
+                pattern.generate (s.enabled && s.testPattern && ! s.analysing, segmentTransport, g.end - g.start, injected, g.start);
 
                 int j = 0, cursor = g.start, runs = 0;
                 while (true)
@@ -116,6 +122,10 @@ namespace chordchimp
                     handle (*next, numSamples, out);
                 }
             }
+
+            seconds += numSamples * secondsPerSample;
+            if (current.analysing)
+                listener.advance (seconds);
         }
 
         // All notes off now (bypass, transport stop, all-notes-off, destruction).
@@ -124,6 +134,7 @@ namespace chordchimp
             performer.killAll (sample, out);
             voices.releaseAll (sample, out);
             held = {};
+            listener.allUp (timeAt (sample));
             refreshChords (sample, nullptr);
         }
 
@@ -138,6 +149,9 @@ namespace chordchimp
         int getPatternKey() const noexcept { return pattern.getHeldKey(); }
         const ChordPerformer& getPerformer() const noexcept { return performer; }
         const Clock& getClock() const noexcept { return clock; }
+
+        // The key heard in Analyse mode (the last analysis's, until the next one starts).
+        KeyGuess getKeyGuess() const noexcept { return listener.guess(); }
 
         // For the editor: input key `note` is down; a performance of key `note` is playing, held
         // or not.
@@ -184,9 +198,11 @@ namespace chordchimp
             current = s;
             performer.setFollowKeyOctave (s.followKeyOctave);
 
-            if (s.enabled != old.enabled)
+            if (s.enabled != old.enabled || s.analysing != old.analysing)
             {
                 releaseAll (0, out);
+                if (s.analysing && ! old.analysing)
+                    listener.reset();     // each analysis starts afresh
                 performer.applySettings (s.fx, s.outputChannel, {}, 0, out);
                 return;
             }
@@ -205,6 +221,9 @@ namespace chordchimp
             return sample < 0 ? 0 : (sample >= numSamples ? (numSamples > 0 ? numSamples - 1 : 0) : sample);
         }
 
+        // Seconds since the engine started, at `sample` of this block (the KeyListener's clock).
+        double timeAt (int sample) const noexcept { return seconds + sample * secondsPerSample; }
+
         void handle (const MidiEvent& e, int numSamples, BlockEvents& out) noexcept
         {
             const int sample = clampSample (e.sample, numSamples);
@@ -222,12 +241,14 @@ namespace chordchimp
                 h.down = true;
                 h.velocity = (uint8_t) e.velocity();
                 h.channel = (uint8_t) e.channel();
-                h.passThrough = ! current.enabled;
+                h.passThrough = ! current.enabled || current.analysing;
                 h.slot = (int8_t) KeyRouter::slotOf (n);
 
                 if (h.passThrough)
                 {
                     voices.start ((VoiceTracker::Source) n, h.channel, n, h.velocity, sample, out);
+                    if (current.analysing)
+                        listener.noteOn (n, h.velocity, timeAt (sample));
                 }
                 else if (h.slot >= 0)
                 {
@@ -257,7 +278,11 @@ namespace chordchimp
             auto& h = held[(size_t) n];
             h.down = false;
             if (h.passThrough)
+            {
                 voices.release ((VoiceTracker::Source) n, sample, out);
+                if (current.analysing)
+                    listener.noteOff (n, timeAt (sample));
+            }
             else if (h.slot >= 0)
                 performer.release (n, sample, out);   // ends, or is held (Hold)
         }
@@ -274,6 +299,8 @@ namespace chordchimp
         EventBuffer<256> injected;
         int lastChordSlot = -1;
         bool wasPlaying = false;
+        KeyListener listener;
+        double seconds = 0.0, secondsPerSample = 1.0 / 44100.0;
         std::atomic<bool> resetRequested { false };
         ChordPerformer performer { voices, clock, chords, context };
     };

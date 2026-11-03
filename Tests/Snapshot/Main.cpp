@@ -23,6 +23,11 @@
 //                 and oversized blocks, mono output, bypass, a reset and a sample-rate change
 //                 while notes sound, all-notes-off and SysEx from the host, an input flood
 //                 (key-ups get through), and 64 instances made and destroyed
+//   6. Analyse    key detection (docs/KEY_DETECTION_PLAN.md K6.2): from the editor (Analyse, a
+//                 guess, the click that uses it, the cross) and from the host's thread (Listen,
+//                 Use guess, seen by the timer); the test rig's Heard key.json; Analyse isn't
+//                 saved or in presets; the globals fit at every size; no allocation while
+//                 listening; the editor-heard snapshot
 //
 //   ChordChimpSnapshot <fixtures dir> <output dir> [--update | --no-pixels]
 //   ChordChimpSnapshot --bench [seconds]
@@ -40,6 +45,7 @@
 #include <iostream>
 #include <pthread.h>
 #include <random>
+#include <set>
 #include <thread>
 #include <time.h>
 
@@ -695,6 +701,300 @@ namespace
         }
     }
 
+    // A tune in A minor (Frere Jacques in minor, as Mahler's), at 100 bpm: (pitch, beats).
+    const std::vector<std::pair<int, double>>& minorTune()
+    {
+        static const std::vector<std::pair<int, double>> t {
+            { 57, 1 }, { 59, 1 }, { 60, 1 }, { 57, 1 }, { 57, 1 }, { 59, 1 }, { 60, 1 }, { 57, 1 },
+            { 60, 1 }, { 62, 1 }, { 64, 2 }, { 60, 1 }, { 62, 1 }, { 64, 2 },
+            { 64, 0.5 }, { 65, 0.5 }, { 64, 0.5 }, { 62, 0.5 }, { 60, 1 }, { 57, 1 },
+            { 64, 0.5 }, { 65, 0.5 }, { 64, 0.5 }, { 62, 0.5 }, { 60, 1 }, { 57, 1 },
+            { 57, 1 }, { 52, 1 }, { 57, 2 }, { 57, 1 }, { 52, 1 }, { 57, 2 } };
+        return t;
+    }
+
+    // Plays the tune, transposed, into the processor block by block (48 kHz, 512 samples), each
+    // note held for 90% of its beats; returns the note-ons that came out.
+    int playTune (ChordChimpProcessor& p, int transpose = 0)
+    {
+        constexpr double rate = 48000.0, beat = 0.6;
+        std::vector<std::pair<int64_t, juce::MidiMessage>> events;
+        double t = 0.0;
+        for (const auto& [pitch, beats] : minorTune())
+        {
+            events.push_back ({ (int64_t) (t * rate), juce::MidiMessage::noteOn (1, pitch + transpose, (juce::uint8) 100) });
+            events.push_back ({ (int64_t) ((t + 0.9 * beats * beat) * rate), juce::MidiMessage::noteOff (1, pitch + transpose) });
+            t += beats * beat;
+        }
+        std::stable_sort (events.begin(), events.end(), [] (const auto& a, const auto& b) { return a.first < b.first; });
+        juce::AudioBuffer<float> audio (2, 512);
+        juce::MidiBuffer midi;
+        int ons = 0;
+        size_t i = 0;
+        for (int64_t pos = 0; pos < (int64_t) ((t + 3.0) * rate); pos += 512)
+        {
+            midi.clear();
+            for (; i < events.size() && events[i].first < pos + 512; ++i)
+                midi.addEvent (events[i].second, (int) (events[i].first - pos));
+            p.processBlock (audio, midi);
+            for (const auto m : midi)
+                ons += m.getMessage().isNoteOn() ? 1 : 0;
+        }
+        return ons;
+    }
+
+    // Records the gestures and value changes a processor reports, in order.
+    struct GestureWatch : juce::AudioProcessorListener
+    {
+        std::vector<std::pair<char, int>> calls;   // ('b' | 'v' | 'e', parameter index)
+        void audioProcessorParameterChanged (juce::AudioProcessor*, int i, float) override { calls.push_back ({ 'v', i }); }
+        void audioProcessorChanged (juce::AudioProcessor*, const ChangeDetails&) override {}
+        void audioProcessorParameterChangeGestureBegin (juce::AudioProcessor*, int i) override { calls.push_back ({ 'b', i }); }
+        void audioProcessorParameterChangeGestureEnd (juce::AudioProcessor*, int i) override { calls.push_back ({ 'e', i }); }
+
+        // Every parameter in `ids` began, changed and ended, all the beginnings first and all
+        // the ends last.
+        bool together (ChordChimpProcessor& p, std::initializer_list<const char*> ids) const
+        {
+            std::set<int> want;
+            for (const char* id : ids)
+                if (auto* param = dynamic_cast<juce::AudioProcessorParameterWithID*> (p.state.getParameter (id)))
+                    want.insert (param->getParameterIndex());
+            std::set<int> b, v, e;
+            int phase = 0;
+            for (const auto& [kind, i] : calls)
+            {
+                const int k = kind == 'b' ? 0 : (kind == 'v' ? 1 : 2);
+                if (k < phase)
+                    return false;
+                phase = k;
+                (k == 0 ? b : (k == 1 ? v : e)).insert (i);
+            }
+            return b == want && v == want && e == want;
+        }
+    };
+
+    void fromAnotherThread (ChordChimpProcessor& p, const char* id, float plain)
+    {
+        std::thread host ([&] { set (p, id, plain); });
+        host.join();
+    }
+
+    void runTimers (int ms = 200) { juce::MessageManager::getInstance()->runDispatchLoopUntil (ms); }
+
+    void testAnalyse (const juce::File& fixtures, const juce::File& out, bool update)
+    {
+        std::cout << "== Analyse: from the editor ==\n";
+        {
+            auto p = std::make_unique<ChordChimpProcessor>();
+            p->prepareToPlay (48000.0, 512);
+            std::unique_ptr<juce::AudioProcessorEditor> base (p->createEditorIfNeeded());
+            auto* editor = dynamic_cast<ChordChimpEditor*> (base.get());
+            auto& heard = editor->getGlobals().heard;
+            editor->refreshNow();
+            const auto idle = heard.getText();
+            heard.click (false);
+            editor->refreshNow();
+            const auto listening = heard.getText();
+            const bool listen = p->analyseMode() == params::AnalyseMode::Listen;
+            const int through = playTune (*p);
+            editor->refreshNow();
+            const auto guess = p->readKeyGuess();
+            check (idle == "Analyse" && listen && listening.startsWith ("Listening") && through == (int) minorTune().size()
+                       && guess.has() && guess.tonic == 9 && guess.minor && heard.getText().startsWith ("A minor")
+                       && heard.getText().endsWith ("%") && ! heard.closeBounds().isEmpty(),
+                   "Analyse, then an A-minor tune: every note passes through, the box shows \"" + heard.getText() + "\"");
+            snapshot (*editor, "editor-heard", fixtures, out, update);
+
+            GestureWatch watch;
+            p->addListener (&watch);
+            heard.click (false);
+            p->removeListener (&watch);
+            block (*p, {});
+            editor->refreshNow();
+            std::set<int> classes;
+            for (const int n : noteOns (block (*p, { juce::MidiMessage::noteOn (1, 48, (juce::uint8) 100) })))
+                classes.insert (n % 12);
+            block (*p, { juce::MidiMessage::noteOff (1, 48) });
+            check ((int) get (*p, params::key) == 9 && (int) get (*p, params::scale) == (int) Scale::NaturalMinor
+                       && p->analyseMode() == params::AnalyseMode::Off && watch.together (*p, { params::key, params::scale, params::analyse })
+                       && classes == std::set<int> { 9, 0, 4 },
+                   "clicking the guess sets Key = A, Scale = Natural Minor and Analyse = Off, as one set of gestures; C then plays A minor");
+            check (heard.getText() == "A minor" && heard.closeBounds().isEmpty(), "back to chords, the box shows the key heard, matching Key (\"" + heard.getText() + "\")");
+
+            heard.click (false);
+            editor->refreshNow();
+            const bool fresh = ! p->readKeyGuess().has() || p->analyseMode() == params::AnalyseMode::Listen;
+            block (*p, {});
+            editor->refreshNow();
+            heard.click (true);
+            editor->refreshNow();
+            check (fresh && ! p->readKeyGuess().has() && p->analyseMode() == params::AnalyseMode::Off && (int) get (*p, params::key) == 9
+                       && heard.getText() == "Analyse",
+                   "Analyse again starts afresh; the cross goes back to chords and leaves Key alone");
+            p->editorBeingDeleted (base.get());
+            base.reset();
+        }
+
+        std::cout << "== Analyse: from the host ==\n";
+        {
+            auto p = std::make_unique<ChordChimpProcessor>();
+            p->prepareToPlay (48000.0, 512);
+            std::unique_ptr<juce::AudioProcessorEditor> base (p->createEditorIfNeeded());
+            auto* editor = dynamic_cast<ChordChimpEditor*> (base.get());
+            fromAnotherThread (*p, params::analyse, (float) params::AnalyseMode::Listen);
+            editor->refreshNow();
+            const bool follows = editor->getGlobals().heard.getText().startsWith ("Listening");
+            playTune (*p);
+            fromAnotherThread (*p, params::analyse, (float) params::AnalyseMode::UseGuess);
+            const bool waits = (int) get (*p, params::key) == 0;
+            runTimers();
+            check (follows && waits && (int) get (*p, params::key) == 9 && (int) get (*p, params::scale) == (int) Scale::NaturalMinor
+                       && p->analyseMode() == params::AnalyseMode::Off,
+                   "the host sets Listen (the box follows), then Use guess: the timer sets Key = A, Scale = Natural Minor, Analyse = Off");
+
+            // From Dorian, a D-minor guess keeps Dorian.
+            set (*p, params::scale, (float) (int) Scale::Dorian);
+            fromAnotherThread (*p, params::analyse, (float) params::AnalyseMode::Listen);
+            block (*p, {});
+            playTune (*p, 5);
+            fromAnotherThread (*p, params::analyse, (float) params::AnalyseMode::UseGuess);
+            runTimers();
+            check ((int) get (*p, params::key) == 2 && (int) get (*p, params::scale) == (int) Scale::Dorian && p->analyseMode() == params::AnalyseMode::Off,
+                   "a D-minor guess on Dorian sets Key = D and keeps Dorian");
+            p->editorBeingDeleted (base.get());
+            base.reset();
+
+            auto q = std::make_unique<ChordChimpProcessor>();
+            q->prepareToPlay (48000.0, 512);
+            set (*q, params::key, 4.0f);
+            fromAnotherThread (*q, params::analyse, (float) params::AnalyseMode::UseGuess);
+            block (*q, {});
+            runTimers();
+            check ((int) get (*q, params::key) == 4 && q->analyseMode() == params::AnalyseMode::Listen,
+                   "Use guess with nothing heard leaves Key alone and listens");
+        }
+
+        std::cout << "== Analyse: the test rig's file ==\n";
+        {
+            const auto file = ChordChimpProcessor::heardKeyFile();
+            file.deleteFile();
+            auto p = std::make_unique<ChordChimpProcessor>();
+            p->prepareToPlay (48000.0, 512);
+            set (*p, params::analyse, (float) params::AnalyseMode::Listen);
+            playTune (*p);
+            runTimers();
+            const bool notWritten = ! file.existsAsFile();
+            set (*p, params::testPattern, 1.0f);
+            runTimers();
+            const auto json = juce::JSON::parse (file);
+            check (notWritten && json["analyse"] == "Listen" && json["state"] == "confident" && json["key"] == "A" && json["mode"] == "minor"
+                       && (double) json["fit"] > 0.7 && json["runnerUp"].isObject() && (int) json["notes"] == (int) minorTune().size(),
+                   "with Test pattern on, the guess is written to " + file.getFullPathName() + ": " + juce::JSON::toString (json, true));
+            set (*p, params::analyse, (float) params::AnalyseMode::UseGuess);
+            runTimers();
+            const auto after = juce::JSON::parse (file);
+            check (after["analyse"] == "Off" && (int) get (*p, params::key) == 9, "after Use guess the file says Analyse is Off");
+        }
+
+        std::cout << "== Analyse: state and presets ==\n";
+        {
+            auto p = std::make_unique<ChordChimpProcessor>();
+            set (*p, params::analyse, (float) params::AnalyseMode::Listen);
+            juce::MemoryBlock saved;
+            p->getStateInformation (saved);
+            auto restored = std::make_unique<ChordChimpProcessor>();
+            restored->setStateInformation (saved.getData(), (int) saved.getSize());
+            const bool notSaved = restored->analyseMode() == params::AnalyseMode::Off;
+            p->applyPreset (PresetManager::factoryTree (3), "Genre", "Preset 3");
+            check (notSaved && p->analyseMode() == params::AnalyseMode::Listen && ! params::isPresetParameter (params::analyse)
+                       && ! p->presetState().getChildWithProperty ("id", params::analyse).isValid(),
+                   "a state saved in Listen opens with Analyse Off; a preset neither holds Analyse nor changes it");
+        }
+
+        std::cout << "== Analyse: the globals fit ==\n";
+        {
+            auto p = std::make_unique<ChordChimpProcessor>();
+            std::unique_ptr<juce::AudioProcessorEditor> base (p->createEditorIfNeeded());
+            auto* editor = dynamic_cast<ChordChimpEditor*> (base.get());
+            auto& globals = editor->getGlobals();
+            const auto comboFont = ui::font (13.0f);
+            for (const auto size : { juce::Point<int> { ChordChimpEditor::minWidth, ChordChimpEditor::minHeight },
+                                     juce::Point<int> { ChordChimpEditor::defaultWidth, ChordChimpEditor::defaultHeight },
+                                     juce::Point<int> { 1200, 800 }, juce::Point<int> { ChordChimpEditor::maxWidth, ChordChimpEditor::maxHeight } })
+            {
+                editor->setSize (size.x, size.y);
+                juce::StringArray problems;
+                juce::Rectangle<int> last;
+                for (auto* child : globals.getChildren())
+                {
+                    if (child->getBounds().intersects (last) || child->getRight() > globals.getWidth())
+                        problems.add ("overlap at " + child->getBounds().toString());
+                    last = child->getBounds();
+                    // A combo box's text has its width less the arrow and the label's insets (Theme.h).
+                    if (auto* box = findChild<juce::ComboBox> (*child))
+                        for (int i = 0; i < box->getNumItems(); ++i)
+                        {
+                            const int room = box->getWidth() - ui::LookAndFeel::comboArrowWidth - 2 * ui::LookAndFeel::comboTextInset;
+                            if (const auto t = box->getItemText (i); juce::GlyphArrangement::getStringWidthInt (comboFont, t) > room)
+                                problems.add ("\"" + t + "\" (" + juce::String (juce::GlyphArrangement::getStringWidthInt (comboFont, t)) + " px) in "
+                                              + juce::String (room) + " px");
+                        }
+                }
+                // The Heard box (while analysing, with its cross): its shortest form always fits, its
+                // longest from the default size up.
+                set (*p, params::analyse, (float) params::AnalyseMode::Listen);
+                editor->refreshNow();
+                auto& heard = globals.heard;
+                if (! heard.fits ("F#m?") || (size.x >= ChordChimpEditor::defaultWidth && ! heard.fits ("Ab major 100%")))
+                    problems.add ("Heard at " + juce::String (heard.getWidth()) + " px");
+                const juce::String form = heard.fits ("Ab major 100%") ? "Ab major 100%" : (heard.fits ("Abm 100%") ? "Abm 100%" : "Abm");
+                set (*p, params::analyse, 0.0f);
+                editor->refreshNow();
+                check (problems.isEmpty(), juce::String (size.x) + " x " + juce::String (size.y) + ": the globals don't overlap and every choice fits; "
+                                               + "the Heard box shows \"" + form + "\"" + (problems.isEmpty() ? juce::String() : ": " + problems.joinIntoString (", ")));
+            }
+        }
+
+        std::cout << "== Analyse: no allocation while listening ==\n";
+        {
+            auto p = std::make_unique<ChordChimpProcessor>();
+            p->prepareToPlay (48000.0, 256);
+            set (*p, params::analyse, (float) params::AnalyseMode::Listen);
+            juce::AudioBuffer<float> audio (2, 256);
+            juce::MidiBuffer midi;
+            midi.ensureSize (1 << 16);
+            std::mt19937 rng (3);
+            int allocations = 0;
+            std::vector<int> down;
+            for (int i = 0; i < 4000; ++i)
+            {
+                midi.clear();
+                if (i % 4 == 0)
+                {
+                    const int note = 48 + (int) (rng() % 36);
+                    midi.addEvent (juce::MidiMessage::noteOn (1, note, (juce::uint8) (1 + rng() % 127)), (int) (rng() % 256));
+                    down.push_back (note);
+                }
+                if (down.size() > 3)
+                {
+                    midi.addEvent (juce::MidiMessage::noteOff (1, down.front()), 255);
+                    down.erase (down.begin());
+                }
+                if (i % 1000 == 999)
+                    set (*p, params::analyse, (float) (i % 2000 == 999 ? params::AnalyseMode::UseGuess : params::AnalyseMode::Listen));
+                const int before = allocCount.load();
+                {
+                    AllocWatch watch;
+                    p->processBlock (audio, midi);
+                }
+                allocations += allocCount.load() - before;
+            }
+            check (allocations == 0 && p->readKeyGuess().notes > 0, "4000 blocks in Listen with notes (and Use guess): "
+                                                                         + juce::String (allocations) + " allocations in processBlock");
+        }
+    }
+
     // processBlock's CPU time: `instances` processors one after another on one thread (as a
     // host's audio thread runs them), for `seconds` of audio at each block size.
     int runBench (double seconds)
@@ -703,9 +1003,9 @@ namespace
         constexpr double rate = 44100.0;
         std::cout << "== Phase 8: CPU per instance (" << instances << " instances, " << seconds << " s of audio at 44.1 kHz, 140 BPM, 2-beat loop) ==\n"
                   << "   scenario         block   mean % of real time   99.9th percentile / worst block (% of a block's duration)\n";
-        const char* names[] = { "idle", "test pattern", "everything on" };
+        const char* names[] = { "idle", "test pattern", "everything on", "listening" };
         double worstMean = 0.0;
-        for (int scenario = 0; scenario < 3; ++scenario)
+        for (int scenario = 0; scenario < 4; ++scenario)
             for (const int blockSize : { 32, 128, 512 })
             {
                 std::vector<std::unique_ptr<ChordChimpProcessor>> procs;
@@ -720,7 +1020,12 @@ namespace
                         set (p, params::testPattern, 1.0f);
                     if (scenario == 2)
                         everythingOn (p);
+                    if (scenario == 3)
+                        set (p, params::analyse, (float) params::AnalyseMode::Listen);   // a tune passing through, analysed
                 }
+                // Listening: sixteenth notes up and down a scale (at 140 BPM, 16 a bar).
+                const int sixteenth = (int) (rate * 60.0 / 140.0 / 4.0);
+                int tuneNote = -1;
                 juce::AudioBuffer<float> audio (2, blockSize);
                 juce::MidiBuffer midi;
                 midi.ensureSize (1 << 16);
@@ -730,9 +1035,21 @@ namespace
                 times.reserve ((size_t) numBlocks * instances);
                 for (int n = 0; n < numBlocks; ++n)
                 {
+                    juce::MidiBuffer tune;
+                    if (scenario == 3)
+                        for (int64_t s = ((int64_t) n * blockSize + sixteenth - 1) / sixteenth * sixteenth; s < (int64_t) (n + 1) * blockSize; s += sixteenth)
+                        {
+                            const int at = (int) (s - (int64_t) n * blockSize);
+                            if (tuneNote >= 0)
+                                tune.addEvent (juce::MidiMessage::noteOff (1, tuneNote), at);
+                            const int step = (int) ((s / sixteenth) % 14);
+                            tuneNote = 60 + scaleOffset (Scale::NaturalMinor, step < 7 ? step : 14 - step);
+                            tune.addEvent (juce::MidiMessage::noteOn (1, tuneNote, (juce::uint8) 100), at);
+                        }
                     for (auto& p : procs)
                     {
                         midi.clear();
+                        midi.addEvents (tune, 0, -1, 0);
                         const auto t0 = std::chrono::steady_clock::now();
                         p->processBlock (audio, midi);
                         const double dt = std::chrono::duration<double> (std::chrono::steady_clock::now() - t0).count();
@@ -1039,6 +1356,7 @@ int main (int argc, char** argv)
 
     testPresets (fixtures);
     testPhase8();
+    testAnalyse (fixtures, out, update);
 
     std::cout << (failures == 0 ? "\nsnapshot: all passed\n" : "\n*** snapshot: " + std::to_string (failures) + " failure(s)\n");
     return failures == 0 ? 0 : 1;

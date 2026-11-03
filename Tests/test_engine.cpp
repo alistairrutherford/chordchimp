@@ -567,6 +567,8 @@ static void testFuzz (uint32_t seed, int blocks, bool fxRun = false)
         }
         // Phase 7: voice leading while notes are held.
         if (chance (0.02)) fx.voiceLeading = chance (0.6) ? VoiceLeadingMode::Smooth : VoiceLeadingMode::Off;
+        // Key detection: Analyse mode on and off while notes are held.
+        if (chance (0.01)) rig.settings.analysing = ! rig.settings.analysing;
 
         if (chance (0.005))
         {

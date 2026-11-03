@@ -1,7 +1,7 @@
 # ChordChimp: Key detection plan
 
-A plan (2026-11-02; revised 2026-11-03 for Analyse mode and the bridge), **its core built
-2026-11-03** (Phase 9; see *As built* below and PLAN.md §11). It adds one
+A plan (2026-11-02; revised 2026-11-03 for Analyse mode and the bridge), **built 2026-11-03**
+(Phases 9 and 10; see *As built* below and PLAN.md §11). It adds one
 feature to ChordChimp as it stands after Phase 8 (`b3c0d55`): **an Analyse mode that stops
 playing chords, listens to the incoming MIDI notes and guesses their key, shows the guess next to
 the Key menu, and sets Key to it in one step: from the editor, or from Live's device parameters
@@ -23,7 +23,8 @@ take (K5.5). Three phases, about 2¾ days (K7).
 
 ### As built (2026-11-03)
 
-The plan below held, with these changes from tuning on the corpus (Phase 9):
+The plan below held, with these changes from tuning on the corpus (Phase 9) and from the layout
+check (Phase 10):
 
 | Plan | Built | Why |
 |---|---|---|
@@ -33,6 +34,7 @@ The plan below held, with these changes from tuning on the corpus (Phase 9):
 | A change after a 0.05 lead for 1.5 s | the same, **or any lead for 4 s** | A wrong early key otherwise stayed forever when the right one led by less than 0.05 |
 | A modulation in about 6-10 s | **within 20 s** (C→G 19.5 s, Am→Cm 15 s via C major) | Close keys cross over after about one half-life; the hold barely matters |
 | Bass weighting only if the corpus asks | **none** | Weighting the lowest note helped ChordChimp's own chords but broke I-V-vi-IV |
+| Column weights for the globals | **sized to their content**: each menu its longest choice, Heard up to its longest guess, the rest by weight; combo text insets 3 px, not 5 | No weights fit both 720 and 780 px; Key's "C#/Db" was already squashed at 720 before this work |
 | Open question 5 | notes **pass through** while listening | The user's answer (2026-11-03) |
 | Open question 8 | **Analyse** | The user's answer (2026-11-03) |
 

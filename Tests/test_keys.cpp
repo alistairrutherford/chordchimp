@@ -1,6 +1,6 @@
 // Key detection tests (docs/KEY_DETECTION_PLAN.md K6.1): the profiles, a corpus of tunes and
 // progressions in every key, ChordChimp's own chords, modulation, silence, ambiguous input,
-// weighting, hysteresis and the scale mapping (the engine's Analyse mode: Phase 10).
+// weighting, hysteresis, the scale mapping, and the engine's Analyse mode.
 #include "TestUtil.h"
 #include "Receiver.h"
 #include "core/engine/ChordEngine.h"
@@ -618,6 +618,222 @@ static void testFuzz()
     check (sane, "200,000 random notes, velocities, key-ups, resets and times (10 minutes and more): weights finite and >= 0, guesses in range");
 }
 
+//==============================================================================
+// The engine's Analyse mode.
+namespace
+{
+    struct Rig
+    {
+        ChordEngine engine;
+        EngineSettings settings;
+        Transport transport { 48000.0, false, 0.0, 120.0, 4, 4 };
+        BlockEvents out;
+        testutil::Receiver rx;
+
+        BlockEvents& run (std::vector<MidiEvent> in, int numSamples = 480)
+        {
+            std::stable_sort (in.begin(), in.end(), [] (const MidiEvent& a, const MidiEvent& b) { return a.sample < b.sample; });
+            out.clear();
+            engine.process (settings, transport, in.data(), (int) in.size(), numSamples, out);
+            rx.feed (out, numSamples);
+            return out;
+        }
+    };
+
+    int notesOnCount (const BlockEvents& out)
+    {
+        int n = 0;
+        for (const auto& e : out)
+            n += e.isNoteOn() ? 1 : 0;
+        return n;
+    }
+
+    // Plays `notes` (seconds) through the engine at `rate` in blocks of `blockSize`; returns
+    // the time each change of the shown key was first seen at a block's end.
+    std::vector<Change> playEngine (Rig& rig, const Notes& notes, double until, double rate, int blockSize)
+    {
+        struct Ev { int64_t sample; bool on; int pitch, velocity; };
+        std::vector<Ev> ev;
+        for (const auto& n : notes)
+        {
+            ev.push_back ({ (int64_t) std::llround (n.start * rate), true, n.pitch, n.velocity });
+            ev.push_back ({ (int64_t) std::llround ((n.start + n.length) * rate), false, n.pitch, 0 });
+        }
+        std::stable_sort (ev.begin(), ev.end(), [] (const Ev& a, const Ev& b) { return a.sample < b.sample || (a.sample == b.sample && ! a.on && b.on); });
+        rig.transport.sampleRate = rate;
+        std::vector<Change> changes;
+        KeyGuess last;
+        size_t i = 0;
+        for (int64_t pos = 0; (double) pos / rate < until; pos += blockSize)
+        {
+            std::vector<MidiEvent> in;
+            for (; i < ev.size() && ev[i].sample < pos + blockSize; ++i)
+                in.push_back (ev[i].on ? MidiEvent::noteOn (0, ev[i].pitch, ev[i].velocity, (int) (ev[i].sample - pos))
+                                       : MidiEvent::noteOff (0, ev[i].pitch, (int) (ev[i].sample - pos)));
+            rig.run (in, blockSize);
+            const auto g = rig.engine.getKeyGuess();
+            if (g.has() && (! last.has() || g.tonic != last.tonic || g.minor != last.minor))
+                changes.push_back ({ (double) (pos + blockSize) / rate, g });
+            last = g.has() ? g : last;
+        }
+        return changes;
+    }
+}
+
+static void testEngine()
+{
+    std::cout << "== engine: Analyse mode ==\n";
+    const auto cases = corpus();
+    const auto& tune = cases[4].notes;    // Greensleeves, A minor
+
+    {
+        Rig rig;
+        playEngine (rig, tune, endOf (tune) + 0.5, 48000.0, 480);
+        check (! rig.engine.getKeyGuess().has() && rig.rx.noteOns > 0, "Analyse off: the keys play chords and nothing is analysed");
+    }
+    {
+        Rig rig;
+        rig.settings.enabled = false;
+        playEngine (rig, tune, endOf (tune) + 0.5, 48000.0, 480);
+        check (! rig.engine.getKeyGuess().has() && rig.rx.noteOns == (int) tune.size(), "Enable off with Analyse off: notes pass through, nothing is analysed");
+    }
+    {
+        Rig rig;
+        rig.settings.analysing = true;
+        playEngine (rig, tune, endOf (tune) + 0.5, 48000.0, 480);
+        const auto g = rig.engine.getKeyGuess();
+        check (g.has() && g.tonic == 9 && g.minor && rig.rx.noteOns == (int) tune.size() && rig.rx.on.empty() && rig.rx.clean(),
+               "Analyse: every note passes through unchanged and the guess is A minor (" + describe (g) + ")");
+
+        // Back to chords: the guess stays until the next analysis; entering Listen again clears it.
+        rig.settings.analysing = false;
+        rig.run ({});
+        const auto kept = rig.engine.getKeyGuess();
+        const auto chord = notesOnCount (rig.run ({ MidiEvent::noteOn (0, 48, 100, 0) }));
+        rig.run ({ MidiEvent::noteOff (0, 48, 0) });
+        rig.settings.analysing = true;
+        rig.run ({});
+        check (kept == g && chord == 3 && ! rig.engine.getKeyGuess().has(), "leaving Analyse keeps the guess and chords play; entering it again starts afresh");
+    }
+    {
+        // Entering Analyse while a chord is held ends it; leaving it while notes pass through ends them.
+        Rig rig;
+        rig.run ({ MidiEvent::noteOn (0, 48, 100, 0) });
+        const int sounding = (int) rig.rx.on.size();
+        rig.settings.analysing = true;
+        rig.run ({});
+        const bool chordEnded = rig.rx.on.empty();
+        rig.run ({ MidiEvent::noteOn (0, 60, 100, 0), MidiEvent::noteOn (0, 64, 100, 10) });
+        const bool through = rig.rx.on.size() == 2;
+        rig.settings.analysing = false;
+        rig.run ({});
+        const bool ended = rig.rx.on.empty();
+        rig.run ({ MidiEvent::noteOff (0, 60, 0), MidiEvent::noteOff (0, 64, 0) });   // their key-ups, after leaving
+        check (sounding == 3 && chordEnded && through && ended && rig.rx.clean() && rig.engine.getVoices().isEmpty(),
+               "entering Analyse ends a held chord; leaving it ends the notes passing through; their later key-ups do nothing");
+    }
+    {
+        // The test pattern is silent while analysing; all-notes-off and a transport stop end
+        // listened notes too.
+        Rig rig;
+        rig.settings.analysing = true;
+        rig.settings.testPattern = true;
+        rig.transport.playing = true;
+        int patternNotes = 0;
+        for (int b = 0; b < 400; ++b)
+        {
+            patternNotes += notesOnCount (rig.run ({}));
+            rig.transport.ppq += 480.0 / rig.transport.samplesPerBeat();
+        }
+        rig.run ({ MidiEvent::noteOn (0, 62, 100, 0) });
+        rig.run ({ MidiEvent::controller (0, 123, 0, 0) });
+        const bool allOff = rig.rx.on.empty();
+        rig.run ({ MidiEvent::noteOn (0, 62, 100, 0) });
+        rig.transport.playing = false;
+        rig.run ({});
+        check (patternNotes == 0 && allOff && rig.rx.on.empty() && rig.rx.clean(),
+               "in Analyse the test pattern is silent; all-notes-off and a transport stop end the notes passing through");
+    }
+
+    // The time base: the same guess at 44.1, 48 and 96 kHz in blocks of 32-2048, and the change
+    // of a modulation at the same time (within an estimate and a block).
+    {
+        const auto& frere = cases[2].notes;
+        Notes mod = append (frere, transpose (frere, 7), endOf (frere) + 0.6);
+        const double until = endOf (mod) + 0.5;
+        Rig reference;
+        reference.settings.analysing = true;
+        const auto ref = playEngine (reference, mod, until, 48000.0, 480);
+        bool same = ref.size() == 2;
+        std::string worst;
+        double worstDelta = 0.0;
+        for (const double rate : { 44100.0, 48000.0, 96000.0 })
+            for (const int blockSize : { 32, 64, 333, 512, 2048 })
+            {
+                Rig rig;
+                rig.settings.analysing = true;
+                const auto c = playEngine (rig, mod, until, rate, blockSize);
+                same &= c.size() == ref.size() && rig.engine.getKeyGuess().tonic == reference.engine.getKeyGuess().tonic;
+                for (size_t i = 0; i < std::min (c.size(), ref.size()); ++i)
+                {
+                    same &= c[i].guess.tonic == ref[i].guess.tonic && c[i].guess.minor == ref[i].guess.minor;
+                    const double d = std::abs (c[i].time - ref[i].time);
+                    if (d > worstDelta)
+                    {
+                        worstDelta = d;
+                        worst = std::to_string ((int) rate) + " Hz, " + std::to_string (blockSize);
+                    }
+                }
+            }
+        check (same && worstDelta <= KeyListener::estimateEvery + 2048.0 / 44100.0 + 0.01,
+               "the same keys at 44.1/48/96 kHz and blocks of 32-2048; times within "
+                   + std::to_string (worstDelta * 1000.0).substr (0, 5) + " ms (worst at " + worst + ")");
+    }
+
+    // The on-screen keys reach the engine as input, so a fuzz of notes, Analyse switches and
+    // Enable flips leaves nothing sounding.
+    {
+        std::mt19937 rng (5);
+        Rig rig;
+        std::vector<int> down;
+        for (int b = 0; b < 20000; ++b)
+        {
+            std::vector<MidiEvent> in;
+            if (rng() % 3 == 0)
+            {
+                const int note = 36 + (int) (rng() % 48);
+                in.push_back (MidiEvent::noteOn (0, note, 1 + (int) (rng() % 127), (int) (rng() % 480)));
+                down.push_back (note);
+            }
+            if (! down.empty() && rng() % 3 == 0)
+            {
+                const size_t k = rng() % down.size();
+                in.push_back (MidiEvent::noteOff (0, down[k], (int) (rng() % 480)));
+                down.erase (down.begin() + (long) k);
+            }
+            if (rng() % 60 == 0) rig.settings.analysing = ! rig.settings.analysing;
+            if (rig.settings.analysing && rng() % 2000 == 0) rig.settings.enabled = ! rig.settings.enabled;
+            if (rng() % 500 == 0) rig.settings.testPattern = ! rig.settings.testPattern;
+            if (rng() % 300 == 0) rig.transport.playing = ! rig.transport.playing;
+            rig.run (in);
+            if ((int) rig.rx.on.size() != rig.engine.getVoices().soundingNotes() || ! rig.rx.clean())
+            {
+                check (false, "Analyse fuzz, block " + std::to_string (b) + ": " + rig.rx.describe());
+                return;
+            }
+        }
+        std::vector<MidiEvent> ups;
+        for (const int n : down)
+            ups.push_back (MidiEvent::noteOff (0, n, 0));
+        rig.run (ups);
+        rig.settings.testPattern = false;
+        rig.transport.playing = false;
+        rig.run ({});
+        check (rig.rx.on.empty() && rig.engine.getVoices().isEmpty() && rig.rx.clean(),
+               "20,000 blocks of notes with Analyse, Enable, Test pattern and the transport switching: nothing left sounding");
+    }
+}
+
 int main()
 {
     testProfiles();
@@ -630,5 +846,6 @@ int main()
     testWeighting();
     testHysteresis();
     testFuzz();
+    testEngine();
     return testutil::finish ("test_keys");
 }

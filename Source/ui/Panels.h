@@ -2,7 +2,9 @@
 //
 //   TopBar         the name · On · the preset browser · Export (drag out the last bars played) ·
 //                  Keys (show or hide the output keyboard)
-//   GlobalRow      Key · Scale · Chord Group · Progression · Octave · Key octave
+//   GlobalRow      Key · Heard · Scale · Chord Group · Progression · Octave · Key octave
+//   HeardKey       the Heard box (docs/KEY_DETECTION_PLAN.md K5): Analyse, then the key heard;
+//                  a click on the guess sets Key (and Scale) to it, ✕ stops analysing
 //   EffectsPanel   six cards: Strum, Velocity; Arp, Voicing (Stack, Hold, Voice leading);
 //                  Repeat and Step seq, each with its on switch in the card's corner, and the
 //                  chosen pattern's steps under Step seq
@@ -33,13 +35,58 @@ namespace chordchimp::ui
         juce::Rectangle<int> nameArea;
     };
 
+    // The Analyse control and the key it heard. It follows the Analyse parameter, so a change
+    // from the host shows at once.
+    class HeardKey : public juce::Component,
+                     public juce::SettableTooltipClient
+    {
+    public:
+        HeardKey (ChordChimpProcessor&, Bindings&);
+        void refresh (const UiModel&);
+        void paint (juce::Graphics&) override;
+        void resized() override;
+        void mouseUp (const juce::MouseEvent&) override;
+        bool keyPressed (const juce::KeyPress&) override;
+
+        // What a click does: on the box, or on its ✕ (`close`). For tests too.
+        void click (bool close);
+        const juce::String& getText() const noexcept { return text; }
+        juce::Rectangle<int> boxBounds() const noexcept;
+        juce::Rectangle<int> closeBounds() const noexcept;   // empty unless analysing
+        // Whether `s` fits the box as it is now; the widths the column needs for its shortest
+        // and its longest text.
+        bool fits (const juce::String& s) const;
+        static int minimumWidth();
+        static int preferredWidth();
+
+    private:
+        void update();
+        juce::String chooseText (const juce::String& full, const juce::String& shorter, const juce::String& shortest) const;
+        bool analysing() const noexcept { return mode != params::AnalyseMode::Off; }
+        bool matchesKey() const noexcept;
+
+        ChordChimpProcessor& processor;
+        Bindings& bindings;
+        params::AnalyseMode mode = params::AnalyseMode::Off;
+        KeyGuess guess;
+        int key = 0;
+        Scale scale = Scale::Major;
+        juce::String text;
+        bool highlighted = false;     // the guess, confident: accent
+        static constexpr int captionHeight = 15, closeWidth = 18;
+    };
+
     class GlobalRow : public juce::Component
     {
     public:
-        explicit GlobalRow (Bindings&);
+        GlobalRow (ChordChimpProcessor&, Bindings&);
+        void refresh (const UiModel&);
         void resized() override;
 
+        HeardKey heard;
+
     private:
+        Bindings& bindings;
         ParamControl key, scale, group, progression, octave, keyOctave;
     };
 

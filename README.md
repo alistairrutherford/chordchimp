@@ -6,8 +6,8 @@ plan and status are in [PLAN.md](PLAN.md).
 
 ![ChordChimp's editor: the preset bar and Key, Scale, Chord Group, Progression and Octave along the top; seven chord pads with the black keys' five above them, three of them lit; the effects as six cards (Strum, Velocity, Arp, Voicing, Repeat, Step seq with its steps); the output keyboard along the bottom](docs/screenshot.png)
 
-**Status:** Phases 0-9 done: every white key plays its chord in any octave (no Smart Scale, split,
-shifters, Instance Sync, look-ahead, Chord Editor or MIDI import), with 27 parameters, Chordism's
+**Status:** Phases 0-10 done: every white key plays its chord in any octave (no Smart Scale, split,
+shifters, Instance Sync, look-ahead, Chord Editor or MIDI import), with 28 parameters, Chordism's
 22 factory presets and a single-page editor (Phase 3). Hardening and install are done (Phase 4),
 and it's checked in Live 12.4.7 next to Chordism (Phase 5). In Live the editor opens, resizes,
 and keeps its size and keyboard setting with the set. Export drag-out is back (Phase 6): drag the
@@ -16,6 +16,17 @@ borrowed chords (Phase 7): C# bII, D# bIII, F# #iv°, G# bVI, A# bVII, from the 
 with their own row of pads. Key octave (Phase 8) chooses whether the octave you play moves the
 chord (Follow) or not (Ignore, the default). In a set saved before Phase 8, Live lists Key octave
 among the device's parameters only once ChordChimp is put on the track again.
+
+**Key detection** (Phases 9-10, [docs/KEY_DETECTION_PLAN.md](docs/KEY_DETECTION_PLAN.md)): click
+**Analyse** (the Heard box, next to Key) and ChordChimp stops playing chords and listens. Play, or
+let a clip play on its track, or set the track's *MIDI From* to another track for a moment: the
+notes pass through unchanged and the box shows the key it hears, such as *A minor 85%* (how well
+the notes fit that key). Click the guess to set Key to it (and Scale, if the current one is the
+wrong family: major or minor) and play chords again; the cross goes back to chords without
+changing anything. Analyse is also a device parameter (Off / Listen / Use guess), so Live and its
+Remote Scripts can do the same; *Use guess* is a command, so don't automate it. Analyse isn't saved
+with a set or in presets. A set saved before key detection lists Analyse only once ChordChimp is put
+on the track again.
 
 ## Install
 
