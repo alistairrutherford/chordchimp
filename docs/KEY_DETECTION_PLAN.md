@@ -1,7 +1,7 @@
 # ChordChimp: Key detection plan
 
-A plan (2026-11-02; revised 2026-11-03 for Analyse mode and the bridge), **built 2026-11-03**
-(Phases 9 and 10; see *As built* below and PLAN.md §11). It adds one
+A plan (2026-11-02; revised 2026-11-03 for Analyse mode and the bridge), **built and checked in Live
+2026-11-03** (Phases 9-11; see *As built* below and PLAN.md §11). It adds one
 feature to ChordChimp as it stands after Phase 8 (`b3c0d55`): **an Analyse mode that stops
 playing chords, listens to the incoming MIDI notes and guesses their key, shows the guess next to
 the Key menu, and sets Key to it in one step: from the editor, or from Live's device parameters
@@ -446,6 +446,7 @@ using the guess turns chords back on (it does: Analyse goes to Off).
    **Answered (2026-11-03): through.**
 6. **Undo.** Using the guess changes up to three parameters (Key, Scale, Analyse). If Live
    records them as separate undo steps despite the shared gesture, is that acceptable?
+   **Found in Phase 11:** Live records three steps (Analyse, then Scale, then Key). Still open.
 7. **The bridge's readout (K5.5).** A file written while Test pattern is on (recommended, like the
    test take), or always while analysing, or only Live's parameter display text if Phase 11 shows
    it works?

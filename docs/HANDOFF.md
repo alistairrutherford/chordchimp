@@ -1,4 +1,4 @@
-# ChordChimp: session handoff (2026-10-28)
+# ChordChimp: session handoff (2026-11-03)
 
 Where the work stands, for whoever picks it up next. The plan is [PLAN.md](../PLAN.md); its §11
 Status table has the detail of each phase, and its §10 the open questions.
@@ -16,6 +16,10 @@ chord, and keeps Chordism's 22 factory presets. JUCE 8.0.14, C++17, Projucer + x
   Phase 6 brought Export drag-out back (open question 3); Phase 7 gave the black keys borrowed
   chords (open question 1). Both were checked in Live together. Phase 8 added the Key octave
   switch (open question 2).
+- **Key detection (Phases 9-10)** is built as [KEY_DETECTION_PLAN.md](KEY_DETECTION_PLAN.md) says,
+  with its *As built* changes: an Analyse parameter (Off / Listen / Use guess), the Heard box
+  between Key and Scale, Temperley's profiles. Phase 11 checked it in Live (PLAN.md §11), in
+  `~/Music/Ableton/Projects/ChordChimp Analyse Check Project`, mostly by the bridge alone.
 - **Remote:** `origin` is `github.com/alistairrutherford/chordchimp`, and CI
   (`.github/workflows/build.yml`) has passed there.
 - Installed: `ChordChimp.vst3` and `ChordChimp.app` (by `Tools/install.sh`), next to Chordism.
@@ -23,7 +27,11 @@ chord, and keeps Chordism's 22 factory presets. JUCE 8.0.14, C++17, Projucer + x
 ## How things fit
 
 - **Core** (`Source/core`, header-only, no JUCE):
-  - `engine/ChordEngine.h`: one `ChordPerformer` and a `VoiceTracker` with 384 sources.
+  - `engine/ChordEngine.h`: one `ChordPerformer` and a `VoiceTracker` with 384 sources; in
+    Analyse mode input passes through and feeds a `KeyListener`.
+  - `engine/KeyListener.h` and `theory/KeyProfiles.h`: key detection (a decaying pitch-class
+    histogram, Temperley's profiles, hysteresis). Its constants were tuned on the corpus in
+    `Tests/test_keys.cpp`; change them only with that test's output in front of you.
   - `engine/KeyRouter.h`: a white key's letter picks slot 0-6 in any octave, a black key slot
     7-11 (C# … A#).
   - `theory/ChordGroups.h`: `makeBorrowedSlot`, the black keys' chords (bII Phrygian, bIII
@@ -36,8 +44,8 @@ chord, and keeps Chordism's 22 factory presets. JUCE 8.0.14, C++17, Projucer + x
     `progressionFromChoice`); Custom plays as Diatonic.
   - `midiio/{ExportRecorder, MidiFile}.h`: Chordism's Export, unchanged but for names (no
     `ChordImporter`).
-- **Plug-in** (`Source/plugin`): `Parameters.*` (27 parameters, `params::numParameters`, with
-  Chordism's IDs but for `keyOctave`; `params::fromChordism` converts a Chordism preset's Progression value),
+- **Plug-in** (`Source/plugin`): `Parameters.*` (28 parameters, `params::numParameters`, with
+  Chordism's IDs but for `keyOctave` and `analyse`; `params::fromChordism` converts a Chordism preset's Progression value),
   `ChordChimpProcessor.*`, `FactoryPresets.*`, `PresetManager.*` (also reads Chordism preset
   files; user presets in `~/Music/ChordChimp/Presets`).
 - **UI** (`Source/ui`): one page, 780×560, resizable 720×520 to 1400×960. Top bar, a row of
@@ -68,7 +76,9 @@ Tools/install.sh --validate   # build, install, then pluginval
 - The test set is `~/Music/Ableton/Projects/ChordChimp Phase 5 Project`. It has one extra unsaved
   take from the check after reopening.
 - With Test pattern on, each finished take is also written to
-  `~/Music/ChordChimp/Exports/Test take.mid` (Phase 6), for comparing takes without recording.
+  `~/Music/ChordChimp/Exports/Test take.mid` (Phase 6), for comparing takes without recording,
+  and the key heard to `~/Music/ChordChimp/Exports/Heard key.json` whenever it changes (Phase
+  10). Analyse is a device parameter: set it to Listen, play, read the file, set it to Use guess.
 - Live keeps a plug-in's parameter list with the device in a set: after a new parameter, a
   ChordChimp saved earlier doesn't list it until it's put on the track again (Phase 8).
 - To drag Export into Live by computer use, use a real click-drag; separate mouse moves with the
@@ -77,6 +87,9 @@ Tools/install.sh --validate   # build, install, then pluginval
   720×520) used a copy, `~/Music/Ableton/Projects/ChordChimp Editor Check Project`. Live's
   plug-in windows hide while Live isn't the front app, so editor checks need Live in front. The
   editor's saved size and keyboard flag are in the `UI` child of ChordChimp's state in the `.als`.
+- The bridge can't launch a session clip; for Analyse checks, route another track's part in (for
+  example Chordism's test pattern) instead. A ChordChimp saved before Phase 10 can't be replaced in
+  place by `load_device`; put a new one on an empty track.
 - After a new install, re-index Live's browser so it lists the plug-in. The browser category for
   plug-ins is `plugins`.
 - Bridge quirks: arrangement recording ignores the start beat (always records from 0) and starts a
