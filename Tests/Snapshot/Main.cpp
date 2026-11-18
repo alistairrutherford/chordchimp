@@ -2,7 +2,7 @@
 // host and checks:
 //
 //   1. snapshots  the editor in a fixed state (C major, the Pop progression, effects, keys held)
-//                 at its default size (780×560), its smallest (720×520, keyboard hidden) and a
+//                 at its default size (780×624), its smallest (720×584, keyboard hidden) and a
 //                 large one (1200×800), each compared with Tests/fixtures/snapshot/*.png (at most
 //                 0.5% of pixels may differ by more than 24 levels: font rendering moves a little
 //                 between macOS versions); clicking a chord pad plays its chord
@@ -28,6 +28,10 @@
 //                 Use guess, seen by the timer); the test rig's Heard key.json; Analyse isn't
 //                 saved or in presets; the globals fit at every size; no allocation while
 //                 listening; the editor-heard snapshot
+//   7. Info View  the strip along the bottom (as NoteCap's): every parameter has a short entry;
+//                 every control, display and card can be pointed at (default and smallest size);
+//                 the strip itself isn't one; leaving the editor shows the hint; a snapshot of it
+//                 showing an entry
 //
 //   ChordChimpSnapshot <fixtures dir> <output dir> [--update | --no-pixels]
 //   ChordChimpSnapshot --bench [seconds]
@@ -1244,6 +1248,68 @@ int main (int argc, char** argv)
             }
         check (total == params::numParameters && missing.isEmpty(), juce::String (total) + " parameters, " + juce::String (missing.size()) + " without a control (Test pattern is Live's)"
                                       + (missing.isEmpty() ? juce::String() : ": " + missing.joinIntoString (", ")));
+
+        std::cout << "== Info View ==\n";
+        {
+            juce::StringArray noEntry, tooLong;
+            for (auto* param : processor->getParameters())
+                if (auto* withId = dynamic_cast<juce::AudioProcessorParameterWithID*> (param))
+                    if (ui::InfoView::titleFor (withId->paramID).isEmpty() || ui::InfoView::textFor (withId->paramID).isEmpty())
+                        noEntry.add (withId->paramID);
+            for (const auto& k : ui::InfoView::keys())
+                if (ui::InfoView::textFor (k).length() > 200 || ui::InfoView::titleFor (k).length() > 24)
+                    tooLong.add (k);
+            check (noEntry.isEmpty(), "every parameter has an Info View entry" + (noEntry.isEmpty() ? juce::String() : ": none for " + noEntry.joinIntoString (", ")));
+            check (tooLong.isEmpty(), "entries stay brief (titles at most 24 characters, text at most 200)"
+                                          + (tooLong.isEmpty() ? juce::String() : ": " + tooLong.joinIntoString (", ")));
+
+            // Everything in the table can be pointed at but the test rig (Live's), at the
+            // default size and the smallest (keyboard hidden there: its entry is checked at the default).
+            for (const bool small : { false, true })
+            {
+                editor->setSize (small ? ChordChimpEditor::minWidth : ChordChimpEditor::defaultWidth,
+                                 small ? ChordChimpEditor::minHeight : ChordChimpEditor::defaultHeight);
+                editor->showKeyboard (! small);
+                editor->refreshNow();
+                juce::StringArray found, unreachable;
+                for (int y = 0; y < editor->getHeight(); y += 2)
+                    for (int x = 0; x < editor->getWidth(); x += 2)
+                        found.addIfNotAlreadyThere (editor->infoKeyAt ({ x, y }));
+                for (const auto& k : ui::InfoView::keys())
+                    if (! found.contains (k) && k != params::testPattern && ! (small && k == "display.keyboard"))
+                        unreachable.add (k);
+                const auto strip = editor->infoView().getBounds();
+                check (unreachable.isEmpty(), juce::String (small ? "smallest size" : "default size") + ": everything described can be pointed at ("
+                                                  + juce::String (found.size() - 1) + " keys)" + (unreachable.isEmpty() ? juce::String() : "; not: " + unreachable.joinIntoString (", ")));
+                check (strip.getBottom() == editor->getHeight() - 10 && strip.getWidth() == editor->getWidth() - 24 && editor->infoKeyAt (strip.getCentre()).isEmpty(),
+                       "the strip runs along the bottom and isn't itself something to point at");
+            }
+            editor->setSize (ChordChimpEditor::defaultWidth, ChordChimpEditor::defaultHeight);
+            editor->showKeyboard (true);
+            editor->refreshNow();
+
+            // Pointing shows the entry; leaving the editor shows the hint.
+            auto& pads = editor->getChordPads();
+            const auto padCentre = editor->getLocalPoint (&pads, pads.padBounds (0).getCentre().toInt());
+            editor->showInfoAt (padCentre);
+            check (editor->infoView().shownKey() == "display.pads" && editor->infoView().shownTitle() == "Chord pads", "pointing at a pad shows the pads' entry");
+            auto source = juce::Desktop::getInstance().getMainMouseSource();
+            const auto now = juce::Time::getCurrentTime();
+            const juce::MouseEvent away (source, { -5.0f, -5.0f }, {}, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, editor, editor, now, { -5.0f, -5.0f }, now, 1, false);
+            editor->mouseExit (away);
+            check (editor->infoView().shownKey().isEmpty() && editor->infoView().shownText() == ui::InfoView::hint(), "leaving the editor shows the hint");
+
+            // The snapshot: pointing at Arp's pattern.
+            juce::Point<int> arpAt;
+            for (int y = 0; y < editor->getHeight() && arpAt.isOrigin(); y += 2)
+                for (int x = 0; x < editor->getWidth() && arpAt.isOrigin(); x += 2)
+                    if (editor->infoKeyAt ({ x, y }) == params::arp)
+                        arpAt = { x + 6, y + 6 };
+            editor->showInfoAt (arpAt);
+            check (editor->infoView().shownKey() == params::arp, "pointing at Arp's pattern shows its entry");
+            snapshot (*editor, "editor-info", fixtures, out, update);
+            editor->showInfoAt ({ -1, -1 });
+        }
     }
 
     std::cout << "== state ==\n";
@@ -1282,7 +1348,7 @@ int main (int argc, char** argv)
         std::unique_ptr<juce::AudioProcessorEditor> first (sized->createEditorIfNeeded());
         sized->removeListener (&watch);
         check (first->getWidth() == ChordChimpEditor::defaultWidth && first->getHeight() == ChordChimpEditor::defaultHeight && ! watch.changed,
-               "a new instance's editor opens at the default size (780 x 560) and doesn't report a change");
+               "a new instance's editor opens at the default size (780 x 624) and doesn't report a change");
         first->setSize (919, 689);
         close (*sized, first);
 

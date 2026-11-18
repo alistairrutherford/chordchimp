@@ -42,6 +42,7 @@
 		A51B2B30D78AD308EFB6DC21 /* include_juce_audio_utils.mm */ = {isa = PBXBuildFile; fileRef = 3C54994FFDC47C6C45AD7911; };
 		A64471DBE4C6ABB2C36435F8 /* PresetManager.cpp */ = {isa = PBXBuildFile; fileRef = 506733DE6721CE8EF078EAF9; };
 		A685F8ED8B4460F1D137392B /* Parameters.cpp */ = {isa = PBXBuildFile; fileRef = E2B49BCAD4FBBD7E9B5180AC; };
+		A6C106294AA746D82DFF7878 /* InfoView.cpp */ = {isa = PBXBuildFile; fileRef = C178D85412CA254430F4E3AE; };
 		A8C761C14CA7F183C1FD63D9 /* WebKit.framework */ = {isa = PBXBuildFile; fileRef = DAB73AC4247E3EC9A7679EDD; };
 		AFB1394CA3C68A133AA387A1 /* CoreAudio.framework */ = {isa = PBXBuildFile; fileRef = A33F6FE78749449646CFC9B9; };
 		B0FDC5A9F9901440167EBF3A /* Metal.framework */ = {isa = PBXBuildFile; fileRef = F962D5BB0CABD3FE66A9E249; settings = { ATTRIBUTES = (Weak, ); }; };
@@ -102,6 +103,7 @@
 		B76ABE2A8C61B9A500E11472 /* juce_events */ /* juce_events */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_events; path = /Users/alistairrutherford/Development/JUCE/modules/juce_events; sourceTree = "<absolute>"; };
 		BB213CC38C80EC40C3A7A5C3 /* juce_audio_processors */ /* juce_audio_processors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_processors; path = /Users/alistairrutherford/Development/JUCE/modules/juce_audio_processors; sourceTree = "<absolute>"; };
 		C0D07C717EE2B6D043580EB6 /* include_juce_data_structures.mm */ /* include_juce_data_structures.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_data_structures.mm; path = ../../JuceLibraryCode/include_juce_data_structures.mm; sourceTree = SOURCE_ROOT; };
+		C178D85412CA254430F4E3AE /* InfoView.cpp */ /* InfoView.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = InfoView.cpp; path = ../../../../Source/ui/InfoView.cpp; sourceTree = SOURCE_ROOT; };
 		C2B0C7AEE48A996114EEE406 /* Foundation.framework */ /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		C3293AC861C115E81C9611E6 /* Security.framework */ /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		C4A4B3B2C70F3FBB1EFA3A28 /* RecentFilesMenuTemplate.nib */ /* RecentFilesMenuTemplate.nib */ = {isa = PBXFileReference; lastKnownFileType = file.nib; name = RecentFilesMenuTemplate.nib; path = RecentFilesMenuTemplate.nib; sourceTree = SOURCE_ROOT; };
@@ -229,6 +231,7 @@
 				506733DE6721CE8EF078EAF9,
 				64DB6FF879924ED40ACF21A9,
 				87177D6CBDBCA0274DD7A0B1,
+				C178D85412CA254430F4E3AE,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -346,6 +349,7 @@
 				A64471DBE4C6ABB2C36435F8,
 				C11786F038A13DA9C41AA1EF,
 				34BCDCC0EA6421AC3C4CCA58,
+				A6C106294AA746D82DFF7878,
 				E0736E7EAA172E114656AFE6,
 				64355ACBDA019266CD815C82,
 				F4ACF6734B324B62150236B5,

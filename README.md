@@ -4,7 +4,7 @@ A MIDI chord generator plug-in (VST3) for Ableton Live on macOS: every white key
 chord, and every black key a borrowed one. A simplified fork of [Chordism](../chordism): no Smart Scale and no keyboard split. The
 plan and status are in [PLAN.md](PLAN.md).
 
-![ChordChimp's editor: the preset bar and Key, Scale, Chord Group, Progression and Octave along the top; seven chord pads with the black keys' five above them, three of them lit; the effects as six cards (Strum, Velocity, Arp, Voicing, Repeat, Step seq with its steps); the output keyboard along the bottom](docs/screenshot.png)
+![ChordChimp's editor: the preset bar and Key, Scale, Chord Group, Progression and Octave along the top; seven chord pads with the black keys' five above them, three of them lit; the effects as six cards (Strum, Velocity, Arp, Voicing, Repeat, Step seq with its steps); the output keyboard; the Info View along the bottom, describing Arp's pattern](docs/screenshot.png)
 
 **Status:** Phases 0-11 done: every white key plays its chord in any octave (no Smart Scale, split,
 shifters, Instance Sync, look-ahead, Chord Editor or MIDI import), with 28 parameters, Chordism's
@@ -16,6 +16,9 @@ borrowed chords (Phase 7): C# bII, D# bIII, F# #iv°, G# bVI, A# bVII, from the 
 with their own row of pads. Key octave (Phase 8) chooses whether the octave you play moves the
 chord (Follow) or not (Ignore, the default). In a set saved before Phase 8, Live lists Key octave
 among the device's parameters only once ChordChimp is put on the track again.
+
+**Info View:** point at any control, pad or card and the strip along the bottom of the editor says
+what it does and what its settings mean, like Live's own Info View (it replaces the tooltips).
 
 **Key detection** (Phases 9-11, checked in Live; [docs/KEY_DETECTION_PLAN.md](docs/KEY_DETECTION_PLAN.md)): click
 **Analyse** (the Heard box, next to Key) and ChordChimp stops playing chords and listens. Play, or

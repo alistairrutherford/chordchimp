@@ -69,6 +69,8 @@
         <FILE id="csF050" name="Panels.cpp" compile="1" resource="0" file="Source/ui/Panels.cpp"/>
         <FILE id="csF059" name="PresetBar.h" compile="0" resource="0" file="Source/ui/PresetBar.h"/>
         <FILE id="csF060" name="PresetBar.cpp" compile="1" resource="0" file="Source/ui/PresetBar.cpp"/>
+        <FILE id="csF063" name="InfoView.h" compile="0" resource="0" file="Source/ui/InfoView.h"/>
+        <FILE id="csF064" name="InfoView.cpp" compile="1" resource="0" file="Source/ui/InfoView.cpp"/>
       </GROUP>
     </GROUP>
   </MAINGROUP>

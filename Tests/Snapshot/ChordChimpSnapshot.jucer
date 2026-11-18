@@ -18,6 +18,7 @@
         <FILE id="snF011" name="PresetManager.cpp" compile="1" resource="0" file="../../Source/plugin/PresetManager.cpp"/>
         <FILE id="snF012" name="FactoryPresets.cpp" compile="1" resource="0" file="../../Source/plugin/FactoryPresets.cpp"/>
         <FILE id="snF013" name="PresetBar.cpp" compile="1" resource="0" file="../../Source/ui/PresetBar.cpp"/>
+        <FILE id="snF014" name="InfoView.cpp" compile="1" resource="0" file="../../Source/ui/InfoView.cpp"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

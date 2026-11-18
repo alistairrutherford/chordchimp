@@ -61,6 +61,7 @@ namespace chordchimp::ui
     //==========================================================================
     ChordPads::ChordPads (ChordChimpProcessor& p) : processor (p), playing (p)
     {
+        setComponentID ("display.pads");          // its Info View entry
         setTooltip ("The chords: one per white key and, above them, the black keys' borrowed chords (in any octave). Click or drag across to play");
     }
 
@@ -162,6 +163,7 @@ namespace chordchimp::ui
     //==========================================================================
     OutputKeyboard::OutputKeyboard (ChordChimpProcessor& p) : processor (p), playing (p)
     {
+        setComponentID ("display.keyboard");      // its Info View entry
         layout.lo = 21;
         layout.hi = 108;
         labelFont = font (9.0f);
